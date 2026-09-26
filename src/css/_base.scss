@@ -1,0 +1,14 @@
+body {
+  margin: 0;
+}
+
+.page-shell {
+  width: 100%;
+  max-width: $app-content-max;
+  margin: 0 auto;
+  padding: $app-space;
+}
+
+.page-shell--wide {
+  max-width: 1080px;
+}

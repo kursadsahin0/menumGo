@@ -1,38 +1,40 @@
-# cafe ()
+# QR Menu
 
-## Install the dependencies
+Kafeler, restoranlar ve barlar için dijital menü. Misafir tek bir QR kodu okutur, menüyü tarayıcıda görür. Sipariş veya ödeme yok.
 
-```bash
-pnpm install
-# or: yarn/npm/bun install
-```
+Menü Türkçe ve İngilizce açılır. Üründe fiyat, porsiyon, içerik ve alerjen bulunur. Tükenen ürün işaretlenir.
 
-### Start the app in development mode (HMR, error reporting, etc.)
+## Çalıştırma
 
-```bash
-quasar dev
-```
-
-### Format & Lint the files
+Node.js 22 veya üzeri gerekir.
 
 ```bash
-pnpm run lint
-# or: yarn/npm/bun run lint
+npm install
+cp .env.example .env
+npm run dev
 ```
 
-...or just check formatting & linting:
+Uygulama `http://localhost:9000` adresinde açılır.
+
+## Ortam
+
+| Değişken | Açıklama |
+| --- | --- |
+| `VITE_USE_MOCK` | `true` iken istekler yerel veriye gider. Varsayılan budur. |
+| `VITE_API_BASE_URL` | `VITE_USE_MOCK=false` iken kullanılacak API adresi. |
+
+## Deneme
+
+Panel girişi: `demo@qrmenu.local` / `demo1234`
+
+Misafir menüsü: `/menu/burger-house`
+
+## Komutlar
 
 ```bash
-pnpm run lint:check
-# or: yarn/npm/bun run lint:check
+npm run dev         # geliştirme
+npm run build       # üretim derlemesi
+npm run lint        # biçim ve lint düzeltmesi
+npm run lint:check  # biçim ve lint kontrolü
 ```
-
-### Build the app for production
-
-```bash
-quasar build
-```
-
-### Customize the configuration
-
-See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-config-file).
+# deneme

@@ -1,0 +1,84 @@
+.admin-layout {
+  background: var(--app-bg);
+  color: var(--app-ink);
+}
+
+.admin-layout .q-header.admin-topbar {
+  background: var(--app-surface);
+  color: var(--app-ink);
+}
+
+.admin-topbar__bar {
+  min-height: 64px;
+}
+
+.admin-topbar__title {
+  min-width: 0;
+  margin-left: 4px;
+  overflow: hidden;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-topbar__menu {
+  min-width: 260px;
+}
+
+.admin-layout__drawer {
+  background: var(--app-surface);
+}
+
+.admin-sidebar__brand {
+  padding: 20px 16px 8px;
+}
+
+.admin-sidebar__tenant {
+  margin-top: 8px;
+  color: var(--app-muted);
+  font-size: 0.875rem;
+}
+
+.admin-nav__child {
+  padding-left: 28px;
+}
+
+.admin-nav__item--active {
+  border-radius: 10px;
+  background: $primary;
+  color: #fff;
+}
+
+.admin-nav__group--active {
+  color: $primary;
+  font-weight: 600;
+}
+
+body.body--dark .admin-nav__group--active {
+  color: #fff;
+}
+
+.admin-page {
+  background: var(--app-bg);
+}
+
+.admin-page__wrap {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.admin-page__lead {
+  margin: 0;
+  color: var(--app-muted);
+  line-height: 1.5;
+}
+
+@media (min-width: 960px) {
+  .admin-page__wrap {
+    padding: 24px;
+  }
+}

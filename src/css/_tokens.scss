@@ -1,0 +1,23 @@
+$app-sidebar-width: 260px;
+$app-content-max: 720px;
+$app-space: 16px;
+
+:root {
+  --app-bg: #f4f1eb;
+  --app-surface: #fff;
+  --app-ink: #1c1917;
+  --app-muted: #5c564e;
+  --app-line: rgba(28, 25, 23, 0.08);
+  --app-shadow: 0 1px 2px rgba(28, 25, 23, 0.04);
+}
+
+body.body--dark {
+  --app-bg: #12110f;
+  --app-surface: #1e1b18;
+  --app-ink: #f6f3ee;
+  --app-muted: #c4bdb3;
+  --app-line: rgba(246, 243, 238, 0.12);
+  --app-shadow: none;
+  color: var(--app-ink);
+  background: var(--app-bg);
+}
