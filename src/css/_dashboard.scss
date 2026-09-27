@@ -93,3 +93,49 @@
     height: 280px;
   }
 }
+
+.stats-toolbar {
+  display: flex;
+}
+
+.stats-period {
+  border: 1px solid var(--app-line);
+  border-radius: 12px;
+  background: var(--app-surface);
+}
+
+.stats-summary {
+  margin-top: 16px;
+}
+
+.stats-hours {
+  display: grid;
+  gap: 8px;
+}
+
+.stats-hours__row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  gap: 10px;
+  align-items: center;
+}
+
+.stats-hours__label,
+.stats-hours__value {
+  color: var(--app-muted);
+  font-size: 0.75rem;
+}
+
+.stats-hours__value {
+  text-align: right;
+}
+
+body.body--dark .stats-period .q-btn {
+  color: #fff !important;
+}
+
+@media (min-width: 960px) {
+  .stats-summary.dashboard-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

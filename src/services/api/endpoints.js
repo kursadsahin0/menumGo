@@ -6,6 +6,7 @@ export const endpoints = {
     me: '/auth/me',
     forgotPassword: '/auth/forgot-password',
     resetPassword: '/auth/reset-password',
+    password: '/auth/password',
   },
   menus: {
     list: '/menus',
@@ -25,6 +26,9 @@ export const endpoints = {
   },
   dashboard: {
     overview: '/dashboard',
+  },
+  stats: {
+    report: '/stats',
   },
   products: {
     list: '/products',

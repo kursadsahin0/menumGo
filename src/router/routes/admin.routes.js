@@ -1,5 +1,3 @@
-const section = () => import('@/pages/admin/SectionPage.vue')
-
 export default [
   {
     path: '/admin',
@@ -40,15 +38,13 @@ export default [
       },
       {
         path: 'orders',
-        name: 'admin-orders',
-        meta: { title: 'Siparişler', lead: 'Gelen siparişler burada listelenecek.' },
-        component: section,
+        redirect: { name: 'admin-stats' },
       },
       {
         path: 'stats',
         name: 'admin-stats',
-        meta: { title: 'İstatistikler', lead: 'Ayrıntılı istatistikler burada olacak.' },
-        component: section,
+        meta: { title: 'İstatistikler' },
+        component: () => import('@/pages/admin/StatsPage.vue'),
       },
       {
         path: 'settings/business',
@@ -66,15 +62,13 @@ export default [
       },
       {
         path: 'settings',
-        name: 'admin-settings',
-        meta: { title: 'Ayarlar', lead: 'Hesap ayarları burada olacak.' },
-        component: section,
+        redirect: { name: 'admin-profile' },
       },
       {
         path: 'profile',
         name: 'admin-profile',
-        meta: { title: 'Profil', lead: 'Profil bilgileriniz burada düzenlenecek.' },
-        component: section,
+        meta: { title: 'Profil' },
+        component: () => import('@/pages/admin/SettingsPage.vue'),
       },
     ],
   },

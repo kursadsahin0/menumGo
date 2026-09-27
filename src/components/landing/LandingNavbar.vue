@@ -1,7 +1,7 @@
 <template>
   <header class="landing-nav">
     <q-toolbar class="landing-nav__bar">
-      <router-link class="landing-nav__brand" :to="{ name: 'public-home' }">
+      <router-link class="landing-nav__brand" :to="{ name: 'admin-dashboard' }">
         <AppBrand />
       </router-link>
 
@@ -12,7 +12,14 @@
       </nav>
 
       <div class="landing-nav__actions">
-        <q-btn class="landing-nav__login" flat no-caps label="Giriş Yap" :to="{ name: 'login' }" />
+        <q-btn
+          class="landing-nav__login"
+          unelevated
+          no-caps
+          color="primary"
+          label="Giriş Yap"
+          :to="{ name: 'login' }"
+        />
         <q-btn
           class="landing-nav__menu-btn"
           flat
@@ -27,7 +34,13 @@
     <q-dialog v-model="menuOpen" position="right" full-height>
       <q-card class="landing-nav__panel">
         <q-card-section class="row items-center">
-          <AppBrand />
+          <router-link
+            class="landing-nav__brand"
+            :to="{ name: 'admin-dashboard' }"
+            @click="menuOpen = false"
+          >
+            <AppBrand />
+          </router-link>
           <q-space />
           <q-btn flat round icon="close" aria-label="Menüyü kapat" @click="menuOpen = false" />
         </q-card-section>

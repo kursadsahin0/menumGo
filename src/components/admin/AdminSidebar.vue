@@ -1,9 +1,8 @@
 <template>
   <div class="admin-sidebar">
-    <div class="admin-sidebar__brand">
+    <router-link class="admin-sidebar__brand" :to="{ name: 'admin-dashboard' }">
       <AppBrand />
-      <div v-if="tenantName" class="admin-sidebar__tenant">{{ tenantName }}</div>
-    </div>
+    </router-link>
 
     <q-list padding class="admin-sidebar__list">
       <template v-for="item in adminNavigation" :key="item.label">
@@ -55,18 +54,15 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AppBrand from '@/components/common/AppBrand.vue'
-import { useAuthStore } from '@/stores/auth'
 import { adminNavigation } from '@/router/navigation'
 
 const emit = defineEmits(['navigate'])
 const route = useRoute()
-const auth = useAuthStore()
 
 const menuGroup = adminNavigation.find((item) => item.children)
 const menuNames = (menuGroup?.children || []).map((child) => child.to.name)
 const menuActive = computed(() => menuNames.includes(route.name))
 const menuOpen = ref(menuActive.value)
-const tenantName = computed(() => auth.user?.tenant?.name || '')
 
 watch(menuActive, (active) => {
   if (active) {

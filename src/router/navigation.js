@@ -27,11 +27,6 @@ export const adminNavigation = [
     to: { name: 'admin-qr' },
   },
   {
-    label: 'Siparişler',
-    icon: 'receipt_long',
-    to: { name: 'admin-orders' },
-  },
-  {
     label: 'İstatistikler',
     icon: 'insights',
     to: { name: 'admin-stats' },
@@ -40,11 +35,6 @@ export const adminNavigation = [
     label: 'İşletme Ayarları',
     icon: 'storefront',
     to: { name: 'admin-business' },
-  },
-  {
-    label: 'Ayarlar',
-    icon: 'settings',
-    to: { name: 'admin-settings' },
   },
 ]
 

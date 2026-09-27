@@ -57,7 +57,7 @@
                   <q-item-section class="gt-xs">{{ item.category }}</q-item-section>
                   <q-item-section side>
                     <div class="dash__price">
-                      <span>{{ item.price }}</span>
+                      <span>{{ formatTry(item.price) }}</span>
                       <q-badge
                         :color="item.state === 'Güncellendi' ? 'primary' : 'positive'"
                         :label="item.state"
@@ -77,4 +77,5 @@
 <script setup>
 import LandingSectionHeading from '@/components/landing/LandingSectionHeading.vue'
 import { dashboardItems, dashboardNav, dashboardStats } from '@/data/landing'
+import { formatTry } from '@/utils/currency'
 </script>

@@ -104,13 +104,13 @@ export const heroMenu = {
     {
       name: 'Kahveler',
       items: [
-        { name: 'Espresso', price: '90 TL' },
-        { name: 'Filtre Kahve', price: '110 TL' },
+        { name: 'Espresso', price: 90 },
+        { name: 'Filtre Kahve', price: 110 },
       ],
     },
     {
       name: 'Tatlılar',
-      items: [{ name: 'Cheesecake', price: '180 TL' }],
+      items: [{ name: 'Cheesecake', price: 220 }],
     },
   ],
 }
@@ -128,7 +128,7 @@ export const dashboardStats = [
 ]
 
 export const dashboardItems = [
-  { name: 'Espresso', category: 'Kahveler', price: '90 TL', state: 'Yayında' },
-  { name: 'Filtre Kahve', category: 'Kahveler', price: '110 TL', state: 'Yayında' },
-  { name: 'Cheesecake', category: 'Tatlılar', price: '180 TL', state: 'Güncellendi' },
+  { name: 'Espresso', category: 'Kahveler', price: 90, state: 'Yayında' },
+  { name: 'Filtre Kahve', category: 'Kahveler', price: 110, state: 'Yayında' },
+  { name: 'Cheesecake', category: 'Tatlılar', price: 220, state: 'Güncellendi' },
 ]

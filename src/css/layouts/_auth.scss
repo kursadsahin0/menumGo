@@ -94,18 +94,19 @@
     min-height: 100vh;
     padding: 40px 48px;
     background: $primary;
-    color: #f7f5f2;
+    color: #fff;
   }
 
   .auth-layout__wordmark {
     position: absolute;
     top: 40px;
     left: 48px;
-    color: inherit;
-    font-size: 1.125rem;
-    font-weight: 600;
-    letter-spacing: -0.03em;
+    line-height: 0;
     text-decoration: none;
+  }
+
+  .auth-layout__wordmark .app-brand__logo {
+    height: 64px;
   }
 
   .auth-layout__headline {
@@ -120,7 +121,7 @@
   .auth-layout__lead {
     max-width: 28rem;
     margin: 16px 0 0;
-    color: rgba(247, 245, 242, 0.78);
+    color: #fff;
     font-size: 1.0625rem;
     line-height: 1.6;
   }

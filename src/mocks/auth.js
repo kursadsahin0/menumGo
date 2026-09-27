@@ -203,6 +203,65 @@ export async function mockResetPassword(payload) {
   return { ok: true }
 }
 
+function requireAccount(token) {
+  const id = String(token || '').replace(/^mock\./, '')
+  const accounts = loadAccounts()
+  const account = accounts.find((entry) => entry.id === id)
+
+  if (!account) {
+    throw new ApiError('Oturum geçersiz.', { status: 401 })
+  }
+
+  return { accounts, account }
+}
+
+export async function mockUpdateAccount(token, payload) {
+  await wait()
+
+  const fullName = payload?.fullName?.trim()
+  const email = payload?.email?.trim()
+  const phone = payload?.phone?.trim()
+
+  if (!fullName || !email || !phone) {
+    throw new ApiError('Hesap bilgileri eksik.', { status: 422 })
+  }
+
+  const { accounts, account } = requireAccount(token)
+  const existing = findByEmail(accounts, email)
+
+  if (existing && existing.id !== account.id) {
+    throw new ApiError('Bu e-posta ile kayıtlı bir hesap var.', { status: 409 })
+  }
+
+  account.fullName = fullName
+  account.email = email
+  account.phone = phone
+  saveAccounts(accounts)
+
+  return toPublicUser(account)
+}
+
+export async function mockChangePassword(token, payload) {
+  await wait()
+
+  const currentPassword = payload?.currentPassword ?? ''
+  const password = payload?.password ?? ''
+  const { accounts, account } = requireAccount(token)
+
+  if (account.password !== currentPassword) {
+    throw new ApiError('Mevcut şifre hatalı.', { status: 422 })
+  }
+
+  if (password.length < 8) {
+    throw new ApiError('Şifre en az 8 karakter olmalı.', { status: 422 })
+  }
+
+  account.password = password
+  saveAccounts(accounts)
+
+  return { ok: true }
+}
+
 export async function mockLogout() {
   await wait(80)
   return { ok: true }

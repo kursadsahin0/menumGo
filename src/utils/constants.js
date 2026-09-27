@@ -1,4 +1,4 @@
-export const APP_NAME = 'QR Menu'
+export const APP_NAME = 'menümGo'
 
 export const STORAGE_KEYS = {
   token: 'qr_menu.token',

@@ -58,8 +58,6 @@
         :categories="productStore.categories"
         @edit="openEdit"
         @remove="askRemove"
-        @toggle-available="toggleAvailable"
-        @toggle-featured="toggleFeatured"
       />
     </div>
 
@@ -185,14 +183,6 @@ async function confirmRemove() {
   } finally {
     removing.value = false
   }
-}
-
-function toggleAvailable(product) {
-  productStore.patchProduct(product.id, { isAvailable: !product.isAvailable })
-}
-
-function toggleFeatured(product) {
-  productStore.patchProduct(product.id, { isFeatured: !product.isFeatured })
 }
 
 onMounted(async () => {

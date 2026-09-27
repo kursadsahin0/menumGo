@@ -1,22 +1,44 @@
 <!doctype html>
-<html>
+<html lang="tr">
   <head>
-    <title><%= productName %></title>
+    <title><%= productName %> · Dijital QR menü</title>
 
     <meta charset="utf-8" />
-    <meta name="description" content="<%= productDescription %>" />
+    <meta
+      name="description"
+      content="Kafeler, restoranlar ve barlar için dijital QR menü. Misafir kodu okutur, menüyü telefonunda görür. Fiyat değişince menü de güncellenir."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#1f3a34" />
+    <meta property="og:site_name" content="<%= productName %>" />
+    <meta property="og:title" content="<%= productName %> · Dijital QR menü" />
+    <meta
+      property="og:description"
+      content="Kafeler, restoranlar ve barlar için dijital QR menü. Misafir kodu okutur, menüyü telefonunda görür. Fiyat değişince menü de güncellenir."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:image" content="brand/logo.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="<%= productName %> · Dijital QR menü" />
+    <meta
+      name="twitter:description"
+      content="Kafeler, restoranlar ve barlar için dijital QR menü. Misafir kodu okutur, menüyü telefonunda görür. Fiyat değişince menü de güncellenir."
+    />
+    <meta name="twitter:image" content="brand/logo.png" />
     <meta name="format-detection" content="telephone=no" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1<% if (ctx.mode.cordova || ctx.mode.capacitor) { %>, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover<% } %>"
     />
 
-    <link rel="icon" type="image/png" sizes="128x128" href="icons/favicon-128x128.png" />
-    <link rel="icon" type="image/png" sizes="96x96" href="icons/favicon-96x96.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png" />
-    <link rel="icon" type="image/ico" href="favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-icon-180x180.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48x48.png?v=2" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png?v=2" />
+    <link rel="icon" type="image/png" sizes="128x128" href="icons/favicon-128x128.png?v=2" />
+    <link rel="icon" type="image/png" sizes="96x96" href="icons/favicon-96x96.png?v=2" />
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png?v=2" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico?v=2" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-icon-180x180.png?v=2" />
   </head>
   <body>
     <!-- quasar:entry-point -->

@@ -2,7 +2,7 @@
   "name": "qr-menu",
   "version": "0.0.1",
   "description": "Kafeler, restoranlar ve barlar için dijital QR menü SaaS platformu",
-  "productName": "QR Menu",
+  "productName": "menümGo",
   "author": "kursadsahin0 <kursatsahin565@gmail.com>",
   "type": "module",
   "private": true,

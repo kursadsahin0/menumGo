@@ -1,3 +1,25 @@
+.app-brand {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+.app-brand__logo {
+  display: block;
+  height: 48px;
+  width: auto;
+}
+
+body.body--dark .app-brand__logo,
+.landing-footer .app-brand__logo,
+.auth-layout__wordmark .app-brand__logo {
+  filter: brightness(0) invert(1);
+}
+
+.landing-footer .app-brand__logo {
+  height: 72px;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -96,6 +118,60 @@ body.body--dark .auth-card {
   background: var(--app-surface);
   color: var(--app-ink);
   border-color: var(--app-line);
+}
+
+body.body--dark .landing-nav {
+  background: rgba(18, 17, 15, 0.92);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+body.body--dark .landing-nav__brand,
+body.body--dark .landing-nav__link,
+body.body--dark .landing-nav__login,
+body.body--dark .landing-nav__menu-btn {
+  color: #fff !important;
+}
+
+body.body--dark .landing-heading__eyebrow,
+body.body--dark .landing-heading__text,
+body.body--dark .hero__text,
+body.body--dark .feature-card__text,
+body.body--dark .feature-card__icon,
+body.body--dark .step-card__text,
+body.body--dark .step-card__index,
+body.body--dark .landing-nav__link,
+body.body--dark .faq__answer,
+body.body--dark .auth-link,
+body.body--dark .dashboard-stat__icon,
+body.body--dark .product-thumb--empty,
+body.body--dark .venue-qr__url {
+  color: #fff;
+}
+
+body.body--dark .admin-layout .text-primary,
+body.body--dark .auth-layout .text-primary,
+body.body--dark .landing-layout .text-primary {
+  color: #fff !important;
+}
+
+body.body--dark .phone,
+body.body--dark .dash {
+  color: #1c1917;
+}
+
+body.body--dark .dash .q-card.q-dark,
+body.body--dark .dash .q-card.q-dark .q-card__section {
+  background: #fff;
+  color: #1c1917;
+}
+
+body.body--dark .dash__item--active,
+body.body--dark .landing-footer,
+body.body--dark .landing-footer__text,
+body.body--dark .landing-footer__link,
+body.body--dark .landing-footer__bar {
+  color: #fff;
 }
 
 @media (min-width: 720px) {

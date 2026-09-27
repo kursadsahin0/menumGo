@@ -39,7 +39,7 @@
                     <q-item-label>{{ item.name }}</q-item-label>
                   </q-item-section>
                   <q-item-section side>
-                    <span class="phone__price">{{ item.price }}</span>
+                    <span class="phone__price">{{ formatTry(item.price) }}</span>
                   </q-item-section>
                 </q-item>
               </q-list>
@@ -54,4 +54,5 @@
 
 <script setup>
 import { heroMenu } from '@/data/landing'
+import { formatTry } from '@/utils/currency'
 </script>

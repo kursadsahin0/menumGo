@@ -7,6 +7,7 @@
     :rules="rules"
     outlined
     lazy-rules
+    :dense="dense"
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <template #append>
@@ -38,6 +39,10 @@ defineProps({
   rules: {
     type: Array,
     default: () => [],
+  },
+  dense: {
+    type: Boolean,
+    default: false,
   },
 })
 

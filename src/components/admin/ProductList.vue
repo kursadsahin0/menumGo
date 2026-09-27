@@ -1,101 +1,77 @@
 <template>
   <div class="product-list">
-    <div v-if="groups.length" class="product-head">
-      <span></span>
-      <span>Ürün</span>
-      <span>Fiyat</span>
-      <span>İndirimli fiyat</span>
-      <span>Durum</span>
-      <span>Öne çıkan</span>
-      <span>İşlemler</span>
-    </div>
-
     <section v-for="group in groups" :key="group.id" class="product-group">
       <h2 class="product-group__title">
         {{ group.name }}
         <span class="product-group__count">{{ group.products.length }} ürün</span>
       </h2>
 
-      <q-card v-for="product in group.products" :key="product.id" flat class="product-row">
-        <div class="product-row__media">
-          <img
-            v-if="product.image"
-            class="product-thumb"
-            :src="product.image"
-            alt=""
-            loading="lazy"
-            decoding="async"
-          />
-          <div v-else class="product-thumb product-thumb--empty">
-            <q-icon name="restaurant" />
+      <div class="product-sheet">
+        <div class="product-head">
+          <span></span>
+          <span>Ürün</span>
+          <span>Fiyat</span>
+          <span>Durum</span>
+          <span>İşlemler</span>
+        </div>
+
+        <article
+          v-for="product in group.products"
+          :key="product.id"
+          class="product-row"
+          :class="{ 'is-off': !product.isAvailable }"
+        >
+          <div class="product-row__media">
+            <img
+              v-if="product.image"
+              class="product-thumb"
+              :src="product.image"
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+            <div v-else class="product-thumb product-thumb--empty">
+              <q-icon name="restaurant" />
+            </div>
           </div>
-        </div>
 
-        <div class="product-row__name">
-          <div class="product-row__title">{{ product.name }}</div>
-          <div v-if="product.description" class="product-row__description">
-            {{ product.description }}
+          <div class="product-row__name">
+            <div class="product-row__title">{{ product.name }}</div>
+            <div v-if="product.description" class="product-row__description">
+              {{ product.description }}
+            </div>
           </div>
-        </div>
 
-        <div class="product-row__price">
-          <span class="row-label">Fiyat</span>
-          {{ formatTry(product.price) }}
-        </div>
-        <div class="product-row__deal">
-          <span class="row-label">İndirimli fiyat</span>
-          {{ formatTry(product.discountedPrice) }}
-        </div>
+          <div class="product-row__price">
+            <span class="product-row__amount">{{ formatTry(currentPrice(product)) }}</span>
+            <span v-if="hasDiscount(product)" class="product-row__compare">
+              {{ formatTry(product.price) }}
+            </span>
+          </div>
 
-        <q-badge
-          :color="product.isAvailable ? 'positive' : 'grey-7'"
-          :label="product.isAvailable ? 'Mevcut' : 'Tükendi'"
-        />
+          <span class="product-status" :class="{ 'is-off': !product.isAvailable }">
+            {{ product.isAvailable ? 'Mevcut' : 'Tükendi' }}
+          </span>
 
-        <q-icon
-          class="product-row__featured"
-          :name="product.isFeatured ? 'star' : 'star_border'"
-          :color="product.isFeatured ? 'primary' : 'grey-6'"
-          size="20px"
-        />
-
-        <div class="product-actions">
-          <q-btn flat round dense icon="edit" aria-label="Düzenle" @click="emit('edit', product)">
-            <q-tooltip>Düzenle</q-tooltip>
-          </q-btn>
-          <q-btn
-            flat
-            round
-            dense
-            :icon="product.isAvailable ? 'toggle_on' : 'toggle_off'"
-            aria-label="Aktif veya pasif yap"
-            @click="emit('toggle-available', product)"
-          >
-            <q-tooltip>{{ product.isAvailable ? 'Pasif yap' : 'Aktif yap' }}</q-tooltip>
-          </q-btn>
-          <q-btn
-            flat
-            round
-            dense
-            :icon="product.isFeatured ? 'star' : 'star_border'"
-            aria-label="Öne çıkar"
-            @click="emit('toggle-featured', product)"
-          >
-            <q-tooltip>Öne çıkar</q-tooltip>
-          </q-btn>
-          <q-btn
-            flat
-            round
-            dense
-            icon="delete"
-            color="negative"
-            aria-label="Sil"
-            @click="emit('remove', product)"
-          >
-            <q-tooltip>Sil</q-tooltip>
-          </q-btn>
-        </div>
-      </q-card>
+          <div class="product-actions">
+            <q-btn flat round dense icon="edit" aria-label="Düzenle" @click="emit('edit', product)">
+              <q-tooltip>Düzenle</q-tooltip>
+            </q-btn>
+            <span class="product-actions__split" aria-hidden="true"></span>
+            <q-btn
+              flat
+              round
+              dense
+              icon="delete_outline"
+              color="negative"
+              aria-label="Sil"
+              @click="emit('remove', product)"
+            >
+              <q-tooltip>Sil</q-tooltip>
+            </q-btn>
+          </div>
+        </article>
+      </div>
     </section>
 
     <EmptyState
@@ -123,7 +99,15 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['edit', 'remove', 'toggle-available', 'toggle-featured'])
+const emit = defineEmits(['edit', 'remove'])
+
+function hasDiscount(product) {
+  return product.discountedPrice != null && Number(product.discountedPrice) < Number(product.price)
+}
+
+function currentPrice(product) {
+  return hasDiscount(product) ? product.discountedPrice : product.price
+}
 
 const groups = computed(() => {
   const known = new Set(props.categories.map((category) => category.id))

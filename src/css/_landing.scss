@@ -132,6 +132,10 @@ html:has(.landing-page) {
 
 .landing-nav__login {
   display: none;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-weight: 600;
 }
 
 .landing-nav__panel {

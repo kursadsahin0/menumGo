@@ -1,12 +1,14 @@
 import { request } from '@/services/api/http'
 import { endpoints } from '@/services/api/endpoints'
 import {
+  mockChangePassword,
   mockFetchUser,
   mockForgotPassword,
   mockLogin,
   mockLogout,
   mockRegister,
   mockResetPassword,
+  mockUpdateAccount,
 } from '@/mocks/auth'
 
 export function login(payload) {
@@ -58,5 +60,23 @@ export function resetPassword(payload) {
     url: endpoints.auth.resetPassword,
     data: payload,
     mock: () => mockResetPassword(payload),
+  })
+}
+
+export function updateAccount(token, payload) {
+  return request({
+    method: 'patch',
+    url: endpoints.auth.me,
+    data: payload,
+    mock: () => mockUpdateAccount(token, payload),
+  })
+}
+
+export function changePassword(token, payload) {
+  return request({
+    method: 'post',
+    url: endpoints.auth.password,
+    data: payload,
+    mock: () => mockChangePassword(token, payload),
   })
 }

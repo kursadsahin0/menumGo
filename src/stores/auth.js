@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia'
 import {
+  changePassword as changePasswordRequest,
   fetchCurrentUser,
   forgotPassword as forgotPasswordRequest,
   login as loginRequest,
   logout as logoutRequest,
   register as registerRequest,
   resetPassword as resetPasswordRequest,
+  updateAccount as updateAccountRequest,
 } from '@/services/auth.service'
 import {
   clearSession,
@@ -120,6 +122,17 @@ export const useAuthStore = defineStore('auth', {
         this.error = error
         throw error
       }
+    },
+
+    async updateAccount(payload) {
+      const user = await updateAccountRequest(this.token, payload)
+      this.user = user
+      setStoredUser(user)
+      return user
+    },
+
+    async changePassword(payload) {
+      return changePasswordRequest(this.token, payload)
     },
 
     async logout() {

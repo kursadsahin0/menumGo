@@ -103,6 +103,9 @@ import { useMenuLanguage } from '@/composables/useMenuLanguage'
 import { useMenuSettingsStore } from '@/stores/menuSettings'
 import { useMenuStore } from '@/stores/menu'
 import { menuAppearance, presentRestaurant } from '@/utils/menuAppearance'
+import { menuImage } from '@/utils/menuImage'
+import { applySeo, menuJsonLd, SITE_DESCRIPTION } from '@/utils/seo'
+import { APP_NAME } from '@/utils/constants'
 
 const route = useRoute()
 const menu = useMenuStore()
@@ -202,17 +205,45 @@ watch(visibleCategories, async (categories) => {
   bindSpy()
 })
 
-watch(restaurant, (value) => {
-  const label = locale.value === 'en' ? 'Menu' : 'Menü'
-  document.title = value?.name ? `${value.name} · ${label}` : label
-})
-
-watch(locale, () => {
-  const label = locale.value === 'en' ? 'Menu' : 'Menü'
-  if (restaurant.value?.name) {
-    document.title = `${restaurant.value.name} · ${label}`
+function syncMenuSeo() {
+  if (menu.error) {
+    applySeo({
+      title: `Menü bulunamadı · ${APP_NAME}`,
+      description: SITE_DESCRIPTION,
+      robots: 'noindex, nofollow',
+      path: route.path,
+    })
+    return
   }
-})
+
+  const place = restaurant.value
+
+  if (!place?.name) {
+    return
+  }
+
+  const label = locale.value === 'en' ? 'Menu' : 'Menü'
+  const description = text(place.description) || SITE_DESCRIPTION
+  const photo = menuImage(place.logo, 1200)
+  const image = photo.startsWith('http') ? photo : undefined
+
+  applySeo({
+    title: `${place.name} · ${label}`,
+    description,
+    path: route.path,
+    image,
+    jsonLd: menuJsonLd({
+      name: place.name,
+      description,
+      path: route.path,
+      image,
+      telephone: place.phone,
+      address: text(place.address),
+    }),
+  })
+}
+
+watch([restaurant, locale, () => menu.error], syncMenuSeo)
 
 onBeforeUnmount(() => {
   observer?.disconnect()

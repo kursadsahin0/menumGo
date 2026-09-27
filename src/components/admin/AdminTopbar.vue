@@ -24,38 +24,49 @@
 
     <q-btn flat round aria-label="Kullanıcı menüsü">
       <q-avatar size="32px" color="primary" text-color="white">{{ initials }}</q-avatar>
-      <q-menu anchor="bottom right" self="top right">
-        <q-list class="admin-topbar__menu">
-          <q-item>
-            <q-item-section>
-              <q-item-label>{{ displayName }}</q-item-label>
-              <q-item-label caption>{{ auth.user?.email }}</q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-separator />
-          <q-item>
-            <q-item-section>Koyu tema</q-item-section>
-            <q-item-section side>
-              <q-toggle
-                :model-value="isDark"
-                aria-label="Koyu tema"
-                @update:model-value="setDark"
-              />
-            </q-item-section>
-          </q-item>
-          <q-item v-ripple clickable :to="{ name: 'admin-profile' }">
-            <q-item-section avatar>
-              <q-icon name="person" />
-            </q-item-section>
-            <q-item-section>Profil</q-item-section>
-          </q-item>
-          <q-item v-ripple clickable @click="onLogout">
-            <q-item-section avatar>
-              <q-icon name="logout" />
-            </q-item-section>
-            <q-item-section>Çıkış</q-item-section>
-          </q-item>
-        </q-list>
+      <q-menu class="account-menu" anchor="bottom right" self="top right" :offset="[0, 8]">
+        <div class="account-menu__panel">
+          <div class="account-menu__head">
+            <q-avatar size="40px" color="primary" text-color="white">{{ initials }}</q-avatar>
+            <div class="account-menu__identity">
+              <div class="account-menu__name">{{ displayName }}</div>
+              <div v-if="venueName" class="account-menu__venue">{{ venueName }}</div>
+              <div class="account-menu__email">{{ auth.user?.email }}</div>
+            </div>
+          </div>
+
+          <div class="account-menu__theme">
+            <span>Koyu tema</span>
+            <q-toggle
+              :model-value="isDark"
+              size="sm"
+              color="primary"
+              aria-label="Koyu tema"
+              @update:model-value="setDark"
+            />
+          </div>
+
+          <q-list class="account-menu__actions">
+            <q-item
+              v-close-popup
+              v-ripple
+              clickable
+              class="account-menu__action"
+              :to="{ name: 'admin-profile' }"
+            >
+              <q-item-section avatar>
+                <q-icon name="person_outline" size="20px" />
+              </q-item-section>
+              <q-item-section>Profil</q-item-section>
+            </q-item>
+            <q-item v-close-popup v-ripple clickable class="account-menu__action" @click="onLogout">
+              <q-item-section avatar>
+                <q-icon name="logout" size="20px" />
+              </q-item-section>
+              <q-item-section>Çıkış</q-item-section>
+            </q-item>
+          </q-list>
+        </div>
       </q-menu>
     </q-btn>
   </q-toolbar>
@@ -84,6 +95,7 @@ const isDark = computed(() => $q.dark.isActive)
 
 const unreadCount = computed(() => adminNotifications.filter((item) => item.unread).length)
 const displayName = computed(() => auth.user?.fullName || 'Hesap')
+const venueName = computed(() => auth.user?.tenant?.name || '')
 const initials = computed(() => {
   const parts = displayName.value.split(' ').filter(Boolean).slice(0, 2)
   return (

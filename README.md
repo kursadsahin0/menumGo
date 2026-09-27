@@ -1,4 +1,4 @@
-# QR Menu
+# menümGo
 
 Kafeler, restoranlar ve barlar için dijital menü. Misafir tek bir QR kodu okutur, menüyü tarayıcıda görür. Sipariş veya ödeme yok.
 
