@@ -8,6 +8,7 @@
     outlined
     lazy-rules
     :dense="dense"
+    :hide-bottom-space="hideBottomSpace"
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <template #append>
@@ -41,6 +42,10 @@ defineProps({
     default: () => [],
   },
   dense: {
+    type: Boolean,
+    default: false,
+  },
+  hideBottomSpace: {
     type: Boolean,
     default: false,
   },

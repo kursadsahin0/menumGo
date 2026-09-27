@@ -307,8 +307,376 @@ body.body--dark .account-sheet__theme p {
   opacity: 0.72;
 }
 
+.billing-checkout {
+  display: grid;
+  gap: 22px;
+  width: 100%;
+  max-width: 980px;
+  margin: 4px auto 0;
+}
+
+.billing-offer {
+  min-width: 0;
+}
+
+.billing-pay {
+  padding: 28px 24px 24px;
+  border: 1px solid var(--app-line);
+  border-radius: 24px;
+  background: var(--app-surface);
+  box-shadow: 0 18px 40px rgba(28, 25, 23, 0.06);
+}
+
+.billing-pay {
+  display: flex;
+  flex-direction: column;
+}
+
+.billing-pay__form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.billing-pay h2 {
+  margin: 0 0 18px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.billing-pay__submit {
+  margin-top: 20px;
+}
+
+.billing-pay__grid {
+  display: grid;
+  gap: 12px;
+}
+
+.billing-pay__grid .q-field {
+  margin-bottom: 0;
+}
+
+.billing-pay__grid .q-field--outlined .q-field__control {
+  border-radius: 12px;
+  background: var(--app-bg);
+}
+
+body.body--dark .billing-pay__grid .q-field--outlined .q-field__control {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.billing-offer__head h1 {
+  margin: 0;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.billing-offer__head p,
+.billing-offer__note,
+.billing-offer__price span {
+  color: var(--app-muted);
+}
+
+.billing-offer__head p {
+  max-width: 36rem;
+  margin: 8px 0 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.pay-card-scene {
+  margin-top: 0;
+  perspective: 1200px;
+  aspect-ratio: 1.586;
+}
+
+.pay-card {
+  position: relative;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s ease;
+}
+
+.pay-card.is-back {
+  transform: rotateY(180deg);
+}
+
+.pay-card__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px 18px 16px;
+  overflow: hidden;
+  border-radius: 18px;
+  color: #f6f3ee;
+  background:
+    radial-gradient(90% 80% at 100% 0%, rgba(212, 184, 150, 0.42), transparent 46%),
+    linear-gradient(155deg, #3d6a5c 0%, #1f3a34 48%, #142824 100%);
+  box-shadow: 0 16px 28px rgba(20, 40, 36, 0.28);
+  transform: rotateY(0deg);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.pay-card__face--front::before {
+  content: '';
+  position: absolute;
+  right: -48px;
+  bottom: -72px;
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  background: rgba(212, 184, 150, 0.16);
+}
+
+.pay-card__face--front::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.16), transparent 38%);
+  pointer-events: none;
+}
+
+.pay-card__top,
+.pay-card__number,
+.pay-card__bottom {
+  position: relative;
+}
+
+.pay-card__top,
+.pay-card__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pay-card__tools {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.pay-card__chip {
+  width: 42px;
+  height: 31px;
+}
+
+.pay-card__wave {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: rgba(246, 243, 238, 0.85);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.pay-card__number {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.pay-card__number.is-hot,
+.pay-card__bottom .is-hot strong {
+  color: #fff;
+}
+
+.pay-card__group .is-empty,
+.pay-card__bottom .is-empty {
+  opacity: 0.45;
+}
+
+.pay-card__bottom {
+  align-items: flex-end;
+}
+
+.pay-card__bottom p {
+  min-width: 0;
+  margin: 0;
+}
+
+.pay-card__bottom span,
+.pay-card__sign span {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.pay-card__bottom strong {
+  display: block;
+  overflow: hidden;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pay-card__bottom p:first-child {
+  flex: 1;
+}
+
+.pay-card__bottom p:first-child strong {
+  max-width: 168px;
+}
+
+.pay-card__bottom p:last-child {
+  text-align: right;
+}
+
+.pay-card__face--back {
+  justify-content: flex-start;
+  padding: 0;
+  transform: rotateY(180deg);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.pay-card__stripe {
+  display: block;
+  height: 46px;
+  margin-top: 24px;
+  background: #0d1210;
+}
+
+.pay-card__sign {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 18px 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: repeating-linear-gradient(90deg, #f4efe6, #f4efe6 8px, #e7dfd2 8px, #e7dfd2 10px);
+  color: #1c1917;
+}
+
+.pay-card__sign span {
+  margin: 0;
+  opacity: 0.7;
+}
+
+.pay-card__sign strong {
+  letter-spacing: 0.18em;
+  font-weight: 600;
+}
+
+.billing-offer__price {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 20px 0 0;
+}
+
+.billing-offer__price strong {
+  font-size: 2.5rem;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.billing-offer__price span {
+  font-size: 0.875rem;
+}
+
+.billing-offer__list {
+  display: grid;
+  gap: 12px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.billing-offer__list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9375rem;
+}
+
+.billing-offer__list .q-icon {
+  display: grid;
+  flex: 0 0 22px;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(31, 58, 52, 0.1);
+  color: $primary;
+  font-size: 14px;
+}
+
+.billing-offer__button {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.billing-offer__note {
+  margin: 12px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+body.body--dark .billing-offer__head p,
+body.body--dark .billing-offer__price span,
+body.body--dark .billing-offer__note {
+  opacity: 0.72;
+}
+
+body.body--dark .billing-offer__list .q-icon {
+  background: rgba(212, 184, 150, 0.16);
+  color: #d4b896;
+}
+
 @media (min-width: 640px) {
-  .account-sheet__split {
+  .account-sheet__split,
+  .billing-pay__grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .billing-pay__wide {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 900px) {
+  .billing-checkout {
+    grid-template-columns: minmax(0, 420px) minmax(320px, 1fr);
+    grid-template-areas:
+      'head head'
+      'offer pay';
+    column-gap: 36px;
+    row-gap: 28px;
+    align-items: start;
+  }
+
+  .billing-offer__head {
+    grid-area: head;
+  }
+
+  .billing-offer {
+    grid-area: offer;
+  }
+
+  .billing-pay {
+    grid-area: pay;
   }
 }

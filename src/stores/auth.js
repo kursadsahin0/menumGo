@@ -28,6 +28,7 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state) => Boolean(state.token),
+    hasAccess: (state) => state.user?.subscription?.status === 'active',
   },
 
   actions: {
@@ -75,7 +76,7 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
-        const user = await fetchCurrentUser(this.token)
+        const user = await fetchCurrentUser()
         this.user = user
         this.sessionChecked = true
         setStoredUser(user)
@@ -125,14 +126,14 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async updateAccount(payload) {
-      const user = await updateAccountRequest(this.token, payload)
+      const user = await updateAccountRequest(payload)
       this.user = user
       setStoredUser(user)
       return user
     },
 
     async changePassword(payload) {
-      return changePasswordRequest(this.token, payload)
+      return changePasswordRequest(payload)
     },
 
     async logout() {

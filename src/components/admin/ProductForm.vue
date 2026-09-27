@@ -1,10 +1,11 @@
 <template>
   <q-form class="product-form" @submit="onSubmit">
-    <div class="product-form__title">{{ mode === 'edit' ? 'Ürünü düzenle' : 'Yeni ürün' }}</div>
+    <h2 class="product-form__title">{{ mode === 'edit' ? 'Ürünü düzenle' : 'Yeni ürün' }}</h2>
 
-    <q-input v-model="form.name" label="Ürün adı" outlined lazy-rules :rules="[rules.required]" />
-    <q-input v-model="form.description" type="textarea" label="Açıklama" outlined autogrow />
-    <div class="product-form__prices">
+    <q-input v-model="form.name" label="Ürün adı" outlined dense lazy-rules :rules="[rules.required]" />
+    <q-input v-model="form.description" type="textarea" label="Açıklama" outlined dense autogrow />
+
+    <div class="product-form__row">
       <q-input
         v-model="form.price"
         type="number"
@@ -13,6 +14,7 @@
         label="Fiyat"
         prefix="₺"
         outlined
+        dense
         lazy-rules
         :rules="[priceRule]"
       />
@@ -24,39 +26,68 @@
         label="İndirimli fiyat"
         prefix="₺"
         outlined
+        dense
         lazy-rules
         :rules="[discountRule]"
       />
     </div>
-    <q-select
-      v-model="form.categoryId"
-      :options="categories"
-      option-value="id"
-      option-label="name"
-      emit-value
-      map-options
-      label="Kategori"
-      outlined
-      lazy-rules
-      :rules="[rules.required]"
-    />
-    <q-file
-      v-model="imageFile"
-      label="Görsel"
-      accept="image/*"
-      outlined
-      clearable
-      @update:model-value="onImage"
-    >
-      <template #prepend>
-        <q-icon name="image" />
-      </template>
-    </q-file>
-    <div v-if="form.image" class="product-form__preview">
-      <img class="product-thumb" :src="form.image" alt="" />
-      <q-btn flat no-caps color="negative" label="Görseli kaldır" @click="clearImage" />
+
+    <div class="product-form__row">
+      <q-select
+        v-model="form.categoryId"
+        class="product-form__grow"
+        :options="categories"
+        option-value="id"
+        option-label="name"
+        emit-value
+        map-options
+        label="Kategori"
+        outlined
+        dense
+        lazy-rules
+        :rules="[rules.required]"
+      />
+      <q-input
+        v-model.number="form.sortOrder"
+        class="product-form__sort"
+        type="number"
+        min="0"
+        label="Sıra"
+        outlined
+        dense
+        lazy-rules
+        :rules="[sortRule]"
+      />
     </div>
-    <div class="product-form__toggles">
+
+    <div class="product-form__image">
+      <img v-if="form.image" class="product-form__thumb" :src="form.image" alt="" />
+      <q-file
+        v-model="imageFile"
+        class="product-form__grow"
+        label="Görsel"
+        accept="image/*"
+        outlined
+        dense
+        clearable
+        @update:model-value="onImage"
+      >
+        <template #prepend>
+          <q-icon name="image" />
+        </template>
+      </q-file>
+      <q-btn
+        v-if="form.image"
+        flat
+        dense
+        no-caps
+        color="negative"
+        label="Kaldır"
+        @click="clearImage"
+      />
+    </div>
+
+    <div class="product-form__row">
       <q-btn-toggle
         v-model="form.isAvailable"
         no-caps
@@ -64,17 +95,8 @@
         toggle-color="primary"
         :options="availabilityOptions"
       />
-      <q-checkbox v-model="form.isFeatured" label="Öne çıkan" />
+      <q-checkbox v-model="form.isFeatured" label="Öne çıkan" dense />
     </div>
-    <q-input
-      v-model.number="form.sortOrder"
-      type="number"
-      min="0"
-      label="Sıralama"
-      outlined
-      lazy-rules
-      :rules="[sortRule]"
-    />
 
     <div class="product-form__actions">
       <q-btn flat no-caps label="Vazgeç" @click="emit('cancel')" />

@@ -98,23 +98,6 @@ export const landingFaqs = [
   },
 ]
 
-export const heroMenu = {
-  venue: 'Demo Kafe',
-  categories: [
-    {
-      name: 'Kahveler',
-      items: [
-        { name: 'Espresso', price: 90 },
-        { name: 'Filtre Kahve', price: 110 },
-      ],
-    },
-    {
-      name: 'Tatlılar',
-      items: [{ name: 'Cheesecake', price: 220 }],
-    },
-  ],
-}
-
 export const dashboardNav = [
   { icon: 'restaurant_menu', label: 'Menü', active: true },
   { icon: 'qr_code', label: 'QR Kod', active: false },

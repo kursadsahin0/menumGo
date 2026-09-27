@@ -13,6 +13,14 @@
 
       <div class="landing-nav__actions">
         <q-btn
+          class="landing-nav__register"
+          flat
+          no-caps
+          color="primary"
+          label="Kayıt ol"
+          :to="{ name: 'register' }"
+        />
+        <q-btn
           class="landing-nav__login"
           unelevated
           no-caps
@@ -59,6 +67,14 @@
         </q-list>
 
         <q-card-actions vertical class="q-px-md q-pb-lg">
+          <q-btn
+            flat
+            no-caps
+            color="primary"
+            label="Kayıt ol"
+            :to="{ name: 'register' }"
+            @click="menuOpen = false"
+          />
           <q-btn
             unelevated
             no-caps

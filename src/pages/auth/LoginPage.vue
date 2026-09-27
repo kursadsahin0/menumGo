@@ -51,6 +51,11 @@
 
       <p class="auth-card__hint">Deneme hesabı: demo@qrmenu.local · demo1234</p>
     </q-card-section>
+
+    <q-card-section class="auth-card__footer">
+      Hesabınız yok mu?
+      <router-link class="auth-link" :to="{ name: 'register' }">Kayıt ol</router-link>
+    </q-card-section>
   </q-card>
 </template>
 
@@ -78,6 +83,12 @@ async function onSubmit() {
 
   try {
     await login(form)
+
+    if (!auth.hasAccess) {
+      router.push({ name: 'admin-billing' })
+      return
+    }
+
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : null
     router.push(redirect || { name: 'admin-dashboard' })
   } catch (error) {

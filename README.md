@@ -11,10 +11,13 @@ Node.js 22 veya üzeri gerekir.
 ```bash
 npm install
 cp .env.example .env
+npm install --prefix server
+cp server/.env.example server/.env
+npm run api
 npm run dev
 ```
 
-Uygulama `http://localhost:9000` adresinde açılır.
+Arayüz `http://localhost:9000` adresinde açılır. Hesaplar `npm run api` ile çalışan API üzerinden PostgreSQL'e yazılır.
 
 ## Ortam
 

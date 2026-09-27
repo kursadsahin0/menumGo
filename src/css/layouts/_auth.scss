@@ -80,6 +80,72 @@
   margin-top: 4px;
 }
 
+.auth-layout:has(.auth-card--fit),
+.auth-layout:has(.auth-card--fit) .q-page-container,
+.auth-layout:has(.auth-card--fit) .auth-layout__page {
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.auth-layout:has(.auth-card--fit) .auth-layout__page {
+  padding: 16px;
+}
+
+.auth-layout:has(.auth-card--fit) .auth-layout__main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  margin: 0 auto;
+}
+
+.auth-layout:has(.auth-card--fit) .auth-layout__brand {
+  margin-bottom: 8px;
+}
+
+.auth-layout:has(.auth-card--fit) .auth-layout__brand .app-brand__logo {
+  height: 36px;
+}
+
+.auth-card--fit .q-card__section {
+  padding: 16px 16px 12px;
+}
+
+.auth-card--fit .auth-card__title {
+  font-size: 1.35rem;
+}
+
+.auth-card--fit .auth-card__text {
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.auth-card--fit .auth-card__footer {
+  padding-top: 0;
+  font-size: 0.875rem;
+}
+
+.auth-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+  margin-top: 12px;
+}
+
+.auth-form__wide {
+  grid-column: 1 / -1;
+}
+
+.auth-card--fit .auth-check {
+  margin-top: 0;
+}
+
+.auth-card--fit .landing-btn {
+  min-height: 40px;
+}
+
 @media (min-width: 960px) {
   .auth-layout__page {
     padding: 0;
@@ -142,5 +208,19 @@
 
   .auth-layout__panel {
     max-width: 440px;
+  }
+
+  .auth-layout:has(.auth-card--fit) .auth-layout__main {
+    padding: 20px 28px;
+  }
+
+  .auth-layout:has(.auth-card--fit) .auth-layout__aside {
+    height: 100vh;
+    min-height: 0;
+    padding: 32px 40px;
+  }
+
+  .auth-layout:has(.auth-card--fit) .auth-layout__panel {
+    max-width: 520px;
   }
 }

@@ -57,8 +57,14 @@ export default [
         redirect: { name: 'admin-business' },
       },
       {
+        path: 'billing',
+        name: 'admin-billing',
+        meta: { title: 'Satın alma', allowWithoutSubscription: true },
+        component: () => import('@/pages/admin/BillingPage.vue'),
+      },
+      {
         path: 'subscription',
-        redirect: { name: 'admin-dashboard' },
+        redirect: { name: 'admin-billing' },
       },
       {
         path: 'settings',
@@ -67,7 +73,7 @@ export default [
       {
         path: 'profile',
         name: 'admin-profile',
-        meta: { title: 'Profil' },
+        meta: { title: 'Profil', allowWithoutSubscription: true },
         component: () => import('@/pages/admin/SettingsPage.vue'),
       },
     ],

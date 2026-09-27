@@ -1,10 +1,10 @@
 <template>
   <div class="admin-sidebar">
-    <router-link class="admin-sidebar__brand" :to="{ name: 'admin-dashboard' }">
+    <router-link class="admin-sidebar__brand" :to="home">
       <AppBrand />
     </router-link>
 
-    <q-list padding class="admin-sidebar__list">
+    <q-list v-if="auth.hasAccess" padding class="admin-sidebar__list">
       <template v-for="item in adminNavigation" :key="item.label">
         <q-expansion-item
           v-if="item.children"
@@ -53,11 +53,16 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import AppBrand from '@/components/common/AppBrand.vue'
 import { adminNavigation } from '@/router/navigation'
 
 const emit = defineEmits(['navigate'])
 const route = useRoute()
+const auth = useAuthStore()
+const home = computed(() =>
+  auth.hasAccess ? { name: 'admin-dashboard' } : { name: 'admin-billing' },
+)
 
 const menuGroup = adminNavigation.find((item) => item.children)
 const menuNames = (menuGroup?.children || []).map((child) => child.to.name)

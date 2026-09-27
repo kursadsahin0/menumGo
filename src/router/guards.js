@@ -41,8 +41,14 @@ export function registerGuards(router, pinia) {
       }
     }
 
+    const allowsUnpaid = to.matched.some((record) => record.meta.allowWithoutSubscription)
+
+    if (requiresAuth && auth.isAuthenticated && !auth.hasAccess && !allowsUnpaid) {
+      return { name: 'admin-billing' }
+    }
+
     if (guestOnly && auth.isAuthenticated) {
-      return { name: 'admin-dashboard' }
+      return { name: auth.hasAccess ? 'admin-dashboard' : 'admin-billing' }
     }
 
     return true

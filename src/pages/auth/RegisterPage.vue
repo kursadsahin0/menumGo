@@ -1,17 +1,21 @@
 <template>
-  <q-card flat class="auth-card">
+  <q-card flat class="auth-card auth-card--fit">
     <q-card-section>
       <header>
         <h1 class="auth-card__title">Hesap oluştur</h1>
-        <p class="auth-card__text">İşletmeniz için bir panel açın. Kart istenmez.</p>
+        <p class="auth-card__text">
+          Kayıt ve giriş ücretsizdir. Paneli kullanmak için satın alma gerekir.
+        </p>
       </header>
 
-      <q-form class="q-gutter-y-sm q-mt-lg" @submit="onSubmit">
+      <q-form class="auth-form" @submit="onSubmit">
         <q-input
           v-model="form.fullName"
           label="Ad Soyad"
           autocomplete="name"
           outlined
+          dense
+          hide-bottom-space
           lazy-rules
           :rules="[rules.required]"
         />
@@ -20,6 +24,8 @@
           label="İşletme adı"
           autocomplete="organization"
           outlined
+          dense
+          hide-bottom-space
           lazy-rules
           :rules="[rules.required]"
         />
@@ -29,6 +35,8 @@
           label="E-posta"
           autocomplete="email"
           outlined
+          dense
+          hide-bottom-space
           lazy-rules
           :rules="[rules.required, rules.email]"
         />
@@ -38,6 +46,8 @@
           label="Telefon"
           autocomplete="tel"
           outlined
+          dense
+          hide-bottom-space
           lazy-rules
           :rules="[rules.required, rules.phone]"
         />
@@ -45,12 +55,16 @@
           v-model="form.password"
           label="Şifre"
           autocomplete="new-password"
+          dense
+          hide-bottom-space
           :rules="[rules.required, rules.password]"
         />
         <AuthPasswordField
           v-model="form.passwordConfirm"
           label="Şifre tekrar"
           autocomplete="new-password"
+          dense
+          hide-bottom-space
           :rules="confirmRules"
         />
 
@@ -58,8 +72,9 @@
           v-model="form.acceptedTerms"
           borderless
           dense
+          hide-bottom-space
           lazy-rules
-          class="auth-check"
+          class="auth-check auth-form__wide"
           :rules="[rules.accepted]"
         >
           <template #control>
@@ -71,17 +86,17 @@
           </template>
         </q-field>
 
-        <q-banner v-if="errorMessage" class="bg-red-1 text-negative" rounded>
+        <q-banner v-if="errorMessage" class="auth-form__wide bg-red-1 text-negative" rounded>
           {{ errorMessage }}
         </q-banner>
 
         <q-btn
           type="submit"
           color="primary"
-          label="Ücretsiz başla"
+          label="Hesap oluştur"
           no-caps
           unelevated
-          class="full-width landing-btn"
+          class="auth-form__wide full-width landing-btn"
           :loading="auth.status === 'loading'"
         />
       </q-form>
@@ -132,7 +147,7 @@ async function onSubmit() {
       password: form.password,
       acceptedTerms: form.acceptedTerms,
     })
-    router.push({ name: 'admin-dashboard' })
+    router.push({ name: 'admin-billing' })
   } catch (error) {
     errorMessage.value = error?.message || 'Kayıt tamamlanamadı.'
   }

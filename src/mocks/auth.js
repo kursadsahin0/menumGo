@@ -14,6 +14,10 @@ const demoAccount = {
     name: 'Demo Kafe',
     slug: 'burger-house',
   },
+  subscription: {
+    status: 'active',
+    planId: 'professional',
+  },
   resetToken: null,
 }
 
@@ -77,6 +81,23 @@ function saveAccounts(accounts) {
   }
 }
 
+function publicSubscription(account) {
+  const status = account.subscription?.status
+
+  if (status === 'active' || status === 'inactive') {
+    return {
+      status,
+      planId: account.subscription.planId || null,
+    }
+  }
+
+  if (account.email === demoAccount.email) {
+    return { status: 'active', planId: 'professional' }
+  }
+
+  return { status: 'inactive', planId: null }
+}
+
 function toPublicUser(account) {
   return {
     id: account.id,
@@ -84,6 +105,7 @@ function toPublicUser(account) {
     email: account.email,
     phone: account.phone,
     tenant: account.tenant,
+    subscription: publicSubscription(account),
   }
 }
 
@@ -138,6 +160,10 @@ export async function mockRegister(payload) {
       id: `ten_${Date.now()}`,
       name: businessName,
       slug: slugify(businessName),
+    },
+    subscription: {
+      status: 'inactive',
+      planId: null,
     },
     resetToken: null,
   }

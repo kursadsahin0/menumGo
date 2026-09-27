@@ -1,0 +1,20 @@
+{
+  "name": "menumgo-api",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "db:push": "prisma db push",
+    "db:seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.0.1",
+    "@prisma/client": "^6.16.2",
+    "fastify": "^5.6.1"
+  },
+  "devDependencies": {
+    "prisma": "^6.16.2"
+  }
+}

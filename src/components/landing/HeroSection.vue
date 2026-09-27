@@ -21,38 +21,13 @@
       </div>
 
       <div class="hero__stage">
-        <div class="phone" aria-hidden="true">
-          <div class="phone__screen">
-            <div class="phone__notch"></div>
-            <div class="phone__top">
-              <div>
-                <div class="phone__venue">{{ heroMenu.venue }}</div>
-                <div class="phone__meta">Dijital menü</div>
-              </div>
-            </div>
-
-            <div v-for="category in heroMenu.categories" :key="category.name" class="phone__group">
-              <div class="phone__category">{{ category.name }}</div>
-              <q-list>
-                <q-item v-for="item in category.items" :key="item.name" class="phone__item">
-                  <q-item-section>
-                    <q-item-label>{{ item.name }}</q-item-label>
-                  </q-item-section>
-                  <q-item-section side>
-                    <span class="phone__price">{{ formatTry(item.price) }}</span>
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </div>
-          </div>
-        </div>
+        <img
+          class="hero__phone"
+          src="/landing/hero-phone.png?v=4"
+          alt="Misafirin telefonunda gördüğü menü"
+        />
         <p class="hero__caption">Misafirin telefonunda gördüğü menü</p>
       </div>
     </div>
   </section>
 </template>
-
-<script setup>
-import { heroMenu } from '@/data/landing'
-import { formatTry } from '@/utils/currency'
-</script>
