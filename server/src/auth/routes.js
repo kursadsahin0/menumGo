@@ -1,35 +1,17 @@
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { hashPassword, verifyPassword } from './password.js'
-import { createResetToken, createSessionToken, hashResetToken, readSessionToken } from './token.js'
+import { requireUser } from './session.js'
+import { createResetToken, createSessionToken, hashResetToken } from './token.js'
 import {
   assertAccount,
   assertPassword,
   findUserByEmail,
-  findUserById,
   newId,
   normalizeEmail,
   toPublicUser,
   uniqueSlug,
 } from './users.js'
-
-async function requireUser(request) {
-  const header = request.headers.authorization || ''
-  const token = header.startsWith('Bearer ') ? header.slice(7) : ''
-  const userId = readSessionToken(token)
-
-  if (!userId) {
-    throw fail(401, 'Oturumunuz sona erdi.')
-  }
-
-  const user = await findUserById(userId)
-
-  if (!user) {
-    throw fail(401, 'Oturumunuz sona erdi.')
-  }
-
-  return user
-}
 
 export async function authRoutes(app) {
   app.post('/api/auth/register', async (request) => {

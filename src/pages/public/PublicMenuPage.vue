@@ -52,7 +52,13 @@
         />
       </div>
 
-      <div v-if="searching && visibleCategories.length === 0" class="menu-notice">
+      <div v-if="!searching && visibleCategories.length === 0" class="menu-notice">
+        <q-icon name="restaurant_menu" size="32px" />
+        <h2 class="menu-notice__title">{{ messages.noProductsTitle }}</h2>
+        <p class="menu-notice__text">{{ messages.noProducts }}</p>
+      </div>
+
+      <div v-else-if="searching && visibleCategories.length === 0" class="menu-notice">
         <q-icon name="search_off" size="32px" />
         <h2 class="menu-notice__title">{{ messages.emptyTitle }}</h2>
         <p class="menu-notice__text">{{ messages.empty }}</p>
