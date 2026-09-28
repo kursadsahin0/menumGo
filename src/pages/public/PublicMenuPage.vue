@@ -106,7 +106,6 @@ import MenuLanguageSwitch from '@/components/menu/MenuLanguageSwitch.vue'
 import MenuProductCard from '@/components/menu/MenuProductCard.vue'
 import MenuProductDialog from '@/components/menu/MenuProductDialog.vue'
 import { useMenuLanguage } from '@/composables/useMenuLanguage'
-import { useMenuSettingsStore } from '@/stores/menuSettings'
 import { useMenuStore } from '@/stores/menu'
 import { menuAppearance, presentRestaurant } from '@/utils/menuAppearance'
 import { menuImage } from '@/utils/menuImage'
@@ -115,7 +114,6 @@ import { APP_NAME } from '@/utils/constants'
 
 const route = useRoute()
 const menu = useMenuStore()
-const menuSettings = useMenuSettingsStore()
 const { locale, messages, text, setLocale } = useMenuLanguage()
 const query = ref('')
 const searching = computed(() => String(query.value || '').trim().length > 0)
@@ -125,9 +123,9 @@ const dialogOpen = ref(false)
 let observer
 
 const restaurant = computed(() =>
-  presentRestaurant(menu.publicMenu?.restaurant, menuSettings.settings),
+  presentRestaurant(menu.publicMenu?.restaurant, menu.publicMenu?.settings),
 )
-const appearance = computed(() => menuAppearance(menuSettings.settings))
+const appearance = computed(() => menuAppearance(menu.publicMenu?.settings))
 
 const visibleCategories = computed(() => {
   const categories = menu.publicMenu?.categories || []
@@ -158,7 +156,6 @@ function load() {
   selected.value = null
   dialogOpen.value = false
   menu.fetchPublicMenu(route.params.restaurantSlug).catch(() => {})
-  menuSettings.fetchSettings().catch(() => {})
 }
 
 function openProduct(product) {

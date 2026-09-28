@@ -24,10 +24,31 @@ model Tenant {
   id           String        @id
   name         String
   slug         String        @unique
+  businessType String        @default("cafe")
+  description  String        @default("")
+  logo         String?       @db.Text
+  coverImage   String?       @db.Text
   userId       String        @unique
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   subscription Subscription?
   products     Product[]
+  categories   Category[]
+  menuSettings MenuSettings?
+}
+
+model Category {
+  id          String   @id
+  name        String
+  description String   @default("")
+  image       String?  @db.Text
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId, sortOrder])
 }
 
 model Product {
@@ -47,6 +68,34 @@ model Product {
   updatedAt       DateTime @updatedAt
 
   @@index([tenantId, sortOrder])
+}
+
+model MenuSettings {
+  id                String   @id
+  name              String
+  descriptionTr     String   @default("")
+  descriptionEn     String   @default("")
+  phone             String   @default("")
+  addressTr         String   @default("")
+  addressEn         String   @default("")
+  website           String   @default("")
+  instagram         String   @default("")
+  hoursTr           String   @default("")
+  hoursEn           String   @default("")
+  logo              String?  @db.Text
+  theme             String   @default("classic")
+  primaryColor      String   @default("#1f3a34")
+  secondaryColor    String   @default("#8d6a45")
+  font              String   @default("sans")
+  cardStyle         String   @default("soft")
+  logoPosition      String   @default("center")
+  showDescriptions  Boolean  @default(true)
+  showProductImages Boolean  @default(true)
+  showPrices        Boolean  @default(true)
+  tenantId          String   @unique
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model Subscription {

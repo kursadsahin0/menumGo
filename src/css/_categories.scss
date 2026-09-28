@@ -81,6 +81,8 @@
 .category-row__status {
   grid-area: status;
   justify-self: end;
+  border: 0;
+  cursor: pointer;
 }
 
 .category-actions {

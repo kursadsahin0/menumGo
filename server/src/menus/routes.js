@@ -1,27 +1,47 @@
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
-import { categoryFor } from './catalog.js'
 import { toPublicProduct } from '../products/products.js'
+import { ensureMenuSettings, toPublicSettings } from '../menuSettings/settings.js'
 
-function groupProducts(products) {
-  const groups = new Map()
+function groupProducts(categories, products) {
+  const groups = new Map(
+    categories
+      .filter((category) => category.isActive)
+      .map((category) => [
+        category.id,
+        {
+          id: category.id,
+          name: category.name,
+          sortOrder: category.sortOrder,
+          products: [],
+        },
+      ]),
+  )
+  const other = {
+    id: 'uncategorized',
+    name: 'Diğer',
+    sortOrder: 999,
+    products: [],
+  }
 
   products.forEach((product) => {
-    const category = categoryFor(product.categoryId)
-    const current = groups.get(category.id) || {
-      id: category.id,
-      name: category.name,
-      sortOrder: category.sortOrder,
-      products: [],
+    const group = groups.get(product.categoryId)
+
+    if (group) {
+      group.products.push(toPublicProduct(product))
+      return
     }
 
-    current.products.push(toPublicProduct(product))
-    groups.set(category.id, current)
+    other.products.push(toPublicProduct(product))
   })
 
-  return [...groups.values()].sort(
-    (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'tr'),
-  )
+  const visible = [...groups.values()].filter((category) => category.products.length)
+
+  if (other.products.length) {
+    visible.push(other)
+  }
+
+  return visible.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'tr'))
 }
 
 export async function menuRoutes(app) {
@@ -31,6 +51,10 @@ export async function menuRoutes(app) {
       where: { slug },
       include: {
         user: true,
+        menuSettings: true,
+        categories: {
+          orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+        },
         products: {
           orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
         },
@@ -40,6 +64,8 @@ export async function menuRoutes(app) {
     if (!tenant) {
       throw fail(404, 'Menü bulunamadı.')
     }
+
+    const settings = tenant.menuSettings || (await ensureMenuSettings(tenant))
 
     return {
       restaurant: {
@@ -54,7 +80,8 @@ export async function menuRoutes(app) {
         mapsUrl: '',
         socials: [],
       },
-      categories: groupProducts(tenant.products),
+      settings: toPublicSettings(settings, tenant),
+      categories: groupProducts(tenant.categories, tenant.products),
     }
   })
 }

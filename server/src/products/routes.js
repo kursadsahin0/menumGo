@@ -2,6 +2,7 @@ import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { newId } from '../auth/users.js'
 import { requireTenant, requireUser } from '../auth/session.js'
+import { assertOwnedCategory } from '../categories/categories.js'
 import { assertDiscount, readProductInput, toPublicProduct } from './products.js'
 
 function listWhere(tenantId, query) {
@@ -63,6 +64,7 @@ export async function productRoutes(app) {
     const tenant = requireTenant(await requireUser(request))
     const data = readProductInput(request.body)
     assertDiscount(data.price, data.discountedPrice)
+    await assertOwnedCategory(tenant.id, data.categoryId)
 
     const product = await prisma.product.create({
       data: {
@@ -79,6 +81,11 @@ export async function productRoutes(app) {
     const tenant = requireTenant(await requireUser(request))
     const current = await findOwnedProduct(tenant.id, request.params.id)
     const data = readProductInput(request.body, { partial: true })
+
+    if (Object.prototype.hasOwnProperty.call(data, 'categoryId')) {
+      await assertOwnedCategory(tenant.id, data.categoryId)
+    }
+
     assertDiscount(
       data.price ?? current.price,
       Object.prototype.hasOwnProperty.call(data, 'discountedPrice')

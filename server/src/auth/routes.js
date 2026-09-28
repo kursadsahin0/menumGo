@@ -1,3 +1,5 @@
+import { ensureTenantCategories } from '../categories/categories.js'
+import { ensureMenuSettings } from '../menuSettings/settings.js'
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { hashPassword, verifyPassword } from './password.js'
@@ -59,6 +61,9 @@ export async function authRoutes(app) {
         tenant: { include: { subscription: true } },
       },
     })
+
+    await ensureTenantCategories(user.tenant.id)
+    await ensureMenuSettings({ ...user.tenant, user })
 
     return {
       token: createSessionToken(user.id),

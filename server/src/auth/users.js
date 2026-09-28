@@ -42,7 +42,12 @@ export function toPublicUser(user) {
 
 const userInclude = {
   tenant: {
-    include: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      businessType: true,
+      description: true,
       subscription: true,
     },
   },

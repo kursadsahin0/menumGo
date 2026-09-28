@@ -18,7 +18,9 @@ export default [
       },
       {
         path: 'categories',
-        redirect: { name: 'admin-products' },
+        name: 'admin-categories',
+        meta: { title: 'Kategoriler' },
+        component: () => import('@/pages/admin/CategoriesPage.vue'),
       },
       {
         path: 'menu-settings',

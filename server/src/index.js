@@ -5,7 +5,12 @@ import { authRoutes } from './auth/routes.js'
 import { ensureDemoUser } from './auth/seed.js'
 import { prisma } from './db.js'
 import { env } from './env.js'
+import { businessRoutes } from './business/routes.js'
+import { categoryRoutes } from './categories/routes.js'
+import { ensureAllTenantCategories } from './categories/categories.js'
 import { menuRoutes } from './menus/routes.js'
+import { menuSettingsRoutes } from './menuSettings/routes.js'
+import { ensureAllMenuSettings } from './menuSettings/settings.js'
 import { productRoutes } from './products/routes.js'
 
 const app = Fastify({
@@ -47,9 +52,15 @@ app.setErrorHandler((error, request, reply) => {
 app.get('/api/health', async () => ({ ok: true }))
 await authRoutes(app)
 await productRoutes(app)
+await categoryRoutes(app)
+await businessRoutes(app)
 await menuRoutes(app)
+await menuSettingsRoutes(app)
 
 await ensureDemoUser()
+await ensureAllTenantCategories()
+await ensureAllMenuSettings()
+
 await app.listen({ port: env.port, host: '0.0.0.0' })
 
 async function shutdown() {

@@ -10,6 +10,11 @@ export const adminNavigation = [
     icon: 'restaurant_menu',
     children: [
       {
+        label: 'Kategoriler',
+        icon: 'category',
+        to: { name: 'admin-categories' },
+      },
+      {
         label: 'Ürünler',
         icon: 'lunch_dining',
         to: { name: 'admin-products' },
