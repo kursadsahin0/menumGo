@@ -10,9 +10,28 @@ export function listMenus() {
   })
 }
 
-export function getPublicMenu(slug) {
+export function getPublicMenu(slug, tableId) {
   return request({
     method: 'get',
     url: endpoints.menus.public(slug),
+    params: tableId ? { table: tableId } : undefined,
   })
+}
+
+export function recordMenuView(slug, language, tableId) {
+  return request({
+    method: 'post',
+    url: endpoints.menus.view(slug),
+    data: {
+      language: language === 'en' ? 'en' : 'tr',
+      tableId: tableId || null,
+    },
+  }).catch(() => null)
+}
+
+export function recordProductView(slug, productId) {
+  return request({
+    method: 'post',
+    url: endpoints.menus.productView(slug, productId),
+  }).catch(() => null)
 }

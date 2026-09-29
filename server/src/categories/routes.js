@@ -2,6 +2,7 @@ import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { newId } from '../auth/users.js'
 import { requireTenant, requireUser } from '../auth/session.js'
+import { createNotification } from '../notifications/notifications.js'
 import { readCategoryInput, toPublicCategory } from './categories.js'
 
 async function listCategories(tenantId) {
@@ -90,6 +91,8 @@ export async function categoryRoutes(app) {
       },
     })
 
+    await createNotification(tenant.id, `${category.name} kategorisi eklendi`)
+
     return toPublicCategory(category)
   })
 
@@ -102,6 +105,8 @@ export async function categoryRoutes(app) {
       where: { id: current.id },
       data,
     })
+
+    await createNotification(tenant.id, `${category.name} kategorisi güncellendi`)
 
     return toPublicCategory(category)
   })
@@ -121,6 +126,7 @@ export async function categoryRoutes(app) {
     }
 
     await prisma.category.delete({ where: { id: current.id } })
+    await createNotification(tenant.id, `${current.name} kategorisi silindi`)
     return { ok: true }
   })
 }

@@ -26,7 +26,7 @@
     </div>
 
     <div v-else-if="restaurant" class="menu-page">
-      <MenuHeader :restaurant="restaurant" />
+      <MenuHeader :restaurant="restaurant" :table="menu.publicMenu?.table" />
 
       <div class="menu-sticky">
         <div class="menu-toolbar">
@@ -106,6 +106,7 @@ import MenuLanguageSwitch from '@/components/menu/MenuLanguageSwitch.vue'
 import MenuProductCard from '@/components/menu/MenuProductCard.vue'
 import MenuProductDialog from '@/components/menu/MenuProductDialog.vue'
 import { useMenuLanguage } from '@/composables/useMenuLanguage'
+import { recordMenuView, recordProductView } from '@/services/menuService'
 import { useMenuStore } from '@/stores/menu'
 import { menuAppearance, presentRestaurant } from '@/utils/menuAppearance'
 import { menuImage } from '@/utils/menuImage'
@@ -151,16 +152,28 @@ const visibleCategories = computed(() => {
     .filter((category) => category.products.length > 0)
 })
 
+function tableQuery() {
+  const value = route.query.table
+  return String(Array.isArray(value) ? value[0] : value || '')
+}
+
 function load() {
   query.value = ''
   selected.value = null
   dialogOpen.value = false
-  menu.fetchPublicMenu(route.params.restaurantSlug).catch(() => {})
+  const slug = route.params.restaurantSlug
+  const tableId = tableQuery()
+
+  menu
+    .fetchPublicMenu(slug, tableId)
+    .then(() => recordMenuView(slug, locale.value, tableId))
+    .catch(() => {})
 }
 
 function openProduct(product) {
   selected.value = product
   dialogOpen.value = true
+  recordProductView(route.params.restaurantSlug, product.id)
 }
 
 function selectCategory(id) {
@@ -253,6 +266,5 @@ onBeforeUnmount(() => {
 })
 
 setLocale(locale.value)
-load()
-watch(() => route.params.restaurantSlug, load)
+watch(() => [route.params.restaurantSlug, route.query.table], load, { immediate: true })
 </script>

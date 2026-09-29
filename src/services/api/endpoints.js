@@ -11,6 +11,8 @@ export const endpoints = {
   menus: {
     list: '/menus',
     public: (slug) => `/public/menus/${slug}`,
+    view: (slug) => `/public/menus/${slug}/views`,
+    productView: (slug, productId) => `/public/menus/${slug}/products/${productId}/views`,
   },
   menuSettings: {
     current: '/menu-settings',
@@ -42,5 +44,9 @@ export const endpoints = {
   tables: {
     list: '/tables',
     detail: (id) => `/tables/${id}`,
+  },
+  notifications: {
+    list: '/notifications',
+    read: '/notifications/read',
   },
 }

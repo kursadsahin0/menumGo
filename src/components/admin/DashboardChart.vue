@@ -4,7 +4,7 @@
       <h2 class="dashboard-block__title">{{ title }}</h2>
       <p class="dashboard-block__text">{{ text }}</p>
       <div class="dashboard-chart__canvas">
-        <Line :data="chartData" :options="options" />
+        <Line :key="seriesKey" :data="chartData" :options="options" />
       </div>
     </q-card-section>
   </q-card>
@@ -50,15 +50,17 @@ const line = computed(() => ($q.dark.isActive ? '#ffffff' : '#1f3a34'))
 const fill = computed(() => ($q.dark.isActive ? 'rgba(255, 255, 255, 0.14)' : 'rgba(31, 58, 52, 0.12)'))
 const tick = computed(() => ($q.dark.isActive ? '#ffffff' : '#5c564e'))
 
+const seriesKey = computed(() => `${props.labels.join('|')}:${props.values.join(',')}`)
+
 const chartData = computed(() => ({
-  labels: props.labels,
+  labels: [...props.labels],
   datasets: [
     {
-      data: props.values,
+      data: props.values.map((value) => Number(value) || 0),
       borderColor: line.value,
       backgroundColor: fill.value,
       fill: true,
-      tension: 0.35,
+      tension: 0.2,
       pointRadius: 3,
       pointBackgroundColor: line.value,
     },

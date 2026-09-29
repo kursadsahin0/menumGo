@@ -5,13 +5,18 @@ import { authRoutes } from './auth/routes.js'
 import { ensureDemoUser } from './auth/seed.js'
 import { prisma } from './db.js'
 import { env } from './env.js'
+import { analyticsRoutes } from './analytics/routes.js'
 import { businessRoutes } from './business/routes.js'
 import { categoryRoutes } from './categories/routes.js'
 import { ensureAllTenantCategories } from './categories/categories.js'
 import { menuRoutes } from './menus/routes.js'
+import { notificationRoutes } from './notifications/routes.js'
+
 import { menuSettingsRoutes } from './menuSettings/routes.js'
 import { ensureAllMenuSettings } from './menuSettings/settings.js'
 import { productRoutes } from './products/routes.js'
+import { tableRoutes } from './tables/routes.js'
+
 
 const app = Fastify({
   logger: true,
@@ -53,8 +58,11 @@ app.get('/api/health', async () => ({ ok: true }))
 await authRoutes(app)
 await productRoutes(app)
 await categoryRoutes(app)
+await tableRoutes(app)
 await businessRoutes(app)
+await analyticsRoutes(app)
 await menuRoutes(app)
+await notificationRoutes(app)
 await menuSettingsRoutes(app)
 
 await ensureDemoUser()

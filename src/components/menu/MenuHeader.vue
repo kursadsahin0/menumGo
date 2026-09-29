@@ -8,6 +8,7 @@
       priority
     />
     <h1 class="menu-header__name">{{ restaurant.name }}</h1>
+    <p v-if="table?.name" class="menu-header__table">{{ table.name }}</p>
     <p class="menu-header__description">{{ text(restaurant.description) }}</p>
     <dl class="menu-facts">
       <div class="menu-fact">
@@ -55,6 +56,10 @@ const props = defineProps({
   restaurant: {
     type: Object,
     required: true,
+  },
+  table: {
+    type: Object,
+    default: null,
   },
 })
 

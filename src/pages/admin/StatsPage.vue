@@ -53,7 +53,8 @@
             <q-card-section>
               <h2 class="dashboard-block__title">Saatler</h2>
               <p class="dashboard-block__text">Günün hangi saatinde açıldı</p>
-              <div class="stats-hours">
+              <p v-if="!report.hours.length" class="dashboard-block__text">Bu aralıkta açılış yok.</p>
+              <div v-else class="stats-hours">
                 <div v-for="item in report.hours" :key="item.id" class="stats-hours__row">
                   <span class="stats-hours__label">{{ item.label }}</span>
                   <q-linear-progress

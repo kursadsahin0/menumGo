@@ -5,7 +5,9 @@
         <div class="venue-qr__copy">
           <h2 class="venue-qr__title">{{ restaurantName }}</h2>
           <p class="venue-qr__lead">
-            Tüm masalarda bu kod kullanılır. Misafir okuttuğunda menü açılır.
+            Bu kod masayı belirtmez. Misafir işletmenin menüsünü açar. Masaya özel kod için
+            <router-link :to="{ name: 'admin-tables' }">Masalar</router-link>
+            ekranını kullanın.
           </p>
         </div>
 

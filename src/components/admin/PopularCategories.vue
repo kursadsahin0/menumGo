@@ -20,7 +20,7 @@
         v-else
         icon="category"
         title="Henüz görüntüleme yok"
-        text="Kategoriler menü açıldıkça burada sıralanır."
+        text="Misafirler bir ürün açtıkça kategoriler burada sıralanır."
       />
     </q-card-section>
   </q-card>

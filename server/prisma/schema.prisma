@@ -34,6 +34,59 @@ model Tenant {
   products     Product[]
   categories   Category[]
   menuSettings MenuSettings?
+  menuViews    MenuView[]
+  productViews ProductView[]
+  tables        DiningTable[]
+  notifications Notification[]
+}
+
+model Notification {
+  id        String    @id
+  tenantId  String
+  title     String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}
+
+model DiningTable {
+  id          String     @id
+  name        String
+  tableNumber String
+  isActive    Boolean    @default(true)
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  views       MenuView[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([tenantId, tableNumber])
+  @@index([tenantId])
+}
+
+model MenuView {
+  id        String       @id
+  tenantId  String
+  language  String
+  tableId   String?
+  createdAt DateTime     @default(now())
+  tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  table     DiningTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+}
+
+model ProductView {
+  id         String   @id
+  tenantId   String
+  productId  String
+  categoryId String
+  createdAt  DateTime @default(now())
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
 }
 
 model Category {

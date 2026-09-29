@@ -3,6 +3,7 @@ import { fail } from '../http.js'
 import { newId } from '../auth/users.js'
 import { requireTenant, requireUser } from '../auth/session.js'
 import { assertOwnedCategory } from '../categories/categories.js'
+import { createNotification } from '../notifications/notifications.js'
 import { assertDiscount, readProductInput, toPublicProduct } from './products.js'
 
 function listWhere(tenantId, query) {
@@ -74,6 +75,8 @@ export async function productRoutes(app) {
       },
     })
 
+    await createNotification(tenant.id, `${product.name} eklendi`)
+
     return toPublicProduct(product)
   })
 
@@ -97,6 +100,15 @@ export async function productRoutes(app) {
       where: { id: current.id },
       data,
     })
+    const priceChanged =
+      (data.price != null && Number(data.price) !== Number(current.price)) ||
+      (Object.prototype.hasOwnProperty.call(data, 'discountedPrice') &&
+        Number(data.discountedPrice) !== Number(current.discountedPrice))
+
+    await createNotification(
+      tenant.id,
+      priceChanged ? `${product.name} fiyatı kaydedildi` : `${product.name} güncellendi`,
+    )
 
     return toPublicProduct(product)
   })
@@ -106,6 +118,7 @@ export async function productRoutes(app) {
     const current = await findOwnedProduct(tenant.id, request.params.id)
 
     await prisma.product.delete({ where: { id: current.id } })
+    await createNotification(tenant.id, `${current.name} silindi`)
     return { ok: true }
   })
 }

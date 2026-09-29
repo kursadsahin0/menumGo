@@ -21,7 +21,7 @@
         v-else
         icon="restaurant_menu"
         title="Henüz görüntüleme yok"
-        text="Menü açıldıkça ürünler burada sıralanır."
+        text="Misafirler bir ürün açtıkça burada sıralanır."
       />
     </q-card-section>
   </q-card>

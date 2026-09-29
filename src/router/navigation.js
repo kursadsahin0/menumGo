@@ -27,6 +27,11 @@ export const adminNavigation = [
     ],
   },
   {
+    label: 'Masalar',
+    icon: 'table_restaurant',
+    to: { name: 'admin-tables' },
+  },
+  {
     label: 'QR Kodlar',
     icon: 'qr_code_2',
     to: { name: 'admin-qr' },
@@ -40,26 +45,5 @@ export const adminNavigation = [
     label: 'İşletme Ayarları',
     icon: 'storefront',
     to: { name: 'admin-business' },
-  },
-]
-
-export const adminNotifications = [
-  {
-    id: 'ntf_1',
-    title: 'Masa 4 menüyü açtı',
-    time: '4 dk önce',
-    unread: true,
-  },
-  {
-    id: 'ntf_2',
-    title: 'Cheesecake fiyatı kaydedildi',
-    time: '1 sa önce',
-    unread: true,
-  },
-  {
-    id: 'ntf_3',
-    title: 'Haftalık görüntülenme özeti hazır',
-    time: 'Dün',
-    unread: false,
   },
 ]

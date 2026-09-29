@@ -36,7 +36,9 @@ export default [
       },
       {
         path: 'tables',
-        redirect: { name: 'admin-qr' },
+        name: 'admin-tables',
+        meta: { title: 'Masalar' },
+        component: () => import('@/pages/admin/TablesPage.vue'),
       },
       {
         path: 'orders',

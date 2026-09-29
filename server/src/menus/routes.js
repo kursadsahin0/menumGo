@@ -1,3 +1,4 @@
+import { recordMenuView, recordProductView } from '../analytics/report.js'
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { toPublicProduct } from '../products/products.js'
@@ -44,7 +45,30 @@ function groupProducts(categories, products) {
   return visible.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'tr'))
 }
 
+async function publicTenant(slug) {
+  const tenant = await prisma.tenant.findUnique({
+    where: { slug: String(slug || '').trim() },
+    select: { id: true },
+  })
+
+  if (!tenant) {
+    throw fail(404, 'Menü bulunamadı.')
+  }
+
+  return tenant
+}
+
 export async function menuRoutes(app) {
+  app.post('/api/public/menus/:slug/views', async (request) => {
+    const tenant = await publicTenant(request.params.slug)
+    return recordMenuView(tenant.id, request.body?.language, request.body?.tableId)
+  })
+
+  app.post('/api/public/menus/:slug/products/:productId/views', async (request) => {
+    const tenant = await publicTenant(request.params.slug)
+    return recordProductView(tenant.id, request.params.productId)
+  })
+
   app.get('/api/public/menus/:slug', async (request) => {
     const slug = String(request.params.slug || '').trim()
     const tenant = await prisma.tenant.findUnique({
@@ -66,6 +90,13 @@ export async function menuRoutes(app) {
     }
 
     const settings = tenant.menuSettings || (await ensureMenuSettings(tenant))
+    const tableId = String(request.query?.table || '').trim()
+    const table = tableId
+      ? await prisma.diningTable.findFirst({
+          where: { id: tableId, tenantId: tenant.id },
+          select: { id: true, name: true, tableNumber: true },
+        })
+      : null
 
     return {
       restaurant: {
@@ -81,6 +112,7 @@ export async function menuRoutes(app) {
         socials: [],
       },
       settings: toPublicSettings(settings, tenant),
+      table,
       categories: groupProducts(tenant.categories, tenant.products),
     }
   })

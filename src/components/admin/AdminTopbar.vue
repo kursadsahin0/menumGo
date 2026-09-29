@@ -6,19 +6,37 @@
 
     <q-btn flat round icon="notifications" aria-label="Bildirimler">
       <q-badge v-if="unreadCount" floating color="negative" rounded />
-      <q-menu anchor="bottom right" self="top right">
-        <q-list class="admin-topbar__menu">
-          <q-item-label header>Bildirimler</q-item-label>
-          <q-item v-for="item in adminNotifications" :key="item.id">
-            <q-item-section>
-              <q-item-label>{{ item.title }}</q-item-label>
-              <q-item-label caption>{{ item.time }}</q-item-label>
-            </q-item-section>
-            <q-item-section v-if="item.unread" side>
-              <q-badge color="primary" rounded />
-            </q-item-section>
-          </q-item>
-        </q-list>
+      <q-menu
+        class="notice-menu"
+        anchor="bottom right"
+        self="top right"
+        :offset="[0, 8]"
+        @before-show="loadNotifications"
+        @hide="markRead"
+      >
+        <div class="notice-menu__panel">
+          <header class="notice-menu__head">
+            <h2>Bildirimler</h2>
+            <span v-if="unreadCount">{{ unreadCount }} yeni</span>
+          </header>
+          <p v-if="!notifications.length" class="notice-menu__empty">Henüz bildirim yok</p>
+          <ul v-else class="notice-menu__list">
+            <li
+              v-for="item in notifications"
+              :key="item.id"
+              class="notice-menu__item"
+              :class="{ 'is-unread': item.unread }"
+            >
+              <span class="notice-menu__icon">
+                <q-icon :name="notificationIcon(item.title)" size="18px" />
+              </span>
+              <span class="notice-menu__copy">
+                <span class="notice-menu__title">{{ item.title }}</span>
+                <span class="notice-menu__time">{{ item.time }}</span>
+              </span>
+            </li>
+          </ul>
+        </div>
       </q-menu>
     </q-btn>
 
@@ -73,11 +91,11 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
-import { adminNotifications } from '@/router/navigation'
+import { getNotifications, markNotificationsRead } from '@/services/notificationService'
 import { STORAGE_KEYS } from '@/utils/constants'
 
 defineProps({
@@ -92,8 +110,28 @@ const router = useRouter()
 const $q = useQuasar()
 const { auth, logout } = useAuth()
 const isDark = computed(() => $q.dark.isActive)
+const notifications = ref([])
+const unreadCount = computed(() => notifications.value.filter((item) => item.unread).length)
 
-const unreadCount = computed(() => adminNotifications.filter((item) => item.unread).length)
+async function loadNotifications() {
+  try {
+    notifications.value = await getNotifications()
+  } catch {
+    notifications.value = []
+  }
+}
+
+async function markRead() {
+  if (!notifications.value.some((item) => item.unread)) {
+    return
+  }
+
+  try {
+    notifications.value = await markNotificationsRead()
+  } catch {
+    // The badge stays until the next successful refresh.
+  }
+}
 const displayName = computed(() => auth.user?.fullName || 'Hesap')
 const venueName = computed(() => auth.user?.tenant?.name || '')
 const initials = computed(() => {
@@ -106,6 +144,32 @@ const initials = computed(() => {
   )
 })
 
+function notificationIcon(title) {
+  const text = String(title || '')
+
+  if (text.includes('menüyü açtı') || text === 'Menü açıldı') {
+    return 'visibility'
+  }
+
+  if (text.includes('fiyatı')) {
+    return 'payments'
+  }
+
+  if (text.includes('kategorisi')) {
+    return 'category'
+  }
+
+  if (text.includes('silindi')) {
+    return 'delete_outline'
+  }
+
+  if (text.includes('eklendi')) {
+    return 'add_circle_outline'
+  }
+
+  return 'edit_note'
+}
+
 function setDark(value) {
   $q.dark.set(value)
   localStorage.setItem(STORAGE_KEYS.dark, value ? 'true' : 'false')
@@ -115,4 +179,6 @@ async function onLogout() {
   await logout()
   router.push({ name: 'login' })
 }
+
+onMounted(loadNotifications)
 </script>

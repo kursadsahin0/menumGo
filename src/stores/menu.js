@@ -24,13 +24,13 @@ export const useMenuStore = defineStore('menu', {
       }
     },
 
-    async fetchPublicMenu(slug) {
+    async fetchPublicMenu(slug, tableId) {
       this.status = 'loading'
       this.error = null
       this.publicMenu = null
 
       try {
-        this.publicMenu = await getPublicMenu(slug)
+        this.publicMenu = await getPublicMenu(slug, tableId)
         this.status = 'success'
         return this.publicMenu
       } catch (error) {
