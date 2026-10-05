@@ -2,7 +2,7 @@ import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { requireTenant, requireUser } from '../auth/session.js'
 import { createNotification } from '../notifications/notifications.js'
-import { assertTableRoom, readTableInput, saveTable, sortTables, toPublicTable } from './tables.js'
+import { readTableInput, saveTable, sortTables, toPublicTable } from './tables.js'
 
 async function ownedTable(tenantId, id) {
   const table = await prisma.diningTable.findFirst({
@@ -35,7 +35,6 @@ export async function tableRoutes(app) {
 
   app.post('/api/tables', async (request) => {
     const tenant = requireTenant(await requireUser(request))
-    await assertTableRoom(tenant.id, tenant.subscription?.planId)
     const table = await saveTable(tenant.id, readTableInput(request.body))
     await createNotification(tenant.id, `${table.name} eklendi`)
     return toPublicTable(table, tenant.slug)

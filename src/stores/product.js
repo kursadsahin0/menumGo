@@ -6,6 +6,7 @@ import {
   getProduct,
   getProducts,
   updateProduct,
+  updateProductOrder,
 } from '@/services/productService'
 
 export const useProductStore = defineStore('product', {
@@ -68,6 +69,26 @@ export const useProductStore = defineStore('product', {
       } catch (error) {
         this.error = error
         throw error
+      }
+    },
+
+    async reorder(ids) {
+      const previous = this.products.map((product) => ({ ...product }))
+      const order = new Map(ids.map((id, index) => [id, index + 1]))
+
+      this.products = this.products.map((product) =>
+        order.has(product.id) ? { ...product, sortOrder: order.get(product.id) } : product,
+      )
+
+      try {
+        const updated = await updateProductOrder(ids)
+        const next = new Map(updated.map((product) => [product.id, product.sortOrder]))
+        this.products = this.products.map((product) =>
+          next.has(product.id) ? { ...product, sortOrder: next.get(product.id) } : product,
+        )
+      } catch (error) {
+        this.products = previous
+        this.error = error
       }
     },
 

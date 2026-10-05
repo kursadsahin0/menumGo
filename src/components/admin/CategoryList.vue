@@ -35,9 +35,9 @@
       </div>
 
       <div class="category-row__name">
-        <div class="category-row__title">{{ category.name }}</div>
-        <div v-if="category.description" class="category-row__description">
-          {{ category.description }}
+        <div class="category-row__title">{{ trText(category.name) }}</div>
+        <div v-if="trText(category.description)" class="category-row__description">
+          {{ trText(category.description) }}
         </div>
       </div>
 
@@ -82,6 +82,7 @@
 <script setup>
 import { ref } from 'vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import { trText } from '@/utils/localeText'
 
 const props = defineProps({
   categories: {

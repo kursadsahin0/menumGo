@@ -44,6 +44,13 @@
           @click="openCreate"
         />
       </div>
+      <p class="product-toolbar__hint">
+        {{
+          canReorder
+            ? 'Sırayı kategori içinde tutamaçtan sürükleyerek değiştirin.'
+            : 'Sırayı değiştirmek için aramayı ve durum filtresini kapatın.'
+        }}
+      </p>
 
       <AppError class="q-mt-md" :error="productStore.error" />
 
@@ -56,8 +63,10 @@
         class="q-mt-md"
         :products="productStore.products"
         :categories="productStore.categories"
+        :sortable="canReorder"
         @edit="openEdit"
         @remove="askRemove"
+        @reorder="reorder"
       />
     </div>
 
@@ -80,7 +89,7 @@
     <ConfirmDialog
       v-model="confirmOpen"
       title="Ürünü sil"
-      :message="pending ? `${pending.name} silinsin mi? Bu işlem geri alınamaz.` : ''"
+      :message="pending ? `${trText(pending.name)} silinsin mi? Bu işlem geri alınamaz.` : ''"
       confirm-label="Sil"
       danger
       :loading="removing"
@@ -98,6 +107,7 @@ import ProductForm from '@/components/admin/ProductForm.vue'
 import ProductList from '@/components/admin/ProductList.vue'
 import { useNotify } from '@/composables/useNotify'
 import { useProductStore } from '@/stores/product'
+import { trText } from '@/utils/localeText'
 
 const productStore = useProductStore()
 const { notifySuccess, notifyError } = useNotify()
@@ -121,16 +131,24 @@ const statusOptions = [
   { label: 'Tükendi', value: 'unavailable' },
 ]
 
+const canReorder = computed(
+  () => !String(filters.search || '').trim() && filters.status === 'all',
+)
+
 const categoryOptions = computed(() => [
   { label: 'Tüm kategoriler', value: '' },
   ...productStore.categories.map((category) => ({
-    label: category.name,
+    label: trText(category.name),
     value: category.id,
   })),
 ])
 
 function load() {
   productStore.fetchProducts({ ...filters })
+}
+
+function reorder(ids) {
+  productStore.reorder(ids)
 }
 
 function openCreate() {

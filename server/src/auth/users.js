@@ -35,7 +35,6 @@ export function toPublicUser(user) {
       : null,
     subscription: {
       status: user.tenant?.subscription?.status || 'inactive',
-      planId: user.tenant?.subscription?.planId || null,
     },
   }
 }

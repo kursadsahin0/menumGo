@@ -2,12 +2,13 @@
   <div class="product-list">
     <section v-for="group in groups" :key="group.id" class="product-group">
       <h2 class="product-group__title">
-        {{ group.name }}
+        {{ trText(group.name) }}
         <span class="product-group__count">{{ group.products.length }} ürün</span>
       </h2>
 
-      <div class="product-sheet">
+      <div class="product-sheet" :class="{ 'product-sheet--sortable': sortable }">
         <div class="product-head">
+          <span v-if="sortable"></span>
           <span></span>
           <span>Ürün</span>
           <span>Fiyat</span>
@@ -16,11 +17,26 @@
         </div>
 
         <article
-          v-for="product in group.products"
+          v-for="(product, index) in group.products"
           :key="product.id"
           class="product-row"
-          :class="{ 'is-off': !product.isAvailable }"
+          :class="{
+            'is-off': !product.isAvailable,
+            'product-row--dragging': drag.groupId === group.id && drag.index === index,
+          }"
+          @dragover.prevent
+          @drop="move(group, index)"
         >
+          <span
+            v-if="sortable"
+            class="product-handle"
+            draggable="true"
+            aria-label="Sırayı değiştir"
+            @dragstart="startDrag(group.id, index, $event)"
+            @dragend="drag = { groupId: '', index: -1 }"
+          >
+            <q-icon name="drag_indicator" />
+          </span>
           <div class="product-row__media">
             <img
               v-if="product.image"
@@ -36,9 +52,9 @@
           </div>
 
           <div class="product-row__name">
-            <div class="product-row__title">{{ product.name }}</div>
-            <div v-if="product.description" class="product-row__description">
-              {{ product.description }}
+            <div class="product-row__title">{{ trText(product.name) }}</div>
+            <div v-if="trText(product.description)" class="product-row__description">
+              {{ trText(product.description) }}
             </div>
           </div>
 
@@ -84,9 +100,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import { formatTry } from '@/utils/currency'
+import { trText } from '@/utils/localeText'
 
 const props = defineProps({
   products: {
@@ -97,9 +114,47 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  sortable: {
+    type: Boolean,
+    default: true,
+  },
 })
 
-const emit = defineEmits(['edit', 'remove'])
+const emit = defineEmits(['edit', 'remove', 'reorder'])
+const drag = ref({ groupId: '', index: -1 })
+
+function startDrag(groupId, index, event) {
+  drag.value = { groupId, index }
+
+  if (!event.dataTransfer) {
+    return
+  }
+
+  event.dataTransfer.effectAllowed = 'move'
+
+  try {
+    event.dataTransfer.setData('text/plain', String(index))
+  } catch {
+    // Some browsers reject setData outside a real drag gesture.
+  }
+}
+
+function move(group, index) {
+  const from = drag.value
+  drag.value = { groupId: '', index: -1 }
+
+  if (from.groupId !== group.id || from.index < 0 || from.index === index) {
+    return
+  }
+
+  const next = group.products.slice()
+  const [item] = next.splice(from.index, 1)
+  next.splice(index, 0, item)
+  emit(
+    'reorder',
+    next.map((product) => product.id),
+  )
+}
 
 function hasDiscount(product) {
   return product.discountedPrice != null && Number(product.discountedPrice) < Number(product.price)
@@ -121,7 +176,11 @@ const groups = computed(() => {
   })
 
   const sortProducts = (list) =>
-    list.slice().sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'tr'))
+    list
+      .slice()
+      .sort(
+        (a, b) => a.sortOrder - b.sortOrder || trText(a.name).localeCompare(trText(b.name), 'tr'),
+      )
 
   const grouped = props.categories
     .filter((category) => buckets.has(category.id))

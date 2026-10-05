@@ -2,8 +2,49 @@
   <q-form class="product-form" @submit="onSubmit">
     <h2 class="product-form__title">{{ mode === 'edit' ? 'Ürünü düzenle' : 'Yeni ürün' }}</h2>
 
-    <q-input v-model="form.name" label="Ürün adı" outlined dense lazy-rules :rules="[rules.required]" />
-    <q-input v-model="form.description" type="textarea" label="Açıklama" outlined dense autogrow />
+    <div class="product-form__copy">
+      <q-input v-model="form.name.tr" label="Ürün adı" outlined dense lazy-rules :rules="[rules.required]" />
+      <q-input v-model="form.name.en" label="Ürün adı (İngilizce)" outlined dense />
+    </div>
+    <div class="product-form__copy">
+      <q-input v-model="form.description.tr" type="textarea" label="Açıklama" outlined dense autogrow />
+      <q-input
+        v-model="form.description.en"
+        type="textarea"
+        label="Açıklama (İngilizce)"
+        outlined
+        dense
+        autogrow
+      />
+    </div>
+    <div class="product-form__copy">
+      <q-input v-model="form.portion.tr" label="Porsiyon" outlined dense />
+      <q-input v-model="form.portion.en" label="Porsiyon (İngilizce)" outlined dense />
+    </div>
+    <div class="product-form__copy">
+      <q-input v-model="form.ingredients.tr" type="textarea" label="İçerik" outlined dense autogrow />
+      <q-input
+        v-model="form.ingredients.en"
+        type="textarea"
+        label="İçerik (İngilizce)"
+        outlined
+        dense
+        autogrow
+      />
+    </div>
+    <q-select
+      v-model="form.allergens"
+      :options="allergenOptions"
+      option-value="id"
+      option-label="label"
+      emit-value
+      map-options
+      multiple
+      use-chips
+      label="Alerjenler"
+      outlined
+      dense
+    />
 
     <div class="product-form__row">
       <q-input
@@ -36,7 +77,7 @@
       <q-select
         v-model="form.categoryId"
         class="product-form__grow"
-        :options="categories"
+        :options="categoryChoices"
         option-value="id"
         option-label="name"
         emit-value
@@ -113,7 +154,9 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
+import { allergens } from '@/data/allergens'
+import { localeField, trText } from '@/utils/localeText'
 import { rules } from '@/utils/validators'
 
 const props = defineProps({
@@ -142,13 +185,26 @@ const availabilityOptions = [
   { label: 'Tükendi', value: false },
 ]
 
+const allergenOptions = allergens.map((item) => ({
+  id: item.id,
+  label: item.tr,
+}))
 const imageFile = ref(null)
 const form = reactive(blankForm())
+const categoryChoices = computed(() =>
+  props.categories.map((category) => ({
+    id: category.id,
+    name: trText(category.name),
+  })),
+)
 
 function blankForm() {
   return {
-    name: '',
-    description: '',
+    name: { tr: '', en: '' },
+    description: { tr: '', en: '' },
+    portion: { tr: '', en: '' },
+    ingredients: { tr: '', en: '' },
+    allergens: [],
     price: '',
     discountedPrice: '',
     categoryId: null,
@@ -170,8 +226,11 @@ function fillForm(product) {
 
   Object.assign(form, {
     ...next,
-    name: product.name,
-    description: product.description,
+    name: localeField(product.name),
+    description: localeField(product.description),
+    portion: localeField(product.portion),
+    ingredients: localeField(product.ingredients),
+    allergens: Array.isArray(product.allergens) ? [...product.allergens] : [],
     price: product.price,
     discountedPrice: product.discountedPrice ?? '',
     categoryId: product.categoryId,
@@ -235,8 +294,11 @@ function clearImage() {
 
 function onSubmit() {
   emit('submit', {
-    name: form.name,
-    description: form.description,
+    name: { ...form.name },
+    description: { ...form.description },
+    portion: { ...form.portion },
+    ingredients: { ...form.ingredients },
+    allergens: [...form.allergens],
     price: Number(form.price),
     discountedPrice: form.discountedPrice === '' ? null : Number(form.discountedPrice),
     categoryId: form.categoryId,

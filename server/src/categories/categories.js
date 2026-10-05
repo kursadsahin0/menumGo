@@ -8,8 +8,8 @@ const imageLimit = 4_000_000
 export function toPublicCategory(category) {
   return {
     id: category.id,
-    name: category.name,
-    description: category.description,
+    name: { tr: category.name || '', en: category.nameEn || '' },
+    description: { tr: category.description || '', en: category.descriptionEn || '' },
     image: category.image,
     isActive: category.isActive,
     sortOrder: category.sortOrder,
@@ -32,17 +32,30 @@ function readText(value, label, { required = false, max = 500 } = {}) {
   return text
 }
 
+function readLocale(value, label, { required = false, max = 500 } = {}) {
+  const source = value && typeof value === 'object' ? value : { tr: value || '', en: '' }
+
+  return {
+    tr: readText(source.tr, label, { required, max }),
+    en: readText(source.en, `${label} (İngilizce)`, { max }),
+  }
+}
+
 export function readCategoryInput(body, { partial = false } = {}) {
   const source = body && typeof body === 'object' ? body : {}
   const data = {}
   const has = (key) => Object.prototype.hasOwnProperty.call(source, key)
 
   if (!partial || has('name')) {
-    data.name = readText(source.name, 'Kategori adı', { required: true, max: 80 })
+    const name = readLocale(source.name, 'Kategori adı', { required: true, max: 80 })
+    data.name = name.tr
+    data.nameEn = name.en
   }
 
   if (!partial || has('description')) {
-    data.description = readText(source.description, 'Açıklama', { max: 500 })
+    const description = readLocale(source.description, 'Açıklama', { max: 500 })
+    data.description = description.tr
+    data.descriptionEn = description.en
   }
 
   if (!partial || has('image')) {
@@ -101,10 +114,29 @@ async function remapLegacyProducts(tenantId, categories) {
   }
 }
 
+async function fillDefaultEnglish(categories) {
+  for (const category of categories) {
+    const item = defaultCategories.find((entry) => entry.name === category.name)
+
+    if (!item || (category.nameEn && category.descriptionEn)) {
+      continue
+    }
+
+    await prisma.category.update({
+      where: { id: category.id },
+      data: {
+        nameEn: category.nameEn || item.nameEn,
+        descriptionEn: category.descriptionEn || item.descriptionEn,
+      },
+    })
+  }
+}
+
 export async function ensureTenantCategories(tenantId) {
   const existing = await prisma.category.findMany({ where: { tenantId } })
 
   if (existing.length > 0) {
+    await fillDefaultEnglish(existing)
     await remapLegacyProducts(tenantId, existing)
     return existing
   }
@@ -117,7 +149,9 @@ export async function ensureTenantCategories(tenantId) {
         id: newId('cat'),
         tenantId,
         name: item.name,
+        nameEn: item.nameEn,
         description: item.description,
+        descriptionEn: item.descriptionEn,
         isActive: true,
         sortOrder: item.sortOrder,
       },

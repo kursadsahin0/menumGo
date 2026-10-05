@@ -20,7 +20,11 @@
             </span>
           </nav>
           <section v-for="category in previewCategories" :key="category.id" class="menu-section">
-            <h2 class="menu-section__title">{{ text(category.name) }}</h2>
+            <MenuSectionHeading
+              :name="category.name"
+              :description="category.description"
+              :image="category.image"
+            />
             <div class="menu-section__list">
               <MenuProductCard
                 v-for="product in category.products"
@@ -41,6 +45,7 @@ import { computed } from 'vue'
 import MenuFooter from '@/components/menu/MenuFooter.vue'
 import MenuHeader from '@/components/menu/MenuHeader.vue'
 import MenuProductCard from '@/components/menu/MenuProductCard.vue'
+import MenuSectionHeading from '@/components/menu/MenuSectionHeading.vue'
 import { useMenuLanguage } from '@/composables/useMenuLanguage'
 import { menuAppearance, presentRestaurant } from '@/utils/menuAppearance'
 

@@ -4,6 +4,7 @@ import { newId } from '../auth/users.js'
 import { requireTenant, requireUser } from '../auth/session.js'
 import { createNotification } from '../notifications/notifications.js'
 import { readCategoryInput, toPublicCategory } from './categories.js'
+import { removeImage, replaceImage, saveImage } from '../images/files.js'
 
 async function listCategories(tenantId) {
   const categories = await prisma.category.findMany({
@@ -80,6 +81,7 @@ export async function categoryRoutes(app) {
   app.post('/api/categories', async (request) => {
     const tenant = requireTenant(await requireUser(request))
     const data = readCategoryInput(request.body)
+    data.image = await saveImage(data.image, 'Görsel')
     const count = await prisma.category.count({ where: { tenantId: tenant.id } })
 
     const category = await prisma.category.create({
@@ -101,10 +103,18 @@ export async function categoryRoutes(app) {
     const current = await findOwnedCategory(tenant.id, request.params.id)
     const data = readCategoryInput(request.body, { partial: true })
 
+    if (Object.prototype.hasOwnProperty.call(data, 'image')) {
+      data.image = await saveImage(data.image, 'Görsel')
+    }
+
     const category = await prisma.category.update({
       where: { id: current.id },
       data,
     })
+
+    if (Object.prototype.hasOwnProperty.call(data, 'image')) {
+      await replaceImage(current.image, data.image)
+    }
 
     await createNotification(tenant.id, `${category.name} kategorisi güncellendi`)
 
@@ -126,6 +136,7 @@ export async function categoryRoutes(app) {
     }
 
     await prisma.category.delete({ where: { id: current.id } })
+    await removeImage(current.image)
     await createNotification(tenant.id, `${current.name} kategorisi silindi`)
     return { ok: true }
   })

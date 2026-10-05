@@ -32,6 +32,13 @@ export const env = {
   port: Number(process.env.PORT || 3000),
   databaseUrl: process.env.DATABASE_URL || '',
   jwtSecret: process.env.JWT_SECRET || '',
+  appUrl: process.env.APP_URL || 'http://localhost:9000',
+  mailFrom: process.env.MAIL_FROM || 'menümGo <noreply@menumgo.local>',
+  smtpHost: process.env.SMTP_HOST || '',
+  smtpPort: Number(process.env.SMTP_PORT || 587),
+  smtpUser: process.env.SMTP_USER || '',
+  smtpPass: process.env.SMTP_PASS || '',
+  smtpSecure: process.env.SMTP_SECURE === 'true',
 }
 
 if (!env.databaseUrl || !env.jwtSecret) {

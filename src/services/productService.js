@@ -38,3 +38,11 @@ export function deleteProduct(id) {
     url: endpoints.products.detail(id),
   })
 }
+
+export function updateProductOrder(ids) {
+  return request({
+    method: 'patch',
+    url: endpoints.products.order,
+    data: { ids },
+  })
+}

@@ -79,7 +79,11 @@
         class="menu-section"
         data-menu-section
       >
-        <h2 class="menu-section__title">{{ text(category.name) }}</h2>
+        <MenuSectionHeading
+          :name="category.name"
+          :description="category.description"
+          :image="category.image"
+        />
         <div class="menu-section__list">
           <MenuProductCard
             v-for="product in category.products"
@@ -105,6 +109,7 @@ import MenuHeader from '@/components/menu/MenuHeader.vue'
 import MenuLanguageSwitch from '@/components/menu/MenuLanguageSwitch.vue'
 import MenuProductCard from '@/components/menu/MenuProductCard.vue'
 import MenuProductDialog from '@/components/menu/MenuProductDialog.vue'
+import MenuSectionHeading from '@/components/menu/MenuSectionHeading.vue'
 import { useMenuLanguage } from '@/composables/useMenuLanguage'
 import { recordMenuView, recordProductView } from '@/services/menuService'
 import { useMenuStore } from '@/stores/menu'
@@ -240,7 +245,7 @@ function syncMenuSeo() {
 
   const label = locale.value === 'en' ? 'Menu' : 'Menü'
   const description = text(place.description) || SITE_DESCRIPTION
-  const photo = menuImage(place.logo, 1200)
+  const photo = menuImage(place.coverImage || place.logo, 1200)
   const image = photo.startsWith('http') ? photo : undefined
 
   applySeo({

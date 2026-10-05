@@ -1,5 +1,11 @@
 <template>
-  <header class="menu-header">
+  <header class="menu-header" :class="{ 'menu-header--cover': restaurant.coverImage }">
+    <img
+      v-if="restaurant.coverImage"
+      class="menu-cover"
+      :src="menuImage(restaurant.coverImage, 1200)"
+      alt=""
+    />
     <MenuPhoto
       class="menu-logo"
       :photo="restaurant.logo"
@@ -51,6 +57,7 @@
 import { computed } from 'vue'
 import MenuPhoto from '@/components/menu/MenuPhoto.vue'
 import { useMenuLanguage } from '@/composables/useMenuLanguage'
+import { menuImage } from '@/utils/menuImage'
 
 const props = defineProps({
   restaurant: {

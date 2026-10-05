@@ -3,7 +3,7 @@ export function menuImage(photoId, width) {
     return ''
   }
 
-  if (photoId.startsWith('data:') || photoId.startsWith('http')) {
+  if (photoId.startsWith('data:') || photoId.startsWith('http') || photoId.startsWith('/')) {
     return photoId
   }
 
@@ -11,7 +11,12 @@ export function menuImage(photoId, width) {
 }
 
 export function menuImageSrcset(photoId, width) {
-  if (!photoId) {
+  if (
+    !photoId ||
+    photoId.startsWith('data:') ||
+    photoId.startsWith('http') ||
+    photoId.startsWith('/')
+  ) {
     return undefined
   }
 

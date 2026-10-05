@@ -2,11 +2,6 @@ import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { newId } from '../auth/users.js'
 
-const limits = {
-  starter: 5,
-  professional: 30,
-}
-
 function readText(value, label, { required = false, max = 80 } = {}) {
   const text = String(value || '').trim()
 
@@ -58,28 +53,6 @@ export function readTableInput(body, { partial = false } = {}) {
   }
 
   return data
-}
-
-export function tableLimit(planId) {
-  if (planId === 'business') {
-    return null
-  }
-
-  return limits[planId] ?? limits.starter
-}
-
-export async function assertTableRoom(tenantId, planId) {
-  const limit = tableLimit(planId)
-
-  if (limit == null) {
-    return
-  }
-
-  const count = await prisma.diningTable.count({ where: { tenantId } })
-
-  if (count >= limit) {
-    throw fail(422, `Bu planda en fazla ${limit} masa açabilirsiniz.`)
-  }
 }
 
 export async function saveTable(tenantId, data, id) {

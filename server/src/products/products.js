@@ -1,6 +1,19 @@
 import { fail } from '../http.js'
 
 const imageLimit = 4_000_000
+const allergenIds = new Set([
+  'gluten',
+  'milk',
+  'egg',
+  'fish',
+  'peanut',
+  'soy',
+  'nuts',
+  'celery',
+  'mustard',
+  'sesame',
+  'sulphite',
+])
 
 function money(value) {
   if (value == null) {
@@ -13,8 +26,11 @@ function money(value) {
 export function toPublicProduct(product) {
   return {
     id: product.id,
-    name: product.name,
-    description: product.description,
+    name: { tr: product.name || '', en: product.nameEn || '' },
+    description: { tr: product.description || '', en: product.descriptionEn || '' },
+    portion: { tr: product.portion || '', en: product.portionEn || '' },
+    ingredients: { tr: product.ingredients || '', en: product.ingredientsEn || '' },
+    allergens: product.allergens || [],
     price: money(product.price),
     discountedPrice: money(product.discountedPrice),
     image: product.image,
@@ -59,17 +75,68 @@ function readText(value, label, { required = false, max = 500 } = {}) {
   return text
 }
 
+function readLocale(value, label, { required = false, max = 500 } = {}) {
+  const source = value && typeof value === 'object' ? value : { tr: value || '', en: '' }
+
+  return {
+    tr: readText(source.tr, label, { required, max }),
+    en: readText(source.en, `${label} (İngilizce)`, { max }),
+  }
+}
+
+function readAllergens(value) {
+  if (!Array.isArray(value)) {
+    throw fail(422, 'Alerjen listesi geçersiz.')
+  }
+
+  const ids = []
+
+  for (const item of value) {
+    const id = String(item || '').trim()
+
+    if (!allergenIds.has(id)) {
+      throw fail(422, 'Alerjen geçersiz.')
+    }
+
+    if (!ids.includes(id)) {
+      ids.push(id)
+    }
+  }
+
+  return ids
+}
+
 export function readProductInput(body, { partial = false } = {}) {
   const source = body && typeof body === 'object' ? body : {}
   const data = {}
   const has = (key) => Object.prototype.hasOwnProperty.call(source, key)
 
   if (!partial || has('name')) {
-    data.name = readText(source.name, 'Ürün adı', { required: true, max: 80 })
+    const name = readLocale(source.name, 'Ürün adı', { required: true, max: 80 })
+    data.name = name.tr
+    data.nameEn = name.en
   }
 
   if (!partial || has('description')) {
-    data.description = readText(source.description, 'Açıklama', { max: 500 })
+    const description = readLocale(source.description, 'Açıklama', { max: 500 })
+    data.description = description.tr
+    data.descriptionEn = description.en
+  }
+
+  if (!partial || has('portion')) {
+    const portion = readLocale(source.portion, 'Porsiyon', { max: 80 })
+    data.portion = portion.tr
+    data.portionEn = portion.en
+  }
+
+  if (!partial || has('ingredients')) {
+    const ingredients = readLocale(source.ingredients, 'İçerik', { max: 500 })
+    data.ingredients = ingredients.tr
+    data.ingredientsEn = ingredients.en
+  }
+
+  if (!partial || has('allergens')) {
+    data.allergens = readAllergens(source.allergens)
   }
 
   if (!partial || has('price')) {

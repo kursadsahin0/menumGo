@@ -41,7 +41,7 @@
     <ConfirmDialog
       v-model="confirmOpen"
       title="Kategoriyi sil"
-      :message="pending ? `${pending.name} silinsin mi? Bu işlem geri alınamaz.` : ''"
+      :message="pending ? `${trText(pending.name)} silinsin mi? Bu işlem geri alınamaz.` : ''"
       confirm-label="Sil"
       danger
       :loading="removing"
@@ -59,6 +59,7 @@ import AppError from '@/components/common/AppError.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import { useNotify } from '@/composables/useNotify'
 import { useCategoryStore } from '@/stores/category'
+import { trText } from '@/utils/localeText'
 
 const categoryStore = useCategoryStore()
 const { notifySuccess, notifyError } = useNotify()

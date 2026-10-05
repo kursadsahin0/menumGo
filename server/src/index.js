@@ -16,6 +16,7 @@ import { menuSettingsRoutes } from './menuSettings/routes.js'
 import { ensureAllMenuSettings } from './menuSettings/settings.js'
 import { productRoutes } from './products/routes.js'
 import { tableRoutes } from './tables/routes.js'
+import { openUpload, relocateStoredImages } from './images/files.js'
 
 
 const app = Fastify({
@@ -55,6 +56,18 @@ app.setErrorHandler((error, request, reply) => {
 })
 
 app.get('/api/health', async () => ({ ok: true }))
+
+app.get('/api/uploads/:name', async (request, reply) => {
+  const file = await openUpload(request.params.name)
+
+  if (!file) {
+    throw fail(404, 'Görsel bulunamadı.')
+  }
+
+  reply.header('Cache-Control', 'public, max-age=31536000, immutable')
+  reply.type(file.type)
+  return file.stream
+})
 await authRoutes(app)
 await productRoutes(app)
 await categoryRoutes(app)
@@ -65,6 +78,7 @@ await menuRoutes(app)
 await notificationRoutes(app)
 await menuSettingsRoutes(app)
 
+await relocateStoredImages(prisma)
 await ensureDemoUser()
 await ensureAllTenantCategories()
 await ensureAllMenuSettings()

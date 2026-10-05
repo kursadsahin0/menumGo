@@ -90,10 +90,12 @@ model ProductView {
 }
 
 model Category {
-  id          String   @id
-  name        String
-  description String   @default("")
-  image       String?  @db.Text
+  id            String   @id
+  name          String
+  nameEn        String   @default("")
+  description   String   @default("")
+  descriptionEn String   @default("")
+  image         String?  @db.Text
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
   tenantId    String
@@ -107,7 +109,14 @@ model Category {
 model Product {
   id              String   @id
   name            String
+  nameEn          String   @default("")
   description     String   @default("")
+  descriptionEn   String   @default("")
+  portion         String   @default("")
+  portionEn       String   @default("")
+  ingredients     String   @default("")
+  ingredientsEn   String   @default("")
+  allergens       String[] @default([])
   price           Decimal  @db.Decimal(10, 2)
   discountedPrice Decimal? @db.Decimal(10, 2)
   image           String?  @db.Text
@@ -152,9 +161,8 @@ model MenuSettings {
 }
 
 model Subscription {
-  id       String  @id
+  id       String @id
   status   String
-  planId   String?
-  tenantId String  @unique
-  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String @unique
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 }

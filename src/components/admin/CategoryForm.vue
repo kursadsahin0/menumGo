@@ -2,8 +2,28 @@
   <q-form class="product-form" @submit="onSubmit">
     <h2 class="product-form__title">{{ mode === 'edit' ? 'Kategoriyi düzenle' : 'Yeni kategori' }}</h2>
 
-    <q-input v-model="form.name" label="Kategori adı" outlined dense lazy-rules :rules="[rules.required]" />
-    <q-input v-model="form.description" type="textarea" label="Açıklama" outlined dense autogrow />
+    <div class="product-form__copy">
+      <q-input
+        v-model="form.name.tr"
+        label="Kategori adı"
+        outlined
+        dense
+        lazy-rules
+        :rules="[rules.required]"
+      />
+      <q-input v-model="form.name.en" label="Kategori adı (İngilizce)" outlined dense />
+    </div>
+    <div class="product-form__copy">
+      <q-input v-model="form.description.tr" type="textarea" label="Açıklama" outlined dense autogrow />
+      <q-input
+        v-model="form.description.en"
+        type="textarea"
+        label="Açıklama (İngilizce)"
+        outlined
+        dense
+        autogrow
+      />
+    </div>
 
     <div class="product-form__image">
       <img v-if="form.image" class="product-form__thumb" :src="form.image" alt="" />
@@ -48,6 +68,7 @@
 
 <script setup>
 import { reactive, ref, watch } from 'vue'
+import { localeField } from '@/utils/localeText'
 import { rules } from '@/utils/validators'
 
 const props = defineProps({
@@ -77,8 +98,8 @@ const form = reactive(blankForm())
 
 function blankForm() {
   return {
-    name: '',
-    description: '',
+    name: { tr: '', en: '' },
+    description: { tr: '', en: '' },
     image: null,
     isActive: true,
   }
@@ -95,8 +116,8 @@ function fillForm(category) {
 
   Object.assign(form, {
     ...next,
-    name: category.name,
-    description: category.description,
+    name: localeField(category.name),
+    description: localeField(category.description),
     image: category.image,
     isActive: category.isActive,
   })
@@ -124,8 +145,8 @@ function clearImage() {
 
 function onSubmit() {
   emit('submit', {
-    name: form.name,
-    description: form.description,
+    name: { ...form.name },
+    description: { ...form.description },
     image: form.image,
     isActive: form.isActive,
   })

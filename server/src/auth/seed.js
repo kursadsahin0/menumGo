@@ -15,7 +15,6 @@ const demo = {
   subscription: {
     id: 'sub_demo',
     status: 'active',
-    planId: 'professional',
   },
 }
 

@@ -1,22 +1,32 @@
-import { createDefaultSubscription, plans } from '@/data/plans'
 import { wait } from '@/mocks/config'
-import { ApiError } from '@/utils/errors'
 
 const DB_KEY = 'qr_menu.mock.subscription'
+
+function blankSubscription() {
+  return {
+    id: 'sub_demo',
+    status: 'active',
+  }
+}
 
 function loadSubscription() {
   try {
     const raw = localStorage.getItem(DB_KEY)
 
     if (!raw) {
-      const subscription = createDefaultSubscription()
+      const subscription = blankSubscription()
       saveSubscription(subscription)
       return subscription
     }
 
-    return { ...createDefaultSubscription(), ...JSON.parse(raw) }
+    const saved = JSON.parse(raw)
+
+    return {
+      id: saved.id || 'sub_demo',
+      status: saved.status === 'inactive' ? 'inactive' : 'active',
+    }
   } catch {
-    return createDefaultSubscription()
+    return blankSubscription()
   }
 }
 
@@ -28,21 +38,6 @@ function saveSubscription(subscription) {
   }
 }
 
-function requirePlan(planId) {
-  const plan = plans.find((entry) => entry.id === planId)
-
-  if (!plan) {
-    throw new ApiError('Plan bulunamadı.', { status: 404 })
-  }
-
-  return plan
-}
-
-export async function mockGetPlans() {
-  await wait(80)
-  return plans.map((plan) => ({ ...plan }))
-}
-
 export async function mockGetCurrentSubscription() {
   await wait(80)
   return loadSubscription()
@@ -50,14 +45,10 @@ export async function mockGetCurrentSubscription() {
 
 export async function mockCreateCheckout(payload) {
   await wait()
-  const plan = requirePlan(payload?.planId)
-  const current = loadSubscription()
   const next = {
-    ...current,
-    planId: plan.id,
+    ...loadSubscription(),
     status: 'active',
     provider: payload?.provider || null,
-    cancelAtPeriodEnd: false,
   }
 
   saveSubscription(next)
@@ -65,27 +56,19 @@ export async function mockCreateCheckout(payload) {
   return {
     id: `chk_${Date.now()}`,
     provider: next.provider,
-    planId: plan.id,
     status: 'mock',
     url: null,
-    subscription: { ...next },
+    subscription: { id: next.id, status: next.status },
   }
 }
 
 export async function mockCancelSubscription() {
   await wait()
-  const current = loadSubscription()
-
-  if (current.cancelAtPeriodEnd) {
-    return { ...current }
-  }
-
   const next = {
-    ...current,
-    status: 'active',
-    cancelAtPeriodEnd: true,
+    ...loadSubscription(),
+    status: 'inactive',
   }
 
   saveSubscription(next)
-  return { ...next }
+  return { id: next.id, status: next.status }
 }

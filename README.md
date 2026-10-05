@@ -23,8 +23,8 @@ Arayüz `http://localhost:9000` adresinde açılır. Hesaplar `npm run api` ile 
 
 | Değişken | Açıklama |
 | --- | --- |
-| `VITE_USE_MOCK` | `true` iken istekler yerel veriye gider. Varsayılan budur. |
-| `VITE_API_BASE_URL` | `VITE_USE_MOCK=false` iken kullanılacak API adresi. |
+| `VITE_API_BASE_URL` | API adresi. `/api` iken geliştirme sunucusu istekleri `http://127.0.0.1:3000` adresine iletir. |
+| `VITE_USE_MOCK` | Varsayılan kapalıdır. `true` yalnızca abonelik çağrılarını yerel veriye çevirir. Ürün, kategori, menü ve hesap istekleri her zaman API'ye gider. |
 
 ## Deneme
 

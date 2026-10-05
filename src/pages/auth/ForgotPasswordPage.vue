@@ -9,14 +9,7 @@
       </header>
 
       <q-banner v-if="sent" class="bg-green-1 text-positive q-mt-md" rounded>
-        Bu e-posta kayıtlıysa sıfırlama bağlantısı hazır.
-        <router-link
-          v-if="resetToken"
-          class="auth-link"
-          :to="{ name: 'reset-password', query: { token: resetToken } }"
-        >
-          Sıfırlama sayfasını aç
-        </router-link>
+        Bu e-posta kayıtlıysa sıfırlama bağlantısını gönderdik. Gelen kutunuzu kontrol edin.
       </q-banner>
 
       <q-form v-else class="q-gutter-y-sm q-mt-lg" @submit="onSubmit">
@@ -61,14 +54,12 @@ const { auth, forgotPassword } = useAuth()
 const email = ref('')
 const errorMessage = ref('')
 const sent = ref(false)
-const resetToken = ref('')
 
 async function onSubmit() {
   errorMessage.value = ''
 
   try {
-    const result = await forgotPassword({ email: email.value })
-    resetToken.value = result?.resetToken || ''
+    await forgotPassword({ email: email.value })
     sent.value = true
   } catch (error) {
     errorMessage.value = error?.message || 'Bağlantı gönderilemedi.'

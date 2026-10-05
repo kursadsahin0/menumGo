@@ -3,23 +3,21 @@ import {
   cancelSubscription,
   createCheckout,
   getCurrentSubscription,
-  getPlans,
 } from '@/services/subscriptionService'
 
 let pendingSubscription = null
 
 export const useSubscriptionStore = defineStore('subscription', {
   state: () => ({
-    plans: [],
     subscription: null,
     status: 'idle',
-    acting: null,
+    acting: false,
     error: null,
   }),
 
   actions: {
     async fetchSubscription() {
-      if (this.subscription && this.plans.length) {
+      if (this.subscription) {
         return this.subscription
       }
 
@@ -37,11 +35,9 @@ export const useSubscriptionStore = defineStore('subscription', {
       this.error = null
 
       try {
-        const [plans, subscription] = await Promise.all([getPlans(), getCurrentSubscription()])
-        this.plans = plans
-        this.subscription = subscription
+        this.subscription = await getCurrentSubscription()
         this.status = 'success'
-        return subscription
+        return this.subscription
       } catch (error) {
         this.status = 'error'
         this.error = error
@@ -49,12 +45,12 @@ export const useSubscriptionStore = defineStore('subscription', {
       }
     },
 
-    async checkout(planId) {
-      this.acting = planId
+    async checkout() {
+      this.acting = true
       this.error = null
 
       try {
-        const checkout = await createCheckout({ planId })
+        const checkout = await createCheckout()
 
         if (checkout.subscription) {
           this.subscription = checkout.subscription
@@ -65,12 +61,12 @@ export const useSubscriptionStore = defineStore('subscription', {
         this.error = error
         throw error
       } finally {
-        this.acting = null
+        this.acting = false
       }
     },
 
     async cancel() {
-      this.acting = 'cancel'
+      this.acting = true
       this.error = null
 
       try {
@@ -80,7 +76,7 @@ export const useSubscriptionStore = defineStore('subscription', {
         this.error = error
         throw error
       } finally {
-        this.acting = null
+        this.acting = false
       }
     },
   },

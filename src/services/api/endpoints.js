@@ -9,7 +9,6 @@ export const endpoints = {
     password: '/auth/password',
   },
   menus: {
-    list: '/menus',
     public: (slug) => `/public/menus/${slug}`,
     view: (slug) => `/public/menus/${slug}/views`,
     productView: (slug, productId) => `/public/menus/${slug}/products/${productId}/views`,
@@ -22,7 +21,6 @@ export const endpoints = {
   },
   subscription: {
     current: '/subscription',
-    plans: '/subscription/plans',
     checkout: '/subscription/checkout',
     cancel: '/subscription/cancel',
   },
@@ -35,6 +33,7 @@ export const endpoints = {
   products: {
     list: '/products',
     detail: (id) => `/products/${id}`,
+    order: '/products/order',
   },
   categories: {
     list: '/categories',

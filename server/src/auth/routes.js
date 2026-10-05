@@ -1,4 +1,5 @@
 import { ensureTenantCategories } from '../categories/categories.js'
+import { sendPasswordResetEmail } from '../mail/mail.js'
 import { ensureMenuSettings } from '../menuSettings/settings.js'
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
@@ -51,7 +52,6 @@ export async function authRoutes(app) {
               create: {
                 id: newId('sub'),
                 status: 'inactive',
-                planId: null,
               },
             },
           },
@@ -134,7 +134,7 @@ export async function authRoutes(app) {
     const user = await findUserByEmail(request.body?.email)
 
     if (!user) {
-      return { ok: true, resetToken: null }
+      return { ok: true }
     }
 
     const resetToken = createResetToken()
@@ -148,7 +148,21 @@ export async function authRoutes(app) {
       },
     })
 
-    return { ok: true, resetToken }
+    try {
+      await sendPasswordResetEmail(request.log, { to: user.email, token: resetToken })
+    } catch (error) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          resetTokenHash: null,
+          resetTokenExpiresAt: null,
+        },
+      })
+      request.log.error({ err: error }, 'Şifre sıfırlama e-postası gönderilemedi')
+      throw fail(422, 'Sıfırlama e-postası gönderilemedi.')
+    }
+
+    return { ok: true }
   })
 
   app.post('/api/auth/reset-password', async (request) => {

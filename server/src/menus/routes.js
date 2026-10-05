@@ -1,4 +1,5 @@
 import { recordMenuView, recordProductView } from '../analytics/report.js'
+import { limitViewWrites } from '../rateLimit.js'
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { toPublicProduct } from '../products/products.js'
@@ -12,7 +13,9 @@ function groupProducts(categories, products) {
         category.id,
         {
           id: category.id,
-          name: category.name,
+          name: { tr: category.name || '', en: category.nameEn || '' },
+          description: { tr: category.description || '', en: category.descriptionEn || '' },
+          image: category.image || null,
           sortOrder: category.sortOrder,
           products: [],
         },
@@ -20,7 +23,9 @@ function groupProducts(categories, products) {
   )
   const other = {
     id: 'uncategorized',
-    name: 'Diğer',
+    name: { tr: 'Diğer', en: 'Other' },
+    description: { tr: '', en: '' },
+    image: null,
     sortOrder: 999,
     products: [],
   }
@@ -42,7 +47,9 @@ function groupProducts(categories, products) {
     visible.push(other)
   }
 
-  return visible.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'tr'))
+  return visible.sort(
+    (a, b) => a.sortOrder - b.sortOrder || a.name.tr.localeCompare(b.name.tr, 'tr'),
+  )
 }
 
 async function publicTenant(slug) {
@@ -59,15 +66,23 @@ async function publicTenant(slug) {
 }
 
 export async function menuRoutes(app) {
-  app.post('/api/public/menus/:slug/views', async (request) => {
-    const tenant = await publicTenant(request.params.slug)
-    return recordMenuView(tenant.id, request.body?.language, request.body?.tableId)
-  })
+  app.post(
+    '/api/public/menus/:slug/views',
+    { preHandler: limitViewWrites },
+    async (request) => {
+      const tenant = await publicTenant(request.params.slug)
+      return recordMenuView(tenant.id, request.body?.language, request.body?.tableId)
+    },
+  )
 
-  app.post('/api/public/menus/:slug/products/:productId/views', async (request) => {
-    const tenant = await publicTenant(request.params.slug)
-    return recordProductView(tenant.id, request.params.productId)
-  })
+  app.post(
+    '/api/public/menus/:slug/products/:productId/views',
+    { preHandler: limitViewWrites },
+    async (request) => {
+      const tenant = await publicTenant(request.params.slug)
+      return recordProductView(tenant.id, request.params.productId)
+    },
+  )
 
   app.get('/api/public/menus/:slug', async (request) => {
     const slug = String(request.params.slug || '').trim()
@@ -104,6 +119,7 @@ export async function menuRoutes(app) {
         slug: tenant.slug,
         name: tenant.name,
         logo: null,
+        coverImage: tenant.coverImage || null,
         description: '',
         hours: '',
         phone: tenant.user?.phone || '',
