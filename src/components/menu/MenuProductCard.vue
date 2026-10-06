@@ -9,16 +9,16 @@
       <MenuPhoto :photo="product.image" :alt="text(product.name)" size="thumb" />
     </span>
     <span class="menu-card__body">
-      <span class="menu-card__name">
+      <span v-if="product.isFeatured || !product.isAvailable" class="menu-card__flags">
         <span v-if="product.isFeatured" class="menu-badge menu-badge--featured">
           {{ messages.featured }}
         </span>
-        {{ text(product.name) }}
+        <span v-if="!product.isAvailable" class="menu-badge menu-badge--sold">
+          {{ messages.soldOut }}
+        </span>
       </span>
-      <span v-if="text(product.description)" class="menu-card__description">
-        {{ text(product.description) }}
-      </span>
-      <span class="menu-card__meta">
+      <span class="menu-card__top">
+        <span class="menu-card__name">{{ text(product.name) }}</span>
         <span class="menu-prices">
           <span v-if="hasDiscount" class="menu-price menu-price--deal">
             {{ formatTry(product.discountedPrice) }}
@@ -27,9 +27,9 @@
             {{ formatTry(product.price) }}
           </span>
         </span>
-        <span v-if="!product.isAvailable" class="menu-badge menu-badge--sold">
-          {{ messages.soldOut }}
-        </span>
+      </span>
+      <span v-if="text(product.description)" class="menu-card__description">
+        {{ text(product.description) }}
       </span>
     </span>
   </button>

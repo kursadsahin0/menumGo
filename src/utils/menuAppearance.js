@@ -64,6 +64,8 @@ export function presentRestaurant(restaurant, settings) {
     logo: settings.logo || restaurant.logo,
     description: localeCopy(settings.description, restaurant.description),
     phone: settings.phone,
+    wifiName: String(settings.wifiName || ''),
+    wifiPassword: String(settings.wifiPassword || ''),
     address,
     hours: localeCopy(settings.hours, restaurant.hours),
     mapsUrl:

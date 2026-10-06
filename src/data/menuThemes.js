@@ -70,6 +70,8 @@ export function createDefaultSettings() {
     },
     website: '',
     instagram: 'https://instagram.com/burgerhouse',
+    wifiName: '',
+    wifiPassword: '',
     hours: {
       tr: 'Her gün 11:00 – 23:30',
       en: 'Open daily, 11:00 – 23:30',

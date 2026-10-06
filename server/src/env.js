@@ -28,11 +28,37 @@ if (existsSync(envPath)) {
   }
 }
 
+function readOrigins(value) {
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .flatMap((item) => {
+      try {
+        const url = new URL(item)
+
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+          return []
+        }
+
+        return [url.origin]
+      } catch {
+        return []
+      }
+    })
+}
+
 export const env = {
   port: Number(process.env.PORT || 3000),
   databaseUrl: process.env.DATABASE_URL || '',
   jwtSecret: process.env.JWT_SECRET || '',
   appUrl: process.env.APP_URL || 'http://localhost:9000',
+  corsOrigins: [
+    ...new Set([
+      ...readOrigins(process.env.APP_URL || 'http://localhost:9000'),
+      ...readOrigins(process.env.CORS_ORIGINS),
+    ]),
+  ],
   mailFrom: process.env.MAIL_FROM || 'menümGo <noreply@menumgo.local>',
   smtpHost: process.env.SMTP_HOST || '',
   smtpPort: Number(process.env.SMTP_PORT || 587),

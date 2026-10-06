@@ -17,7 +17,18 @@
         <div class="notice-menu__panel">
           <header class="notice-menu__head">
             <h2>Bildirimler</h2>
-            <span v-if="unreadCount">{{ unreadCount }} yeni</span>
+            <div class="notice-menu__tools">
+              <span v-if="unreadCount">{{ unreadCount }} yeni</span>
+              <button
+                v-if="notifications.length"
+                type="button"
+                class="notice-menu__clear"
+                :disabled="clearing"
+                @click="clearAll"
+              >
+                Temizle
+              </button>
+            </div>
           </header>
           <p v-if="!notifications.length" class="notice-menu__empty">Henüz bildirim yok</p>
           <ul v-else class="notice-menu__list">
@@ -91,12 +102,21 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
-import { getNotifications, markNotificationsRead } from '@/services/notificationService'
+import {
+  clearNotifications,
+  getNotifications,
+  markNotificationsRead,
+} from '@/services/notificationService'
 import { STORAGE_KEYS } from '@/utils/constants'
+import {
+  playWaiterChime,
+  showWaiterNotice,
+  unlockNotificationSound,
+} from '@/utils/notificationSound'
 
 defineProps({
   title: {
@@ -111,13 +131,70 @@ const $q = useQuasar()
 const { auth, logout } = useAuth()
 const isDark = computed(() => $q.dark.isActive)
 const notifications = ref([])
+const clearing = ref(false)
 const unreadCount = computed(() => notifications.value.filter((item) => item.unread).length)
+let seenIds = null
+let polling = false
+let pollTimer
+let requestId = 0
+
+function applyNotifications(next) {
+  const ids = new Set(next.map((item) => item.id))
+
+  if (seenIds) {
+    next
+      .filter((item) => !seenIds.has(item.id) && String(item.title).includes('Garson'))
+      .forEach((item, index) => {
+        window.setTimeout(() => playWaiterChime(), index * 400)
+        showWaiterNotice(item.title)
+      })
+  }
+
+  seenIds = ids
+  notifications.value = next
+}
 
 async function loadNotifications() {
+  if (polling) {
+    return
+  }
+
+  polling = true
+  const id = ++requestId
+
   try {
-    notifications.value = await getNotifications()
+    const next = await getNotifications()
+
+    if (id === requestId) {
+      applyNotifications(next)
+    }
   } catch {
-    notifications.value = []
+    if (!seenIds) {
+      notifications.value = []
+    }
+  } finally {
+    polling = false
+  }
+}
+
+async function clearAll() {
+  if (clearing.value || !notifications.value.length) {
+    return
+  }
+
+  clearing.value = true
+  const id = ++requestId
+
+  try {
+    const next = await clearNotifications()
+
+    if (id === requestId) {
+      applyNotifications(next)
+    }
+  } catch {
+    // The list stays until a later refresh succeeds.
+  } finally {
+    clearing.value = false
   }
 }
 
@@ -146,6 +223,10 @@ const initials = computed(() => {
 
 function notificationIcon(title) {
   const text = String(title || '')
+
+  if (text.includes('Garson')) {
+    return 'room_service'
+  }
 
   if (text.includes('menüyü açtı') || text === 'Menü açıldı') {
     return 'visibility'
@@ -180,5 +261,14 @@ async function onLogout() {
   router.push({ name: 'login' })
 }
 
-onMounted(loadNotifications)
+onMounted(() => {
+  loadNotifications()
+  window.addEventListener('pointerdown', unlockNotificationSound)
+  pollTimer = window.setInterval(loadNotifications, 5000)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('pointerdown', unlockNotificationSound)
+  window.clearInterval(pollTimer)
+})
 </script>

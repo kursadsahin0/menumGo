@@ -11,6 +11,7 @@ export const endpoints = {
   menus: {
     public: (slug) => `/public/menus/${slug}`,
     view: (slug) => `/public/menus/${slug}/views`,
+    waiter: (slug) => `/public/menus/${slug}/waiter`,
     productView: (slug, productId) => `/public/menus/${slug}/products/${productId}/views`,
   },
   menuSettings: {
@@ -47,5 +48,6 @@ export const endpoints = {
   notifications: {
     list: '/notifications',
     read: '/notifications/read',
+    clear: '/notifications',
   },
 }

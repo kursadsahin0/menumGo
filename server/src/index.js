@@ -24,8 +24,21 @@ const app = Fastify({
   bodyLimit: 8 * 1024 * 1024,
 })
 
+const localOrigin = [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/]
+
 await app.register(cors, {
-  origin: [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/],
+  origin(origin, callback) {
+    if (
+      !origin ||
+      localOrigin.some((pattern) => pattern.test(origin)) ||
+      env.corsOrigins.includes(origin)
+    ) {
+      callback(null, true)
+      return
+    }
+
+    callback(null, false)
+  },
   allowedHeaders: ['Content-Type', 'Authorization'],
 })
 

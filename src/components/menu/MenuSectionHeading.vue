@@ -8,7 +8,7 @@
       width="56"
       height="56"
     />
-    <div>
+    <div class="menu-section__copy">
       <h2 class="menu-section__title">{{ text(name) }}</h2>
       <p v-if="text(description)" class="menu-section__text">{{ text(description) }}</p>
     </div>

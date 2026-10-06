@@ -142,6 +142,8 @@ model MenuSettings {
   addressEn         String   @default("")
   website           String   @default("")
   instagram         String   @default("")
+  wifiName          String   @default("")
+  wifiPassword      String   @default("")
   hoursTr           String   @default("")
   hoursEn           String   @default("")
   logo              String?  @db.Text

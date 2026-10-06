@@ -8,6 +8,13 @@ export function getNotifications() {
   })
 }
 
+export function clearNotifications() {
+  return request({
+    method: 'delete',
+    url: endpoints.notifications.clear,
+  })
+}
+
 export function markNotificationsRead() {
   return request({
     method: 'post',

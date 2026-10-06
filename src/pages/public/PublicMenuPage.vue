@@ -26,7 +26,11 @@
     </div>
 
     <div v-else-if="restaurant" class="menu-page">
-      <MenuHeader :restaurant="restaurant" :table="menu.publicMenu?.table" />
+      <MenuHeader
+        :restaurant="restaurant"
+        :table="menu.publicMenu?.table"
+        :request-waiter="requestWaiterCall"
+      />
 
       <div class="menu-sticky">
         <div class="menu-toolbar">
@@ -111,7 +115,7 @@ import MenuProductCard from '@/components/menu/MenuProductCard.vue'
 import MenuProductDialog from '@/components/menu/MenuProductDialog.vue'
 import MenuSectionHeading from '@/components/menu/MenuSectionHeading.vue'
 import { useMenuLanguage } from '@/composables/useMenuLanguage'
-import { recordMenuView, recordProductView } from '@/services/menuService'
+import { recordMenuView, recordProductView, requestWaiter } from '@/services/menuService'
 import { useMenuStore } from '@/stores/menu'
 import { menuAppearance, presentRestaurant } from '@/utils/menuAppearance'
 import { menuImage } from '@/utils/menuImage'
@@ -173,6 +177,10 @@ function load() {
     .fetchPublicMenu(slug, tableId)
     .then(() => recordMenuView(slug, locale.value, tableId))
     .catch(() => {})
+}
+
+function requestWaiterCall() {
+  return requestWaiter(route.params.restaurantSlug, tableQuery())
 }
 
 function openProduct(product) {

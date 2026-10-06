@@ -20,6 +20,14 @@ export function recordMenuView(slug, language, tableId) {
   }).catch(() => null)
 }
 
+export function requestWaiter(slug, tableId) {
+  return request({
+    method: 'post',
+    url: endpoints.menus.waiter(slug),
+    data: { tableId: tableId || null },
+  })
+}
+
 export function recordProductView(slug, productId) {
   return request({
     method: 'post',

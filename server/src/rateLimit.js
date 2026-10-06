@@ -1,13 +1,22 @@
 import { fail } from './http.js'
 
 const windowMs = 60_000
-const max = 30
 const hits = new Map()
 
 export async function limitViewWrites(request, reply) {
+  return limitWrites(request, reply, hits, 30)
+}
+
+const waiterHits = new Map()
+
+export async function limitWaiterCalls(request, reply) {
+  return limitWrites(request, reply, waiterHits, 4)
+}
+
+async function limitWrites(request, reply, bucket, max) {
   const now = Date.now()
   const key = request.ip || 'unknown'
-  const recent = (hits.get(key) || []).filter((time) => now - time < windowMs)
+  const recent = (bucket.get(key) || []).filter((time) => now - time < windowMs)
 
   if (recent.length >= max) {
     const retryAfter = Math.max(1, Math.ceil((windowMs - (now - recent[0])) / 1000))
@@ -16,12 +25,12 @@ export async function limitViewWrites(request, reply) {
   }
 
   recent.push(now)
-  hits.set(key, recent)
+  bucket.set(key, recent)
 
-  if (hits.size > 5000) {
-    for (const [id, times] of hits) {
+  if (bucket.size > 5000) {
+    for (const [id, times] of bucket) {
       if (times.every((time) => now - time >= windowMs)) {
-        hits.delete(id)
+        bucket.delete(id)
       }
     }
   }

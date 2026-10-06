@@ -52,10 +52,36 @@
   letter-spacing: -0.02em;
 }
 
+.notice-menu__tools {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .notice-menu__head span {
   color: var(--app-muted);
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+.notice-menu__clear {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--app-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.notice-menu__clear:hover {
+  color: var(--app-ink);
+}
+
+.notice-menu__clear:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
 
 .notice-menu__empty {

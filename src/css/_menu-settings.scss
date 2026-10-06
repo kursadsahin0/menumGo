@@ -118,7 +118,14 @@
 
 .menu-preview__screen .menu-page {
   width: 100%;
+  min-height: 0;
   padding: 20px 14px 28px;
+}
+
+.menu-preview__screen .menu-cover {
+  width: calc(100% + 28px);
+  height: 140px;
+  margin: -20px -14px 0;
 }
 
 .menu-preview__screen .menu-sticky,

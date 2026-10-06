@@ -1,7 +1,8 @@
 import { recordMenuView, recordProductView } from '../analytics/report.js'
-import { limitViewWrites } from '../rateLimit.js'
+import { limitViewWrites, limitWaiterCalls } from '../rateLimit.js'
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
+import { createNotification } from '../notifications/notifications.js'
 import { toPublicProduct } from '../products/products.js'
 import { ensureMenuSettings, toPublicSettings } from '../menuSettings/settings.js'
 
@@ -72,6 +73,35 @@ export async function menuRoutes(app) {
     async (request) => {
       const tenant = await publicTenant(request.params.slug)
       return recordMenuView(tenant.id, request.body?.language, request.body?.tableId)
+    },
+  )
+
+  app.post(
+    '/api/public/menus/:slug/waiter',
+    { preHandler: limitWaiterCalls },
+    async (request) => {
+      const tenant = await publicTenant(request.params.slug)
+      const tableId = String(request.body?.tableId || '').trim()
+      const table = tableId
+        ? await prisma.diningTable.findFirst({
+            where: { id: tableId, tenantId: tenant.id },
+            select: { name: true },
+          })
+        : null
+      const title = table?.name ? `Garson çağrıldı · ${table.name}` : 'Garson çağrıldı'
+      const recent = await prisma.notification.findFirst({
+        where: {
+          tenantId: tenant.id,
+          title,
+          createdAt: { gte: new Date(Date.now() - 45_000) },
+        },
+      })
+
+      if (!recent) {
+        await createNotification(tenant.id, title)
+      }
+
+      return { ok: true }
     },
   )
 

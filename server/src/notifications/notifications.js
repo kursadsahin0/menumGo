@@ -33,6 +33,14 @@ export async function listNotifications(tenantId) {
   }))
 }
 
+export async function clearNotifications(tenantId) {
+  await prisma.notification.deleteMany({
+    where: { tenantId },
+  })
+
+  return []
+}
+
 export async function markNotificationsRead(tenantId) {
   await prisma.notification.updateMany({
     where: { tenantId, readAt: null },

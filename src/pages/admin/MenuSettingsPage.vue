@@ -84,6 +84,8 @@
                 autogrow
               />
             </div>
+            <q-input v-model="draft.wifiName" label="Wi-Fi ağ adı" outlined dense />
+            <q-input v-model="draft.wifiPassword" label="Wi-Fi şifresi" outlined dense />
             <q-input v-model="draft.website" label="Website" outlined dense />
             <q-input v-model="draft.instagram" label="Instagram" outlined dense />
             <div class="menu-settings__copy">
