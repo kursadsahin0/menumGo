@@ -75,6 +75,18 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    applySubscription(status) {
+      if (!this.user || this.user.subscription?.status === status) {
+        return
+      }
+
+      this.user = {
+        ...this.user,
+        subscription: { status },
+      }
+      setStoredUser(this.user)
+    },
+
     async fetchUser() {
       if (!this.token) {
         this.user = null

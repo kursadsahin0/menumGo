@@ -1,6 +1,7 @@
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { newId } from '../auth/users.js'
+import { findActiveTable } from '../tables/tables.js'
 import { dayKeys, dayLabel, relativeTime, startOfDay, weekdayLabel, zonedParts } from './time.js'
 
 export async function recordMenuView(tenantId, language, tableId) {
@@ -10,13 +11,10 @@ export async function recordMenuView(tenantId, language, tableId) {
     throw fail(422, 'Dil geçersiz.')
   }
 
-  let table = null
+  const table = await findActiveTable(tenantId, tableId, { id: true })
 
-  if (tableId) {
-    table = await prisma.diningTable.findFirst({
-      where: { id: String(tableId), tenantId },
-      select: { id: true, name: true },
-    })
+  if (String(tableId || '').trim() && !table) {
+    throw fail(404, 'Menü bulunamadı.')
   }
 
   await prisma.menuView.create({

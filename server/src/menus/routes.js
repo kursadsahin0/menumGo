@@ -5,6 +5,7 @@ import { fail } from '../http.js'
 import { createNotification } from '../notifications/notifications.js'
 import { toPublicProduct } from '../products/products.js'
 import { ensureMenuSettings, toPublicSettings } from '../menuSettings/settings.js'
+import { findActiveTable } from '../tables/tables.js'
 
 function groupProducts(categories, products) {
   const groups = new Map(
@@ -53,16 +54,22 @@ function groupProducts(categories, products) {
   )
 }
 
+function assertPublished(tenant) {
+  if (tenant?.subscription?.status !== 'active') {
+    throw fail(404, 'Menü bulunamadı.')
+  }
+}
+
 async function publicTenant(slug) {
   const tenant = await prisma.tenant.findUnique({
     where: { slug: String(slug || '').trim() },
-    select: { id: true },
+    select: {
+      id: true,
+      subscription: { select: { status: true } },
+    },
   })
 
-  if (!tenant) {
-    throw fail(404, 'Menü bulunamadı.')
-  }
-
+  assertPublished(tenant)
   return tenant
 }
 
@@ -99,12 +106,12 @@ export async function menuRoutes(app) {
     async (request) => {
       const tenant = await publicTenant(request.params.slug)
       const tableId = String(request.body?.tableId || '').trim()
-      const table = tableId
-        ? await prisma.diningTable.findFirst({
-            where: { id: tableId, tenantId: tenant.id },
-            select: { name: true },
-          })
-        : null
+      const table = await findActiveTable(tenant.id, tableId, { name: true })
+
+      if (tableId && !table) {
+        throw fail(404, 'Menü bulunamadı.')
+      }
+
       const title = table?.name ? `Garson çağrıldı · ${table.name}` : 'Garson çağrıldı'
       const recent = await prisma.notification.findFirst({
         where: {
@@ -137,6 +144,7 @@ export async function menuRoutes(app) {
       where: { slug },
       include: {
         user: true,
+        subscription: { select: { status: true } },
         menuSettings: true,
         categories: {
           orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
@@ -147,18 +155,19 @@ export async function menuRoutes(app) {
       },
     })
 
-    if (!tenant) {
-      throw fail(404, 'Menü bulunamadı.')
-    }
+    assertPublished(tenant)
 
     const settings = tenant.menuSettings || (await ensureMenuSettings(tenant))
     const tableId = String(request.query?.table || '').trim()
-    const table = tableId
-      ? await prisma.diningTable.findFirst({
-          where: { id: tableId, tenantId: tenant.id },
-          select: { id: true, name: true, tableNumber: true },
-        })
-      : null
+    const table = await findActiveTable(tenant.id, tableId, {
+      id: true,
+      name: true,
+      tableNumber: true,
+    })
+
+    if (tableId && !table) {
+      throw fail(404, 'Menü bulunamadı.')
+    }
 
     return {
       restaurant: {

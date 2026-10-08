@@ -20,6 +20,26 @@ export async function limitVerificationSends(request, reply, userId) {
   return limitWrites({ ip: `user:${userId}` }, reply, 'verify', 5)
 }
 
+export async function limitActivationAttempts(request, reply) {
+  return limitWrites(request, reply, 'activate', 8)
+}
+
+export async function limitLoginAttempts(request, reply) {
+  return limitWrites(request, reply, 'login', 10)
+}
+
+export async function limitRegistrations(request, reply) {
+  return limitWrites(request, reply, 'register', 5)
+}
+
+export async function limitForgotPassword(request, reply) {
+  return limitWrites(request, reply, 'forgot', 5)
+}
+
+export async function limitPasswordResets(request, reply) {
+  return limitWrites(request, reply, 'reset', 8)
+}
+
 async function limitWrites(request, reply, bucket, max) {
   const ip = String(request.ip || 'unknown').slice(0, 64)
   const now = Date.now()

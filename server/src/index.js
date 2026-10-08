@@ -17,6 +17,7 @@ import { pushRoutes } from './push/routes.js'
 import { menuSettingsRoutes } from './menuSettings/routes.js'
 import { ensureAllMenuSettings } from './menuSettings/settings.js'
 import { productRoutes } from './products/routes.js'
+import { subscriptionRoutes } from './subscription/routes.js'
 import { tableRoutes } from './tables/routes.js'
 import { openUpload, relocateStoredImages } from './images/files.js'
 
@@ -70,6 +71,8 @@ app.setErrorHandler((error, request, reply) => {
   })
 })
 
+const operatorPaths = new Set(['/api/subscription/activate'])
+
 const unverifiedAllowed = new Set([
   '/api/health',
   '/api/auth/register',
@@ -93,7 +96,8 @@ app.addHook('preHandler', async (request) => {
   if (
     path.startsWith('/api/public/') ||
     path.startsWith('/api/uploads/') ||
-    unverifiedAllowed.has(path)
+    unverifiedAllowed.has(path) ||
+    operatorPaths.has(path)
   ) {
     return
   }
@@ -128,6 +132,7 @@ await menuRoutes(app)
 await notificationRoutes(app)
 await pushRoutes(app)
 await menuSettingsRoutes(app)
+await subscriptionRoutes(app)
 
 await relocateStoredImages(prisma)
 await ensureDemoUser()

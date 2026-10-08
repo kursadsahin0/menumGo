@@ -4,10 +4,23 @@ import { sendPasswordResetEmail, sendVerificationEmail } from '../mail/mail.js'
 import { ensureMenuSettings } from '../menuSettings/settings.js'
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
-import { limitVerificationSends } from '../rateLimit.js'
+import {
+  limitForgotPassword,
+  limitLoginAttempts,
+  limitPasswordResets,
+  limitRegistrations,
+  limitVerificationSends,
+} from '../rateLimit.js'
 import { hashPassword, verifyPassword } from './password.js'
-import { requireTenant, requireUser } from './session.js'
-import { createResetToken, createSessionToken, hashResetToken } from './token.js'
+import {
+  openSession,
+  requireTenant,
+  requireUser,
+  revokeAllSessions,
+  revokeOtherSessions,
+  revokeRequestSession,
+} from './session.js'
+import { createResetToken, hashResetToken } from './token.js'
 import {
   assertAccount,
   assertAvailableSlug,
@@ -41,7 +54,7 @@ async function issueEmailVerification(log, user) {
 }
 
 export async function authRoutes(app) {
-  app.post('/api/auth/register', async (request) => {
+  app.post('/api/auth/register', { preHandler: limitRegistrations }, async (request) => {
     const businessName = String(request.body?.businessName || '').trim()
     const account = assertAccount(request.body)
     const password = assertPassword(request.body?.password)
@@ -91,12 +104,12 @@ export async function authRoutes(app) {
     await issueEmailVerification(request.log, user)
 
     return {
-      token: createSessionToken(user.id),
+      token: await openSession(user.id),
       user: toPublicUser(user),
     }
   })
 
-  app.post('/api/auth/login', async (request) => {
+  app.post('/api/auth/login', { preHandler: limitLoginAttempts }, async (request) => {
     const email = normalizeEmail(request.body?.email)
     const password = request.body?.password ?? ''
     const user = await findUserByEmail(email)
@@ -106,12 +119,15 @@ export async function authRoutes(app) {
     }
 
     return {
-      token: createSessionToken(user.id),
+      token: await openSession(user.id),
       user: toPublicUser(user),
     }
   })
 
-  app.post('/api/auth/logout', async () => ({ ok: true }))
+  app.post('/api/auth/logout', async (request) => {
+    await revokeRequestSession(request)
+    return { ok: true }
+  })
 
   app.get('/api/auth/me', async (request) => {
     const user = await requireUser(request)
@@ -250,11 +266,12 @@ export async function authRoutes(app) {
       where: { id: current.id },
       data: { passwordHash: await hashPassword(nextPassword) },
     })
+    await revokeOtherSessions(current.id, request)
 
     return { ok: true }
   })
 
-  app.post('/api/auth/forgot-password', async (request) => {
+  app.post('/api/auth/forgot-password', { preHandler: limitForgotPassword }, async (request) => {
     const user = await findUserByEmail(request.body?.email)
 
     if (!user) {
@@ -289,7 +306,7 @@ export async function authRoutes(app) {
     return { ok: true }
   })
 
-  app.post('/api/auth/reset-password', async (request) => {
+  app.post('/api/auth/reset-password', { preHandler: limitPasswordResets }, async (request) => {
     const token = String(request.body?.token || '')
     const password = assertPassword(request.body?.password)
     const user = await prisma.user.findFirst({
@@ -311,6 +328,7 @@ export async function authRoutes(app) {
         resetTokenExpiresAt: null,
       },
     })
+    await revokeAllSessions(user.id)
 
     return { ok: true }
   })

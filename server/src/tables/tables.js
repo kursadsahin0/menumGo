@@ -16,6 +16,19 @@ function readText(value, label, { required = false, max = 80 } = {}) {
   return text
 }
 
+export async function findActiveTable(tenantId, tableId, select) {
+  const id = String(tableId || '').trim()
+
+  if (!id) {
+    return null
+  }
+
+  return prisma.diningTable.findFirst({
+    where: { id, tenantId, isActive: true },
+    select,
+  })
+}
+
 export function toPublicTable(table, slug) {
   return {
     id: table.id,

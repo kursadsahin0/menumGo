@@ -68,6 +68,7 @@ export const env = {
   vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
   vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
   vapidSubject: process.env.VAPID_SUBJECT || 'mailto:noreply@menumgo.local',
+  activationKey: process.env.ACTIVATION_KEY || '',
 }
 
 if (!env.databaseUrl || !env.jwtSecret) {

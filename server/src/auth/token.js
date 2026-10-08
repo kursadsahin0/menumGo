@@ -7,12 +7,13 @@ function sign(payload) {
   return `${body}.${signature}`
 }
 
-export function createSessionToken(userId) {
-  const week = 7 * 24 * 60 * 60 * 1000
+export const sessionTtlMs = 7 * 24 * 60 * 60 * 1000
 
+export function createSessionToken(userId, sessionId, expiresAt = Date.now() + sessionTtlMs) {
   return sign({
     sub: userId,
-    exp: Date.now() + week,
+    sid: sessionId,
+    exp: expiresAt,
   })
 }
 
@@ -34,11 +35,11 @@ export function readSessionToken(token) {
   try {
     const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'))
 
-    if (!payload?.sub || payload.exp < Date.now()) {
+    if (!payload?.sub || !payload?.sid || payload.exp < Date.now()) {
       return null
     }
 
-    return payload.sub
+    return { userId: payload.sub, sessionId: payload.sid }
   } catch {
     return null
   }

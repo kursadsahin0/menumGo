@@ -113,10 +113,18 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { onMounted, onUnmounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import PaymentCard from '@/components/admin/PaymentCard.vue'
 import { useNotify } from '@/composables/useNotify'
+import { getCurrentSubscription } from '@/services/subscriptionService'
+import { useAuthStore } from '@/stores/auth'
 import { formatTry } from '@/utils/currency'
+
+const router = useRouter()
+const auth = useAuthStore()
+let accessTimer = 0
+let checkingAccess = false
 
 const price = 9900
 const salesPhone = '0555 123 45 67'
@@ -176,4 +184,45 @@ function onSubmit() {
     `Ödeme şu an alınamıyor. Satın almak için ${salesPhone} numarasını arayın. Panel, ödeme tamamlanınca açılır.`,
   )
 }
+
+async function syncAccess() {
+  if (checkingAccess) {
+    return
+  }
+
+  checkingAccess = true
+
+  try {
+    const subscription = await getCurrentSubscription()
+    auth.applySubscription(subscription.status)
+
+    if (auth.hasAccess) {
+      router.replace({ name: 'admin-dashboard' })
+    }
+  } catch (error) {
+    if (error?.status === 401) {
+      auth.clearLocalSession()
+      router.replace({ name: 'login' })
+    }
+  } finally {
+    checkingAccess = false
+  }
+}
+
+function onVisible() {
+  if (document.visibilityState === 'visible') {
+    syncAccess()
+  }
+}
+
+onMounted(() => {
+  syncAccess()
+  accessTimer = window.setInterval(syncAccess, 5000)
+  document.addEventListener('visibilitychange', onVisible)
+})
+
+onUnmounted(() => {
+  window.clearInterval(accessTimer)
+  document.removeEventListener('visibilitychange', onVisible)
+})
 </script>
