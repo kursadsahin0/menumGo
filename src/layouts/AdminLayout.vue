@@ -1,10 +1,11 @@
 <template>
   <q-layout view="lHh Lpr lFf" class="admin-layout">
     <q-header bordered class="admin-topbar">
-      <AdminTopbar :title="pageTitle" @toggle="toggleDrawer" />
+      <AdminTopbar :title="pageTitle" :show-menu="showSidebar" @toggle="toggleDrawer" />
     </q-header>
 
     <q-drawer
+      v-if="showSidebar"
       v-model="drawerOpen"
       show-if-above
       bordered
@@ -33,9 +34,12 @@ const $q = useQuasar()
 const drawerOpen = ref(false)
 
 const pageTitle = computed(() => {
+  if (route.name === 'admin-billing') return ''
   const match = [...route.matched].reverse().find((record) => record.meta.title)
   return match?.meta.title || 'Panel'
 })
+
+const showSidebar = computed(() => route.name !== 'admin-billing')
 
 function toggleDrawer() {
   drawerOpen.value = !drawerOpen.value

@@ -1,5 +1,11 @@
-body {
+body,
+.q-layout {
   margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 100%;
+  line-height: 1.5;
+  letter-spacing: 0;
+  font-optical-sizing: auto;
 }
 
 .page-shell {
@@ -11,4 +17,90 @@ body {
 
 .page-shell--wide {
   max-width: 1080px;
+}
+
+button,
+.q-btn,
+.menu-chip,
+.menu-venue,
+.menu-lang__btn,
+.theme-card,
+.business-type {
+  transition: transform 100ms ease-out;
+}
+
+button:active,
+.q-btn:active:not(.disabled),
+.menu-chip:active,
+.menu-venue:active,
+.menu-lang__btn:active,
+.theme-card:active,
+.business-type:active {
+  transform: scale(0.97);
+}
+
+.q-menu.notice-menu,
+.q-menu.account-menu {
+  background: color-mix(in srgb, var(--app-surface) 86%, transparent);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  .q-btn,
+  .menu-chip,
+  .menu-venue,
+  .menu-lang__btn,
+  .theme-card,
+  .business-type,
+  .q-dialog__inner,
+  .menu-dialog {
+    transition: opacity 200ms ease;
+    transform: none;
+  }
+
+  button:active,
+  .q-btn:active,
+  .menu-chip:active,
+  .menu-venue:active {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .admin-layout .q-header.admin-topbar,
+  .landing-nav,
+  .menu-sticky,
+  .menu-dialog,
+  body.body--dark .menu-dialog.q-card,
+  .q-menu.notice-menu,
+  .q-menu.account-menu {
+    background: var(--app-surface);
+    backdrop-filter: none;
+  }
+
+  .menu-dialog,
+  body.body--dark .menu-dialog.q-card,
+  body.body--dark .menu-dialog .q-card__section,
+  body.body--dark .menu-dialog .q-card__actions {
+    background: #fff;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .admin-layout .q-header.admin-topbar,
+  .landing-nav,
+  .menu-sticky,
+  .menu-dialog,
+  body.body--dark .menu-dialog.q-card,
+  .q-menu.notice-menu {
+    background: var(--app-surface);
+    border: 1px solid var(--app-ink);
+    backdrop-filter: none;
+  }
+
+  .menu-dialog,
+  body.body--dark .menu-dialog.q-card {
+    background: #fff;
+  }
 }

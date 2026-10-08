@@ -1,5 +1,5 @@
 import { recordMenuView, recordProductView } from '../analytics/report.js'
-import { limitViewWrites, limitWaiterCalls } from '../rateLimit.js'
+import { limitViewWrites, limitWaiterCalls, limitWifiReads } from '../rateLimit.js'
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { createNotification } from '../notifications/notifications.js'
@@ -67,6 +67,23 @@ async function publicTenant(slug) {
 }
 
 export async function menuRoutes(app) {
+  app.post(
+    '/api/public/menus/:slug/wifi',
+    { preHandler: limitWifiReads },
+    async (request) => {
+      const tenant = await publicTenant(request.params.slug)
+      const settings = await prisma.menuSettings.findUnique({
+        where: { tenantId: tenant.id },
+        select: { wifiName: true, wifiPassword: true },
+      })
+
+      return {
+        name: settings?.wifiName || '',
+        password: settings?.wifiPassword || '',
+      }
+    },
+  )
+
   app.post(
     '/api/public/menus/:slug/views',
     { preHandler: limitViewWrites },
@@ -148,16 +165,19 @@ export async function menuRoutes(app) {
         id: tenant.id,
         slug: tenant.slug,
         name: tenant.name,
-        logo: null,
+        logo: tenant.logo || null,
         coverImage: tenant.coverImage || null,
-        description: '',
+        description: {
+          tr: tenant.description || settings.descriptionTr || '',
+          en: settings.descriptionEn || '',
+        },
         hours: '',
         phone: tenant.user?.phone || '',
         address: '',
         mapsUrl: '',
         socials: [],
       },
-      settings: toPublicSettings(settings, tenant),
+      settings: toPublicSettings(settings, tenant, { includeWifiPassword: false }),
       table,
       categories: groupProducts(tenant.categories, tenant.products),
     }

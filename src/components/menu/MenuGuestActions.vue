@@ -29,13 +29,15 @@
           </button>
         </div>
         <h2 class="menu-venue-dialog__name">{{ wifiName }}</h2>
-        <dl v-if="wifiPassword" class="menu-venue-dialog__list">
+        <p v-if="loadingWifi" class="menu-actions__notice" role="status">{{ messages.wifiLoading }}</p>
+        <p v-else-if="wifiError" class="menu-actions__error" role="alert">{{ wifiError }}</p>
+        <dl v-else-if="password" class="menu-venue-dialog__list">
           <div>
             <dt>{{ messages.wifiPassword }}</dt>
-            <dd>{{ wifiPassword }}</dd>
+            <dd>{{ password }}</dd>
           </div>
         </dl>
-        <button v-if="wifiPassword" type="button" class="menu-venue menu-actions__copy" @click="copyPassword">
+        <button v-if="password" type="button" class="menu-venue menu-actions__copy" @click="copyPassword">
           {{ copied ? messages.copied : messages.copy }}
         </button>
       </q-card>
@@ -44,7 +46,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useMenuLanguage } from '@/composables/useMenuLanguage'
 
@@ -56,6 +58,14 @@ const props = defineProps({
   wifiPassword: {
     type: String,
     default: '',
+  },
+  hasWifiPassword: {
+    type: Boolean,
+    default: false,
+  },
+  loadWifi: {
+    type: Function,
+    default: null,
   },
   tableName: {
     type: String,
@@ -74,7 +84,12 @@ const copied = ref(false)
 const sending = ref(false)
 const sent = ref(false)
 const error = ref('')
-const hasWifi = computed(() => Boolean(props.wifiName || props.wifiPassword))
+const password = ref(props.wifiPassword)
+const loadingWifi = ref(false)
+const wifiError = ref('')
+const hasWifi = computed(
+  () => Boolean(props.wifiName || props.wifiPassword || props.hasWifiPassword || password.value),
+)
 const notice = computed(() =>
   props.tableName ? `${props.tableName} · ${messages.value.waiterNotice}` : messages.value.waiterNotice,
 )
@@ -83,7 +98,7 @@ let copiedTimer
 
 async function copyPassword() {
   try {
-    await navigator.clipboard.writeText(props.wifiPassword)
+    await navigator.clipboard.writeText(password.value)
     copied.value = true
     clearTimeout(copiedTimer)
     copiedTimer = setTimeout(() => {
@@ -94,6 +109,33 @@ async function copyPassword() {
   }
 }
 
+watch(
+  () => props.wifiPassword,
+  (value) => {
+    if (value) {
+      password.value = value
+    }
+  },
+)
+
+watch(wifiOpen, async (open) => {
+  if (!open || password.value || !props.loadWifi) {
+    return
+  }
+
+  loadingWifi.value = true
+  wifiError.value = ''
+
+  try {
+    const result = await props.loadWifi()
+    password.value = String(result?.password || '')
+  } catch {
+    wifiError.value = messages.value.wifiError
+  } finally {
+    loadingWifi.value = false
+  }
+})
+
 async function onCall() {
   if (sending.value || sent.value) {
     return
@@ -103,9 +145,11 @@ async function onCall() {
   error.value = ''
 
   try {
-    if (props.requestWaiter) {
-      await props.requestWaiter()
+    if (!props.requestWaiter) {
+      throw new Error('waiter')
     }
+
+    await props.requestWaiter()
 
     sent.value = true
     $q.notify({

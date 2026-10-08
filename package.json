@@ -9,7 +9,8 @@
   "scripts": {
     "lint": "prettier --write \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore && eslint --fix -c ./eslint.config.js \"./src*/**/*.{js,cjs,mjs,vue}\"",
     "lint:check": "prettier \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore && eslint -c ./eslint.config.js \"./src*/**/*.{js,cjs,mjs,vue}\"",
-    "dev": "quasar dev",
+    "dev": "node scripts/dev.mjs",
+    "dev:ui": "quasar dev",
     "api": "npm run dev --prefix server",
     "build": "quasar build",
     "postinstall": "quasar prepare --silent"

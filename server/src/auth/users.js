@@ -25,6 +25,7 @@ export function toPublicUser(user) {
     id: user.id,
     fullName: user.fullName,
     email: user.email,
+    emailVerified: Boolean(user.emailVerifiedAt),
     phone: user.phone,
     tenant: user.tenant
       ? {
@@ -99,10 +100,43 @@ export function assertPassword(password, message = 'Şifre en az 8 karakter olma
   return password
 }
 
+const reservedSlugs = new Set(['admin', 'api', 'auth', 'assets', 'menu', 'uploads'])
+
+export function assertSlug(value) {
+  const raw = String(value || '').trim()
+
+  if (!raw) {
+    throw fail(422, 'Menü adresi zorunlu.')
+  }
+
+  const slug = slugify(raw)
+
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length < 3 || slug.length > 48) {
+    throw fail(422, 'Menü adresi 3 ile 48 karakter arasında olmalı.')
+  }
+
+  if (reservedSlugs.has(slug)) {
+    throw fail(422, 'Bu menü adresi kullanılamaz.')
+  }
+
+  return slug
+}
+
+export async function assertAvailableSlug(value, tenantId) {
+  const slug = assertSlug(value)
+  const taken = await prisma.tenant.findUnique({ where: { slug } })
+
+  if (taken && taken.id !== tenantId) {
+    throw fail(409, 'Bu menü adresi kullanılıyor.')
+  }
+
+  return slug
+}
+
 export async function uniqueSlug(name) {
   const base = slugify(name)
-  let slug = base
-  let attempt = 2
+  let slug = reservedSlugs.has(base) ? `${base}-2` : base
+  let attempt = reservedSlugs.has(base) ? 3 : 2
 
   while (await prisma.tenant.findUnique({ where: { slug } })) {
     slug = `${base}-${attempt}`

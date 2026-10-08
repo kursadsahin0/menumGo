@@ -39,6 +39,37 @@ export function forgotPassword(payload) {
   })
 }
 
+export function verifyEmail(payload) {
+  return request({
+    method: 'post',
+    url: endpoints.auth.verifyEmail,
+    data: payload,
+  })
+}
+
+export function sendVerification() {
+  return request({
+    method: 'post',
+    url: endpoints.auth.sendVerification,
+  })
+}
+
+export function updateSlug(payload) {
+  return request({
+    method: 'patch',
+    url: endpoints.auth.slug,
+    data: payload,
+  })
+}
+
+export function deleteAccount(payload) {
+  return request({
+    method: 'delete',
+    url: endpoints.auth.me,
+    data: payload,
+  })
+}
+
 export function resetPassword(payload) {
   return request({
     method: 'post',

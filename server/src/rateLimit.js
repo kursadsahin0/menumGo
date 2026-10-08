@@ -1,37 +1,62 @@
+import { prisma } from './db.js'
 import { fail } from './http.js'
+import { newId } from './auth/users.js'
 
 const windowMs = 60_000
-const hits = new Map()
 
 export async function limitViewWrites(request, reply) {
-  return limitWrites(request, reply, hits, 30)
+  return limitWrites(request, reply, 'view', 30)
 }
 
-const waiterHits = new Map()
-
 export async function limitWaiterCalls(request, reply) {
-  return limitWrites(request, reply, waiterHits, 4)
+  return limitWrites(request, reply, 'waiter', 4)
+}
+
+export async function limitWifiReads(request, reply) {
+  return limitWrites(request, reply, 'wifi', 20)
+}
+
+export async function limitVerificationSends(request, reply, userId) {
+  return limitWrites({ ip: `user:${userId}` }, reply, 'verify', 5)
 }
 
 async function limitWrites(request, reply, bucket, max) {
+  const ip = String(request.ip || 'unknown').slice(0, 64)
   const now = Date.now()
-  const key = request.ip || 'unknown'
-  const recent = (bucket.get(key) || []).filter((time) => now - time < windowMs)
+  const since = new Date(now - windowMs)
+  const lockKey = `${bucket}:${ip}`
 
-  if (recent.length >= max) {
-    const retryAfter = Math.max(1, Math.ceil((windowMs - (now - recent[0])) / 1000))
+  const retryAfter = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`
+    await tx.rateHit.deleteMany({
+      where: { createdAt: { lt: since } },
+    })
+
+    const hits = await tx.rateHit.findMany({
+      where: { bucket, ip, createdAt: { gte: since } },
+      orderBy: { createdAt: 'asc' },
+      select: { createdAt: true },
+    })
+
+    if (hits.length >= max) {
+      const oldest = hits[0].createdAt.getTime()
+      return Math.max(1, Math.ceil((windowMs - (now - oldest)) / 1000))
+    }
+
+    await tx.rateHit.create({
+      data: {
+        id: newId('hit'),
+        bucket,
+        ip,
+        createdAt: new Date(now),
+      },
+    })
+
+    return 0
+  })
+
+  if (retryAfter > 0) {
     reply.header('Retry-After', String(retryAfter))
     throw fail(429, 'Çok fazla istek. Biraz sonra yeniden deneyin.')
-  }
-
-  recent.push(now)
-  bucket.set(key, recent)
-
-  if (bucket.size > 5000) {
-    for (const [id, times] of bucket) {
-      if (times.every((time) => now - time >= windowMs)) {
-        bucket.delete(id)
-      }
-    }
   }
 }

@@ -147,7 +147,7 @@ async function onSubmit() {
       password: form.password,
       acceptedTerms: form.acceptedTerms,
     })
-    router.push({ name: 'admin-billing' })
+    router.push({ name: auth.entryRoute })
   } catch (error) {
     errorMessage.value = error?.message || 'Kayıt tamamlanamadı.'
   }

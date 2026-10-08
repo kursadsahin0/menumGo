@@ -4,8 +4,22 @@
 }
 
 .admin-layout .q-header.admin-topbar {
-  background: var(--app-surface);
+  background: color-mix(in srgb, var(--app-surface) 72%, transparent);
   color: var(--app-ink);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom-color: transparent;
+}
+
+.admin-layout .q-page-container {
+  padding-top: 0 !important;
+}
+
+.admin-layout .q-page {
+  padding-top: 64px;
+}
+
+body.body--dark .admin-layout .q-header.admin-topbar {
+  background: color-mix(in srgb, var(--app-bg) 78%, transparent);
 }
 
 .admin-topbar__bar {
@@ -100,6 +114,31 @@
   padding: 0;
   overflow: auto;
   list-style: none;
+}
+
+.notice-menu__more {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--app-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.notice-menu__more:hover {
+  background: rgba(31, 58, 52, 0.06);
+  color: var(--app-ink);
+}
+
+.notice-menu__more:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
 
 .notice-menu__item {
@@ -416,6 +455,48 @@ body.body--dark .admin-nav__group--active {
   line-height: 1.45;
 }
 
+.account-sheet__note {
+  margin: 0;
+  color: var(--app-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.account-sheet__link {
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: $primary;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.account-sheet__link:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.account-delete {
+  width: min(420px, calc(100vw - 32px));
+  border-radius: 16px;
+}
+
+.account-delete__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.account-delete__text {
+  margin: 8px 0 0;
+  color: var(--app-muted);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
 body.body--dark .account-sheet {
   box-shadow: none;
 }
@@ -425,7 +506,9 @@ body.body--dark .account-sheet__label {
 }
 
 body.body--dark .account-sheet__status,
-body.body--dark .account-sheet__theme p {
+body.body--dark .account-sheet__theme p,
+body.body--dark .account-sheet__note,
+body.body--dark .account-delete__text {
   opacity: 0.72;
 }
 
@@ -509,6 +592,33 @@ body.body--dark .billing-pay__grid .q-field--outlined .q-field__control {
   margin: 8px 0 0;
   font-size: 1rem;
   line-height: 1.5;
+}
+
+.billing-offer__head .billing-call {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 36rem;
+  margin-top: 14px;
+  color: var(--app-ink);
+}
+
+.billing-call .q-icon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: $primary;
+}
+
+.billing-call a,
+.billing-offer__note a {
+  color: inherit;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.billing-call a {
+  font-size: 1.125rem;
 }
 
 .pay-card-scene {
@@ -761,6 +871,10 @@ body.body--dark .billing-offer__head p,
 body.body--dark .billing-offer__price span,
 body.body--dark .billing-offer__note {
   opacity: 0.72;
+}
+
+body.body--dark .billing-offer__head .billing-call {
+  opacity: 1;
 }
 
 body.body--dark .billing-offer__list .q-icon {

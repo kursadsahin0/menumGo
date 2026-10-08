@@ -18,8 +18,9 @@ const classic = {
   logoPosition: 'center',
 }
 
-export function toPublicSettings(settings, tenant) {
+export function toPublicSettings(settings, tenant, { includeWifiPassword = true } = {}) {
   const source = settings || defaultRecord(tenant)
+  const wifiPassword = source.wifiPassword || ''
 
   return {
     name: source.name,
@@ -35,7 +36,9 @@ export function toPublicSettings(settings, tenant) {
     website: source.website || '',
     instagram: source.instagram || '',
     wifiName: source.wifiName || '',
-    wifiPassword: source.wifiPassword || '',
+    ...(includeWifiPassword
+      ? { wifiPassword }
+      : { hasWifiPassword: Boolean(wifiPassword) }),
     hours: {
       tr: source.hoursTr || '',
       en: source.hoursEn || '',

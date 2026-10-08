@@ -28,43 +28,7 @@
           </section>
 
           <section class="menu-settings__section">
-            <h2 class="menu-settings__title">Restoran bilgileri</h2>
-            <q-file
-              v-model="logoFile"
-              label="Logo"
-              accept="image/*"
-              outlined
-              dense
-              clearable
-              @update:model-value="onLogo"
-            >
-              <template #prepend>
-                <q-icon name="image" />
-              </template>
-            </q-file>
-            <div v-if="draft.logo" class="menu-settings__logo">
-              <img :src="logoSrc" alt="" />
-              <q-btn flat no-caps color="negative" label="Logoyu kaldır" @click="clearLogo" />
-            </div>
-            <q-input v-model="draft.name" label="Restoran adı" outlined dense />
-            <div class="menu-settings__copy">
-              <q-input
-                v-model="draft.description.tr"
-                type="textarea"
-                label="Açıklama"
-                outlined
-                dense
-                autogrow
-              />
-              <q-input
-                v-model="draft.description.en"
-                type="textarea"
-                label="Açıklama (İngilizce)"
-                outlined
-                dense
-                autogrow
-              />
-            </div>
+            <h2 class="menu-settings__title">İletişim</h2>
             <q-input v-model="draft.phone" label="Telefon" outlined dense />
             <div class="menu-settings__copy">
               <q-input
@@ -135,56 +99,39 @@
           </div>
         </form>
 
-        <MenuPreview class="menu-settings__preview" :settings="draft" :categories="categories" />
+        <MenuPreview
+          class="menu-settings__preview"
+          :settings="draft"
+          :venue="businessStore.profile"
+          :categories="categories"
+        />
       </div>
     </div>
   </q-page>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import MenuPreview from '@/components/admin/MenuPreview.vue'
 import AdminSkeleton from '@/components/common/AdminSkeleton.vue'
 import AppError from '@/components/common/AppError.vue'
 import { cardStyleOptions, fontOptions, menuThemes } from '@/data/menuThemes'
 import { useNotify } from '@/composables/useNotify'
 import { useAuthStore } from '@/stores/auth'
+import { useBusinessStore } from '@/stores/business'
 import { useMenuSettingsStore } from '@/stores/menuSettings'
 import { useMenuStore } from '@/stores/menu'
-import { menuImage } from '@/utils/menuImage'
 
 const auth = useAuthStore()
+const businessStore = useBusinessStore()
 const menu = useMenuStore()
 const settingsStore = useMenuSettingsStore()
 const { notifySuccess, notifyError } = useNotify()
-const logoFile = ref(null)
 const draft = computed(() => settingsStore.draft)
 const categories = computed(() => menu.publicMenu?.categories || [])
 const dirty = computed(
   () => JSON.stringify(settingsStore.draft) !== JSON.stringify(settingsStore.settings),
 )
-const logoSrc = computed(() => menuImage(draft.value?.logo, 144))
-
-function onLogo(file) {
-  if (!file || !draft.value) {
-    return
-  }
-
-  const reader = new FileReader()
-  reader.onload = () => {
-    draft.value.logo = reader.result
-  }
-  reader.readAsDataURL(file)
-}
-
-function clearLogo() {
-  if (!draft.value) {
-    return
-  }
-
-  draft.value.logo = null
-  logoFile.value = null
-}
 
 async function save() {
   try {
@@ -196,7 +143,7 @@ async function save() {
 }
 
 onMounted(async () => {
-  await settingsStore.fetchSettings()
+  await Promise.all([settingsStore.fetchSettings(), businessStore.fetchBusiness()])
   settingsStore.resetDraft()
   const slug = auth.user?.tenant?.slug || 'burger-house'
   menu.fetchPublicMenu(slug).catch(() => {})

@@ -6,12 +6,16 @@ export const endpoints = {
     me: '/auth/me',
     forgotPassword: '/auth/forgot-password',
     resetPassword: '/auth/reset-password',
+    verifyEmail: '/auth/verify-email',
+    sendVerification: '/auth/verify-email/send',
+    slug: '/auth/slug',
     password: '/auth/password',
   },
   menus: {
     public: (slug) => `/public/menus/${slug}`,
     view: (slug) => `/public/menus/${slug}/views`,
     waiter: (slug) => `/public/menus/${slug}/waiter`,
+    wifi: (slug) => `/public/menus/${slug}/wifi`,
     productView: (slug, productId) => `/public/menus/${slug}/products/${productId}/views`,
   },
   menuSettings: {
@@ -49,5 +53,9 @@ export const endpoints = {
     list: '/notifications',
     read: '/notifications/read',
     clear: '/notifications',
+  },
+  push: {
+    publicKey: '/push/public-key',
+    subscription: '/push/subscription',
   },
 }

@@ -13,11 +13,10 @@ npm install
 cp .env.example .env
 npm install --prefix server
 cp server/.env.example server/.env
-npm run api
 npm run dev
 ```
 
-Arayüz `http://localhost:9000` adresinde açılır. Hesaplar `npm run api` ile çalışan API üzerinden PostgreSQL'e yazılır.
+`npm run dev` arayüzü ve API’yi birlikte açar. Arayüz `http://localhost:9000` adresindedir. İstekler `http://127.0.0.1:3000` üzerindeki API’ye gider. Yalnızca API için `npm run api` yeterlidir.
 
 ## Ortam
 
@@ -35,7 +34,7 @@ Misafir menüsü: `/menu/burger-house`
 ## Komutlar
 
 ```bash
-npm run dev         # geliştirme
+npm run dev         # arayüz ve API birlikte
 npm run build       # üretim derlemesi
 npm run lint        # biçim ve lint düzeltmesi
 npm run lint:check  # biçim ve lint kontrolü

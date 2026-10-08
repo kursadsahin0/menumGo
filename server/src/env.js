@@ -65,6 +65,9 @@ export const env = {
   smtpUser: process.env.SMTP_USER || '',
   smtpPass: process.env.SMTP_PASS || '',
   smtpSecure: process.env.SMTP_SECURE === 'true',
+  vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
+  vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
+  vapidSubject: process.env.VAPID_SUBJECT || 'mailto:noreply@menumgo.local',
 }
 
 if (!env.databaseUrl || !env.jwtSecret) {

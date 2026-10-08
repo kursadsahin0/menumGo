@@ -60,12 +60,14 @@ export function presentRestaurant(restaurant, settings) {
 
   return {
     ...restaurant,
-    name: settings.name || restaurant.name,
-    logo: settings.logo || restaurant.logo,
-    description: localeCopy(settings.description, restaurant.description),
+    name: textValue(restaurant.name) || settings.name || '',
+    logo: restaurant.logo || settings.logo || null,
+    coverImage: restaurant.coverImage || null,
+    description: preferCopy(restaurant.description, settings.description),
     phone: settings.phone,
     wifiName: String(settings.wifiName || ''),
     wifiPassword: String(settings.wifiPassword || ''),
+    hasWifiPassword: Boolean(settings.hasWifiPassword || settings.wifiPassword),
     address,
     hours: localeCopy(settings.hours, restaurant.hours),
     mapsUrl:
@@ -73,6 +75,27 @@ export function presentRestaurant(restaurant, settings) {
       `https://maps.google.com/?q=${encodeURIComponent(plainText(address))}`,
     socials: socials.filter((social) => social.url),
   }
+}
+
+function textValue(value) {
+  if (value && typeof value === 'object') {
+    return String(value.tr || value.en || '').trim()
+  }
+
+  return String(value || '').trim()
+}
+
+function preferCopy(primary, fallback) {
+  const chosen = textValue(primary) ? primary : fallback
+
+  if (chosen && typeof chosen === 'object') {
+    return {
+      tr: String(chosen.tr || ''),
+      en: String(chosen.en || ''),
+    }
+  }
+
+  return { tr: String(chosen || ''), en: '' }
 }
 
 function localeCopy(setting, restaurantValue) {

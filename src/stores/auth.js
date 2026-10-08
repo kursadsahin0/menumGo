@@ -7,7 +7,11 @@ import {
   logout as logoutRequest,
   register as registerRequest,
   resetPassword as resetPasswordRequest,
+  sendVerification as sendVerificationRequest,
   updateAccount as updateAccountRequest,
+  updateSlug as updateSlugRequest,
+  verifyEmail as verifyEmailRequest,
+  deleteAccount as deleteAccountRequest,
 } from '@/services/auth.service'
 import {
   clearSession,
@@ -16,6 +20,7 @@ import {
   persistSession,
   setStoredUser,
 } from '@/utils/storage'
+import { disableWaiterPush } from '@/utils/waiterPush'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -28,7 +33,12 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state) => Boolean(state.token),
+    emailVerified: (state) => state.user?.emailVerified === true,
     hasAccess: (state) => state.user?.subscription?.status === 'active',
+    entryRoute() {
+      if (!this.emailVerified) return 'verify-pending'
+      return this.hasAccess ? 'admin-dashboard' : 'admin-billing'
+    },
   },
 
   actions: {
@@ -132,6 +142,27 @@ export const useAuthStore = defineStore('auth', {
       return user
     },
 
+    async verifyEmail(payload) {
+      return verifyEmailRequest(payload)
+    },
+
+    async sendVerification() {
+      return sendVerificationRequest()
+    },
+
+    async updateSlug(slug) {
+      const user = await updateSlugRequest({ slug })
+      this.user = user
+      setStoredUser(user)
+      return user
+    },
+
+    async deleteAccount(password) {
+      await disableWaiterPush().catch(() => {})
+      await deleteAccountRequest({ password })
+      this.clearLocalSession()
+    },
+
     async changePassword(payload) {
       return changePasswordRequest(payload)
     },
@@ -139,6 +170,7 @@ export const useAuthStore = defineStore('auth', {
     async logout() {
       try {
         if (this.token) {
+          await disableWaiterPush().catch(() => {})
           await logoutRequest()
         }
       } finally {

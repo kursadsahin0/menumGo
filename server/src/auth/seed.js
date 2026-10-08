@@ -22,6 +22,13 @@ export async function ensureDemoUser() {
   const existing = await prisma.user.findUnique({ where: { email: demo.email } })
 
   if (existing) {
+    if (!existing.emailVerifiedAt) {
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: { emailVerifiedAt: new Date() },
+      })
+    }
+
     return existing
   }
 
@@ -32,6 +39,7 @@ export async function ensureDemoUser() {
       email: demo.email,
       phone: demo.phone,
       passwordHash: await hashPassword(demo.password),
+      emailVerifiedAt: new Date(),
       tenant: {
         create: {
           id: demo.tenant.id,

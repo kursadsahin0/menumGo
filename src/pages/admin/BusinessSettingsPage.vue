@@ -52,7 +52,7 @@
             <div>
               <h2 class="business-profile__title">İşletme bilgileri</h2>
               <p class="business-profile__lead">
-                Ad, tür ve görseller işletmenizi panelde tanıtır.
+                Ad, açıklama, logo ve kapak misafir menüsünde görünür.
               </p>
             </div>
             <div class="business-profile__media-actions">
@@ -109,6 +109,14 @@
             v-model="draft.description"
             type="textarea"
             label="Açıklama"
+            outlined
+            autogrow
+            :rows="3"
+          />
+          <q-input
+            v-model="draft.descriptionEn"
+            type="textarea"
+            label="Açıklama (İngilizce)"
             outlined
             autogrow
             :rows="3"

@@ -20,6 +20,13 @@ export function recordMenuView(slug, language, tableId) {
   }).catch(() => null)
 }
 
+export function getWifi(slug) {
+  return request({
+    method: 'post',
+    url: endpoints.menus.wifi(slug),
+  })
+}
+
 export function requestWaiter(slug, tableId) {
   return request({
     method: 'post',

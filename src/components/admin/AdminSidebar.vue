@@ -60,9 +60,7 @@ import { adminNavigation } from '@/router/navigation'
 const emit = defineEmits(['navigate'])
 const route = useRoute()
 const auth = useAuthStore()
-const home = computed(() =>
-  auth.hasAccess ? { name: 'admin-dashboard' } : { name: 'admin-billing' },
-)
+const home = computed(() => ({ name: auth.entryRoute }))
 
 const menuGroup = adminNavigation.find((item) => item.children)
 const menuNames = (menuGroup?.children || []).map((child) => child.to.name)

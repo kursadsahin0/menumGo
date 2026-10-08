@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useMenuSettingsStore } from '@/stores/menuSettings'
 import { setStoredUser } from '@/utils/storage'
 
-function syncTenantName(name) {
+function syncGuestIdentity(profile) {
   const auth = useAuthStore()
 
   if (auth.user?.tenant) {
@@ -12,20 +12,28 @@ function syncTenantName(name) {
       ...auth.user,
       tenant: {
         ...auth.user.tenant,
-        name,
+        name: profile.name,
       },
     }
     setStoredUser(auth.user)
   }
 
   const settings = useMenuSettingsStore()
+  const identity = {
+    name: profile.name,
+    logo: profile.logo,
+    description: {
+      tr: profile.description || '',
+      en: profile.descriptionEn || '',
+    },
+  }
 
   if (settings.settings) {
-    settings.settings = { ...settings.settings, name }
+    settings.settings = { ...settings.settings, ...identity }
   }
 
   if (settings.draft) {
-    settings.draft = { ...settings.draft, name }
+    settings.draft = { ...settings.draft, ...identity }
   }
 }
 
@@ -92,7 +100,7 @@ export const useBusinessStore = defineStore('business', {
       try {
         this.profile = await updateBusiness(clone(this.draft))
         this.draft = clone(this.profile)
-        syncTenantName(this.profile.name)
+        syncGuestIdentity(this.profile)
         return this.profile
       } catch (error) {
         this.error = error

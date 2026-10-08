@@ -30,6 +30,7 @@
         :restaurant="restaurant"
         :table="menu.publicMenu?.table"
         :request-waiter="requestWaiterCall"
+        :load-wifi="loadWifiPassword"
       />
 
       <div class="menu-sticky">
@@ -115,7 +116,7 @@ import MenuProductCard from '@/components/menu/MenuProductCard.vue'
 import MenuProductDialog from '@/components/menu/MenuProductDialog.vue'
 import MenuSectionHeading from '@/components/menu/MenuSectionHeading.vue'
 import { useMenuLanguage } from '@/composables/useMenuLanguage'
-import { recordMenuView, recordProductView, requestWaiter } from '@/services/menuService'
+import { getWifi, recordMenuView, recordProductView, requestWaiter } from '@/services/menuService'
 import { useMenuStore } from '@/stores/menu'
 import { menuAppearance, presentRestaurant } from '@/utils/menuAppearance'
 import { menuImage } from '@/utils/menuImage'
@@ -181,6 +182,10 @@ function load() {
 
 function requestWaiterCall() {
   return requestWaiter(route.params.restaurantSlug, tableQuery())
+}
+
+function loadWifiPassword() {
+  return getWifi(route.params.restaurantSlug)
 }
 
 function openProduct(product) {

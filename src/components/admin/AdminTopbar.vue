@@ -1,24 +1,32 @@
 <template>
   <q-toolbar class="admin-topbar__bar">
-    <q-btn flat dense round icon="menu" aria-label="Menüyü aç" @click="emit('toggle')" />
-    <div class="admin-topbar__title">{{ title }}</div>
+    <q-btn
+      v-if="showMenu"
+      flat
+      dense
+      round
+      icon="menu"
+      aria-label="Menüyü aç"
+      @click="emit('toggle')"
+    />
+    <div v-if="title" class="admin-topbar__title">{{ title }}</div>
     <q-space />
 
     <q-btn flat round icon="notifications" aria-label="Bildirimler">
-      <q-badge v-if="unreadCount" floating color="negative" rounded />
+      <q-badge v-if="unreadTotal" floating color="negative" rounded />
       <q-menu
         class="notice-menu"
         anchor="bottom right"
         self="top right"
         :offset="[0, 8]"
-        @before-show="loadNotifications"
+        @before-show="openNotifications"
         @hide="markRead"
       >
         <div class="notice-menu__panel">
           <header class="notice-menu__head">
             <h2>Bildirimler</h2>
             <div class="notice-menu__tools">
-              <span v-if="unreadCount">{{ unreadCount }} yeni</span>
+              <span v-if="unreadTotal">{{ unreadTotal }} yeni</span>
               <button
                 v-if="notifications.length"
                 type="button"
@@ -47,6 +55,15 @@
               </span>
             </li>
           </ul>
+          <button
+            v-if="hasMore"
+            type="button"
+            class="notice-menu__more"
+            :disabled="loadingOlder"
+            @click.stop="loadOlder"
+          >
+            Daha eski
+          </button>
         </div>
       </q-menu>
     </q-btn>
@@ -117,11 +134,16 @@ import {
   showWaiterNotice,
   unlockNotificationSound,
 } from '@/utils/notificationSound'
+import { enableWaiterPush } from '@/utils/waiterPush'
 
 defineProps({
   title: {
     type: String,
     default: '',
+  },
+  showMenu: {
+    type: Boolean,
+    default: true,
   },
 })
 
@@ -132,16 +154,16 @@ const { auth, logout } = useAuth()
 const isDark = computed(() => $q.dark.isActive)
 const notifications = ref([])
 const clearing = ref(false)
-const unreadCount = computed(() => notifications.value.filter((item) => item.unread).length)
+const loadingOlder = ref(false)
+const hasMore = ref(false)
+const unreadTotal = ref(0)
+const menuOpen = ref(false)
 let seenIds = null
-let polling = false
 let pollTimer
 let requestId = 0
 
-function applyNotifications(next) {
-  const ids = new Set(next.map((item) => item.id))
-
-  if (seenIds) {
+function applyNotifications(next, { announce = true } = {}) {
+  if (announce && seenIds) {
     next
       .filter((item) => !seenIds.has(item.id) && String(item.title).includes('Garson'))
       .forEach((item, index) => {
@@ -150,30 +172,71 @@ function applyNotifications(next) {
       })
   }
 
-  seenIds = ids
+  seenIds = new Set(next.map((item) => item.id))
   notifications.value = next
 }
 
-async function loadNotifications() {
-  if (polling) {
-    return
-  }
+function showPage(page, next, { announce = true } = {}) {
+  hasMore.value = page.hasMore
+  unreadTotal.value = page.unread
+  applyNotifications(next, { announce })
+}
 
-  polling = true
+async function loadNotifications({ replace = false } = {}) {
   const id = ++requestId
 
   try {
-    const next = await getNotifications()
+    const page = await getNotifications()
 
-    if (id === requestId) {
-      applyNotifications(next)
+    if (id !== requestId) {
+      return
+    }
+
+    const pageIds = new Set(page.items.map((item) => item.id))
+    const older = notifications.value.filter((item) => !pageIds.has(item.id))
+    const keepOlder = !replace && menuOpen.value && older.length
+    const alreadyComplete = keepOlder && !hasMore.value
+    showPage(page, keepOlder ? [...page.items, ...older] : page.items)
+
+    if (alreadyComplete) {
+      hasMore.value = false
     }
   } catch {
     if (!seenIds) {
       notifications.value = []
     }
+  }
+}
+
+function openNotifications() {
+  menuOpen.value = true
+  loadNotifications({ replace: true })
+}
+
+async function loadOlder() {
+  const oldest = notifications.value[notifications.value.length - 1]
+
+  if (!hasMore.value || loadingOlder.value || !oldest) {
+    return
+  }
+
+  loadingOlder.value = true
+  const id = ++requestId
+
+  try {
+    const page = await getNotifications(oldest.id)
+
+    if (id !== requestId) {
+      return
+    }
+
+    const known = new Set(notifications.value.map((item) => item.id))
+    const extra = page.items.filter((item) => !known.has(item.id))
+    showPage(page, [...notifications.value, ...extra], { announce: false })
+  } catch {
+    // The current page stays until the next successful load.
   } finally {
-    polling = false
+    loadingOlder.value = false
   }
 }
 
@@ -184,12 +247,13 @@ async function clearAll() {
 
   clearing.value = true
   const id = ++requestId
+  const ids = notifications.value.map((item) => item.id)
 
   try {
-    const next = await clearNotifications()
+    const page = await clearNotifications(ids)
 
     if (id === requestId) {
-      applyNotifications(next)
+      showPage(page, page.items, { announce: false })
     }
   } catch {
     // The list stays until a later refresh succeeds.
@@ -199,12 +263,20 @@ async function clearAll() {
 }
 
 async function markRead() {
-  if (!notifications.value.some((item) => item.unread)) {
+  menuOpen.value = false
+  const ids = notifications.value.filter((item) => item.unread).map((item) => item.id)
+
+  if (!ids.length) {
     return
   }
 
   try {
-    notifications.value = await markNotificationsRead()
+    const result = await markNotificationsRead(ids)
+    unreadTotal.value = result.unread
+    const marked = new Set(ids)
+    notifications.value = notifications.value.map((item) =>
+      marked.has(item.id) ? { ...item, unread: false } : item,
+    )
   } catch {
     // The badge stays until the next successful refresh.
   }
@@ -226,10 +298,6 @@ function notificationIcon(title) {
 
   if (text.includes('Garson')) {
     return 'room_service'
-  }
-
-  if (text.includes('menüyü açtı') || text === 'Menü açıldı') {
-    return 'visibility'
   }
 
   if (text.includes('fiyatı')) {
@@ -264,6 +332,11 @@ async function onLogout() {
 onMounted(() => {
   loadNotifications()
   window.addEventListener('pointerdown', unlockNotificationSound)
+
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    enableWaiterPush().catch(() => {})
+  }
+
   pollTimer = window.setInterval(loadNotifications, 5000)
 })
 

@@ -8,7 +8,7 @@
         :style="appearance.style"
       >
         <div class="menu-page">
-          <MenuHeader v-if="restaurant" :restaurant="restaurant" />
+          <MenuHeader v-if="restaurant" :restaurant="restaurant" :request-waiter="callWaiter" />
           <nav class="menu-cats" aria-hidden="true">
             <span
               v-for="(category, index) in previewCategories"
@@ -47,6 +47,8 @@ import MenuHeader from '@/components/menu/MenuHeader.vue'
 import MenuProductCard from '@/components/menu/MenuProductCard.vue'
 import MenuSectionHeading from '@/components/menu/MenuSectionHeading.vue'
 import { useMenuLanguage } from '@/composables/useMenuLanguage'
+import { requestWaiter } from '@/services/menuService'
+import { useAuthStore } from '@/stores/auth'
 import { menuAppearance, presentRestaurant } from '@/utils/menuAppearance'
 
 const props = defineProps({
@@ -58,16 +60,34 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  venue: {
+    type: Object,
+    default: null,
+  },
 })
 
+const auth = useAuthStore()
 const { text } = useMenuLanguage()
+
+function callWaiter() {
+  const slug = auth.user?.tenant?.slug
+
+  if (!slug) {
+    return Promise.reject(new Error('waiter'))
+  }
+
+  return requestWaiter(slug)
+}
 const appearance = computed(() => menuAppearance(props.settings))
 const restaurant = computed(() =>
   presentRestaurant(
     {
-      name: props.settings.name || 'Restoran',
-      logo: props.settings.logo,
-      description: props.settings.description,
+      name: props.venue?.name || props.settings.name || 'Restoran',
+      logo: props.venue?.logo || props.settings.logo,
+      coverImage: props.venue?.coverImage || null,
+      description: props.venue
+        ? { tr: props.venue.description || '', en: props.venue.descriptionEn || '' }
+        : props.settings.description,
       phone: props.settings.phone,
       address: props.settings.address,
       hours: props.settings.hours,

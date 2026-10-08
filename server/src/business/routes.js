@@ -2,6 +2,7 @@ import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { requireTenant, requireUser } from '../auth/session.js'
 import { readBusiness, toPublicBusiness } from './business.js'
+import { ensureMenuSettings } from '../menuSettings/settings.js'
 import { replaceImage, saveImage } from '../images/files.js'
 
 async function loadTenant(request) {
@@ -17,28 +18,46 @@ async function loadTenant(request) {
 
 export async function businessRoutes(app) {
   app.get('/api/business', async (request) => {
-    return toPublicBusiness(await loadTenant(request))
+    const tenant = await loadTenant(request)
+    const settings = await ensureMenuSettings(tenant)
+    return toPublicBusiness(tenant, settings)
   })
 
   app.put('/api/business', async (request) => {
     const tenant = await loadTenant(request)
+    const menu = await ensureMenuSettings(tenant)
     const data = readBusiness(request.body)
     data.logo = await saveImage(data.logo, 'Logo')
     data.coverImage = await saveImage(data.coverImage, 'Kapak')
 
     const updated = await prisma.tenant.update({
       where: { id: tenant.id },
-      data,
+      data: {
+        name: data.name,
+        businessType: data.businessType,
+        description: data.description,
+        logo: data.logo,
+        coverImage: data.coverImage,
+      },
     })
 
     await replaceImage(tenant.logo, data.logo)
     await replaceImage(tenant.coverImage, data.coverImage)
 
-    await prisma.menuSettings.updateMany({
-      where: { tenantId: tenant.id },
-      data: { name: data.name },
+    const settings = await prisma.menuSettings.update({
+      where: { id: menu.id },
+      data: {
+        name: data.name,
+        descriptionTr: data.description,
+        descriptionEn: data.descriptionEn,
+        logo: data.logo,
+      },
     })
 
-    return toPublicBusiness(updated)
+    if (menu.logo && menu.logo !== tenant.logo) {
+      await replaceImage(menu.logo, data.logo)
+    }
+
+    return toPublicBusiness(updated, settings)
   })
 }

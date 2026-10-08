@@ -23,6 +23,8 @@
     <MenuGuestActions
       :wifi-name="restaurant.wifiName"
       :wifi-password="restaurant.wifiPassword"
+      :has-wifi-password="restaurant.hasWifiPassword"
+      :load-wifi="loadWifi"
       :table-name="table?.name || ''"
       :request-waiter="requestWaiter"
     />
@@ -48,6 +50,10 @@ const props = defineProps({
     default: null,
   },
   requestWaiter: {
+    type: Function,
+    default: null,
+  },
+  loadWifi: {
     type: Function,
     default: null,
   },

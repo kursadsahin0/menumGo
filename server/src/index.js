@@ -1,6 +1,7 @@
 import cors from '@fastify/cors'
 import Fastify from 'fastify'
 import { fail } from './http.js'
+import { requireUser } from './auth/session.js'
 import { authRoutes } from './auth/routes.js'
 import { ensureDemoUser } from './auth/seed.js'
 import { prisma } from './db.js'
@@ -11,6 +12,7 @@ import { categoryRoutes } from './categories/routes.js'
 import { ensureAllTenantCategories } from './categories/categories.js'
 import { menuRoutes } from './menus/routes.js'
 import { notificationRoutes } from './notifications/routes.js'
+import { pushRoutes } from './push/routes.js'
 
 import { menuSettingsRoutes } from './menuSettings/routes.js'
 import { ensureAllMenuSettings } from './menuSettings/settings.js'
@@ -68,6 +70,41 @@ app.setErrorHandler((error, request, reply) => {
   })
 })
 
+const unverifiedAllowed = new Set([
+  '/api/health',
+  '/api/auth/register',
+  '/api/auth/login',
+  '/api/auth/logout',
+  '/api/auth/me',
+  '/api/auth/verify-email',
+  '/api/auth/verify-email/send',
+  '/api/auth/password',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
+])
+
+app.addHook('preHandler', async (request) => {
+  const path = request.url.split('?')[0]
+
+  if (!path.startsWith('/api/')) {
+    return
+  }
+
+  if (
+    path.startsWith('/api/public/') ||
+    path.startsWith('/api/uploads/') ||
+    unverifiedAllowed.has(path)
+  ) {
+    return
+  }
+
+  const user = await requireUser(request)
+
+  if (!user.emailVerifiedAt) {
+    throw fail(403, 'Panele girmek için e-postanızı doğrulayın.')
+  }
+})
+
 app.get('/api/health', async () => ({ ok: true }))
 
 app.get('/api/uploads/:name', async (request, reply) => {
@@ -89,6 +126,7 @@ await businessRoutes(app)
 await analyticsRoutes(app)
 await menuRoutes(app)
 await notificationRoutes(app)
+await pushRoutes(app)
 await menuSettingsRoutes(app)
 
 await relocateStoredImages(prisma)

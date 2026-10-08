@@ -13,7 +13,8 @@
     "@fastify/cors": "^11.0.1",
     "@prisma/client": "^6.16.2",
     "fastify": "^5.6.1",
-    "nodemailer": "^10.0.15"
+    "nodemailer": "^10.0.15",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "prisma": "^6.16.2"

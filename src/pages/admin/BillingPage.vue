@@ -5,6 +5,14 @@
         <header class="billing-offer__head">
           <h1>Tek seferlik panel</h1>
           <p>Aylık ücret yok. Bir kez ödersiniz, menü bu işletmede kalır.</p>
+          <p class="billing-call">
+            <q-icon name="call" size="18px" />
+            <span>
+              Satın almak için
+              <a :href="salesPhoneHref">{{ salesPhone }}</a>
+              numarasını arayın.
+            </span>
+          </p>
         </header>
 
         <article class="billing-offer">
@@ -91,7 +99,11 @@
                 class="billing-offer__button"
                 :label="`Satın al · ${formatTry(price)}`"
               />
-              <p class="billing-offer__note">Ödeme tamamlanınca panel açılır.</p>
+              <p class="billing-offer__note">
+                Ödeme şu an alınamıyor. Satın almak için
+                <a :href="salesPhoneHref">{{ salesPhone }}</a>
+                numarasını arayın. Ödeme tamamlanınca panel açılır.
+              </p>
             </div>
           </q-form>
         </div>
@@ -107,6 +119,8 @@ import { useNotify } from '@/composables/useNotify'
 import { formatTry } from '@/utils/currency'
 
 const price = 9900
+const salesPhone = '0555 123 45 67'
+const salesPhoneHref = `tel:+90${salesPhone.replace(/\D/g, '').replace(/^0/, '')}`
 const { notifyError } = useNotify()
 const activeField = ref('')
 
@@ -158,6 +172,8 @@ function clearField(event) {
 }
 
 function onSubmit() {
-  notifyError('Ödeme şu an alınamıyor. Panel, ödeme tamamlanınca açılır.')
+  notifyError(
+    `Ödeme şu an alınamıyor. Satın almak için ${salesPhone} numarasını arayın. Panel, ödeme tamamlanınca açılır.`,
+  )
 }
 </script>

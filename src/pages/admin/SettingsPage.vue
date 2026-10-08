@@ -8,6 +8,7 @@
             <div>
               <h2>{{ displayName }}</h2>
               <p>{{ auth.user?.email }}</p>
+              <p>{{ auth.user?.emailVerified ? 'E-posta doğrulandı' : 'E-posta doğrulanmadı' }}</p>
             </div>
           </header>
 
@@ -45,6 +46,17 @@
                   :rules="[rules.required, rules.phone]"
                 />
               </div>
+              <p v-if="!auth.user?.emailVerified" class="account-sheet__note">
+                Doğrulama bağlantısı e-postanıza gider.
+                <button
+                  type="button"
+                  class="account-sheet__link"
+                  :disabled="sendingVerification"
+                  @click="sendVerification"
+                >
+                  Doğrulama gönder
+                </button>
+              </p>
               <div class="account-sheet__footer">
                 <p v-if="accountDirty" class="account-sheet__status">Kaydedilmemiş değişiklik var.</p>
                 <q-btn
@@ -56,6 +68,38 @@
                   label="Kaydet"
                   :loading="savingAccount"
                   :disable="!accountDirty"
+                />
+              </div>
+            </q-form>
+          </section>
+
+          <section class="account-sheet__section">
+            <h3 class="account-sheet__label">Menü adresi</h3>
+            <q-form class="account-sheet__fields" greedy @submit="saveSlug">
+              <q-input
+                v-model="slug"
+                label="Adres"
+                outlined
+                dense
+                lazy-rules
+                prefix="/menu/"
+                :rules="[rules.required, slugLength]"
+              />
+              <p class="account-sheet__note">
+                Misafir menüsü {{ menuAddress }} adresinde açılır. Basılı QR kodları yeni adres için
+                yeniden yazdırın.
+              </p>
+              <div class="account-sheet__footer">
+                <p v-if="slugDirty" class="account-sheet__status">Kaydedilmemiş değişiklik var.</p>
+                <q-btn
+                  class="account-sheet__save"
+                  type="submit"
+                  unelevated
+                  no-caps
+                  color="primary"
+                  label="Adresi kaydet"
+                  :loading="savingSlug"
+                  :disable="!slugDirty"
                 />
               </div>
             </q-form>
@@ -109,6 +153,56 @@
           </section>
 
           <section class="account-sheet__section">
+            <h3 class="account-sheet__label">Hesabı sil</h3>
+            <div class="account-sheet__theme">
+              <div>
+                <h3>Menü ve hesap birlikte silinir</h3>
+                <p>Ürünler, masalar, QR adresi ve bildirimler de kalkar.</p>
+              </div>
+              <q-btn
+                unelevated
+                no-caps
+                color="negative"
+                label="Hesabı sil"
+                @click="deleteOpen = true"
+              />
+            </div>
+          </section>
+
+          <q-dialog v-model="deleteOpen">
+            <q-card class="account-delete">
+              <q-card-section>
+                <h2 class="account-delete__title">Hesabı sil</h2>
+                <p class="account-delete__text">
+                  Devam etmek için mevcut şifrenizi yazın. Bu işlem geri alınamaz.
+                </p>
+              </q-card-section>
+              <q-form @submit="removeAccount">
+                <q-card-section>
+                  <AuthPasswordField
+                    v-model="deletePassword"
+                    dense
+                    label="Mevcut şifre"
+                    autocomplete="current-password"
+                    :rules="[rules.required]"
+                  />
+                </q-card-section>
+                <q-card-actions align="right">
+                  <q-btn flat no-caps label="Vazgeç" @click="deleteOpen = false" />
+                  <q-btn
+                    type="submit"
+                    unelevated
+                    no-caps
+                    color="negative"
+                    label="Hesabı sil"
+                    :loading="deleting"
+                  />
+                </q-card-actions>
+              </q-form>
+            </q-card>
+          </q-dialog>
+
+          <section class="account-sheet__section">
             <div class="account-sheet__theme">
               <div>
                 <h3>Koyu tema</h3>
@@ -131,18 +225,27 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import { useRouter } from 'vue-router'
 import AuthPasswordField from '@/components/auth/AuthPasswordField.vue'
 import { useNotify } from '@/composables/useNotify'
 import { useAuthStore } from '@/stores/auth'
 import { STORAGE_KEYS } from '@/utils/constants'
+import { absoluteMenuUrl } from '@/utils/menuUrl'
 import { matches, rules } from '@/utils/validators'
 
 const $q = useQuasar()
+const router = useRouter()
 const auth = useAuthStore()
 const { notifySuccess, notifyError } = useNotify()
 const passwordForm = ref(null)
 const savingAccount = ref(false)
 const savingPassword = ref(false)
+const savingSlug = ref(false)
+const sendingVerification = ref(false)
+const deleting = ref(false)
+const deleteOpen = ref(false)
+const deletePassword = ref('')
+const slug = ref('')
 const isDark = computed(() => $q.dark.isActive)
 const displayName = computed(() => auth.user?.fullName || 'Hesap')
 const initials = computed(() => {
@@ -168,6 +271,10 @@ const password = reactive({
 })
 
 const confirmMatches = computed(() => matches(password.next, 'Şifreler eşleşmiyor.'))
+const slugLength = (value) =>
+  String(value || '').trim().length >= 3 || 'Menü adresi en az 3 karakter olmalı.'
+const menuAddress = computed(() => absoluteMenuUrl(`/menu/${slug.value.trim() || 'adres'}`))
+const slugDirty = computed(() => slug.value.trim() !== (auth.user?.tenant?.slug || ''))
 const accountDirty = computed(() => {
   const user = auth.user
   if (!user) {
@@ -190,6 +297,7 @@ watch(
     account.fullName = user?.fullName || ''
     account.email = user?.email || ''
     account.phone = user?.phone || ''
+    slug.value = user?.tenant?.slug || ''
   },
   { immediate: true },
 )
@@ -201,6 +309,8 @@ function setDark(value) {
 
 async function saveAccount() {
   savingAccount.value = true
+  const emailChanged =
+    account.email.trim().toLowerCase() !== String(auth.user?.email || '').toLowerCase()
 
   try {
     await auth.updateAccount({
@@ -208,11 +318,57 @@ async function saveAccount() {
       email: account.email,
       phone: account.phone,
     })
-    notifySuccess('Hesap kaydedildi.')
+    notifySuccess(
+      emailChanged ? 'Hesap kaydedildi. Doğrulama e-postası gönderildi.' : 'Hesap kaydedildi.',
+    )
+
+    if (emailChanged) {
+      await router.push({ name: 'verify-pending' })
+    }
   } catch (error) {
     notifyError(error)
   } finally {
     savingAccount.value = false
+  }
+}
+
+async function sendVerification() {
+  sendingVerification.value = true
+
+  try {
+    await auth.sendVerification()
+    notifySuccess('Doğrulama e-postası gönderildi.')
+  } catch (error) {
+    notifyError(error)
+  } finally {
+    sendingVerification.value = false
+  }
+}
+
+async function saveSlug() {
+  savingSlug.value = true
+
+  try {
+    await auth.updateSlug(slug.value)
+    notifySuccess('Menü adresi kaydedildi.')
+  } catch (error) {
+    notifyError(error)
+  } finally {
+    savingSlug.value = false
+  }
+}
+
+async function removeAccount() {
+  deleting.value = true
+
+  try {
+    await auth.deleteAccount(deletePassword.value)
+    deleteOpen.value = false
+    await router.push({ name: 'login' })
+  } catch (error) {
+    notifyError(error)
+  } finally {
+    deleting.value = false
   }
 }
 

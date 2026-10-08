@@ -1,7 +1,6 @@
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { newId } from '../auth/users.js'
-import { createNotification } from '../notifications/notifications.js'
 import { dayKeys, dayLabel, relativeTime, startOfDay, weekdayLabel, zonedParts } from './time.js'
 
 export async function recordMenuView(tenantId, language, tableId) {
@@ -28,8 +27,6 @@ export async function recordMenuView(tenantId, language, tableId) {
       tableId: table?.id || null,
     },
   })
-
-  await createNotification(tenantId, table ? `${table.name} menüyü açtı` : 'Menü açıldı')
 
   return { ok: true }
 }

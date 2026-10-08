@@ -3,13 +3,14 @@ import { fail } from '../http.js'
 const imageLimit = 4_000_000
 const businessTypes = new Set(['cafe', 'restaurant', 'bar', 'bakery', 'fast-food', 'other'])
 
-export function toPublicBusiness(tenant) {
+export function toPublicBusiness(tenant, settings) {
   return {
     name: tenant.name,
     businessType: tenant.businessType || 'cafe',
     logo: tenant.logo || null,
     coverImage: tenant.coverImage || null,
-    description: tenant.description || '',
+    description: tenant.description || settings?.descriptionTr || '',
+    descriptionEn: settings?.descriptionEn || '',
   }
 }
 
@@ -51,6 +52,7 @@ export function readBusiness(body) {
     name: readText(source.name, 'Restoran adı', { required: true, max: 80 }),
     businessType,
     description: readText(source.description, 'Açıklama', { max: 500 }),
+    descriptionEn: readText(source.descriptionEn, 'Açıklama (İngilizce)', { max: 500 }),
     logo: readImage(source.logo, 'Logo'),
     coverImage: readImage(source.coverImage, 'Kapak'),
   }
