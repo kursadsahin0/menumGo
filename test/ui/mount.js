@@ -4,12 +4,12 @@ import { QLayout, QPageContainer } from 'quasar'
 import { defineComponent } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
-export async function mountPage(page, { path, name, start, routes = [], layout = false } = {}) {
+export async function mountPage(page, { path, name, start, routes = [], layout = false, meta } = {}) {
   const pinia = createPinia()
   setActivePinia(pinia)
   const router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path, name, component: page }, ...routes],
+    routes: [{ path, name, component: page, meta }, ...routes],
   })
 
   await router.push(start || path)

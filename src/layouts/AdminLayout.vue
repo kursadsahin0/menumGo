@@ -47,13 +47,15 @@ const showTrial = computed(
   () => auth.hasAccess && auth.user?.subscription?.status === 'trial' && route.name !== 'admin-billing',
 )
 
+const lockedOut = computed(() => route.name === 'admin-billing' && !auth.hasAccess)
+
 const pageTitle = computed(() => {
-  if (route.name === 'admin-billing') return ''
+  if (lockedOut.value) return ''
   const match = [...route.matched].reverse().find((record) => record.meta.title)
   return match?.meta.title || 'Panel'
 })
 
-const showSidebar = computed(() => route.name !== 'admin-billing')
+const showSidebar = computed(() => !lockedOut.value)
 
 function toggleDrawer() {
   drawerOpen.value = !drawerOpen.value

@@ -46,4 +46,9 @@ export const adminNavigation = [
     icon: 'storefront',
     to: { name: 'admin-business' },
   },
+  {
+    label: 'İletişim',
+    icon: 'call',
+    to: { name: 'admin-billing' },
+  },
 ]

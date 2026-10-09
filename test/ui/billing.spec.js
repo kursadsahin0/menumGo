@@ -23,8 +23,8 @@ const routes = [
   { path: '/auth/login', name: 'login', component: { template: '<div>Giriş</div>' } },
 ]
 
-async function openBilling() {
-  persistSession('test-token', user, true)
+async function openBilling(subscription = { status: 'inactive' }) {
+  persistSession('test-token', { ...user, subscription }, true)
   return mountPage(BillingPage, {
     path: '/admin/billing',
     name: 'admin-billing',
@@ -71,6 +71,18 @@ describe('iletişim ekranı', () => {
     expect(wrapper.text()).toContain('Denemeniz sürüyor')
     expect(wrapper.text()).toContain('gün kaldı')
     expect(wrapper.text()).toContain('Panele dön')
+    expect(mounted.router.currentRoute.value.name).toBe('admin-billing')
+  })
+
+  it('ödenmiş hesap iletişim ekranında kalır', async () => {
+    getCurrentSubscription.mockResolvedValue({ status: 'active', plan: 'Tek seferlik panel' })
+    const mounted = await openBilling({ status: 'active' })
+    wrapper = mounted.wrapper
+
+    expect(wrapper.text()).toContain('Paneliniz açık')
+    expect(wrapper.text()).toContain('Bize ulaşın')
+    expect(wrapper.text()).toContain('0555 123 45 67')
+    expect(wrapper.text()).not.toContain('Deneme süreniz bitti')
     expect(mounted.router.currentRoute.value.name).toBe('admin-billing')
   })
 

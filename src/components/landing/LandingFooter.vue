@@ -9,14 +9,14 @@
       </div>
 
       <nav class="landing-footer__nav" aria-label="Alt bağlantılar">
-        <a
-          v-for="item in landingNav"
-          :key="item.href"
-          class="landing-footer__link"
-          :href="item.href"
-        >
-          {{ item.label }}
-        </a>
+        <template v-for="item in landingNav" :key="item.label">
+          <router-link v-if="item.to" class="landing-footer__link" :to="item.to">
+            {{ item.label }}
+          </router-link>
+          <a v-else class="landing-footer__link" :href="item.href">
+            {{ item.label }}
+          </a>
+        </template>
         <router-link class="landing-footer__link" :to="{ name: 'login' }">Giriş Yap</router-link>
         <router-link class="landing-footer__link" :to="{ name: 'terms' }">Kullanım koşulları</router-link>
         <router-link class="landing-footer__link" :to="{ name: 'privacy' }">Gizlilik</router-link>

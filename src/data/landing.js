@@ -1,7 +1,8 @@
 export const landingNav = [
-  { label: 'Özellikler', href: '#ozellikler' },
-  { label: 'Nasıl Çalışır?', href: '#nasil-calisir' },
-  { label: 'SSS', href: '#sss' },
+  { label: 'Özellikler', href: '/#ozellikler' },
+  { label: 'Nasıl Çalışır?', href: '/#nasil-calisir' },
+  { label: 'SSS', href: '/#sss' },
+  { label: 'İletişim', to: { name: 'contact' } },
 ]
 
 export const landingFeatures = [

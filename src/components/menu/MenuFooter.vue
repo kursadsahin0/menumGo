@@ -5,6 +5,9 @@
       <q-icon name="storefront" size="18px" />
       {{ messages.venue }}
     </button>
+    <nav class="menu-footer__legal" aria-label="Yasal metinler">
+      <router-link v-for="item in legalLinks" :key="item.to" :to="item.to">{{ item.label }}</router-link>
+    </nav>
     <MenuVenueDialog v-model="venueOpen" :restaurant="restaurant" />
   </footer>
 </template>
@@ -23,6 +26,12 @@ const props = defineProps({
 
 const { messages, text } = useMenuLanguage()
 const venueOpen = ref(false)
+const legalLinks = computed(() => [
+  { to: '/iletisim', label: messages.value.contact },
+  { to: '/kullanim-kosullari', label: messages.value.terms },
+  { to: '/gizlilik', label: messages.value.privacy },
+  { to: '/kvkk', label: messages.value.kvkk },
+])
 const hasVenue = computed(
   () =>
     Boolean(

@@ -74,7 +74,7 @@ export const legalDocuments = {
       {
         heading: 'Veri sorumlusu',
         paragraphs: [
-          'Veri sorumlusu, menümGo hizmetini işleten taraftır. Başvuru kanalı, paneldeki iletişim ekranında yazılı abonelik hattıdır: 0555 123 45 67.',
+          'Veri sorumlusu, menümGo hizmetini işleten taraftır. Başvuru kanalı, iletişim sayfasındaki abonelik hattıdır: 0555 123 45 67.',
         ],
       },
       {

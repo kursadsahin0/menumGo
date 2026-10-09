@@ -115,6 +115,12 @@ describe('misafir menüsü', () => {
   it('aramada içerik ve alerjen adına da bakar', async () => {
     getPublicMenu.mockResolvedValue(menu)
     const { wrapper } = await openMenu()
+
+    expect(wrapper.get('a[href="/iletisim"]').text()).toBe('İletişim')
+    expect(wrapper.get('a[href="/kullanim-kosullari"]').text()).toBe('Kullanım koşulları')
+    expect(wrapper.get('a[href="/gizlilik"]').text()).toBe('Gizlilik')
+    expect(wrapper.get('a[href="/kvkk"]').text()).toBe('KVKK')
+
     const search = wrapper.get('input')
 
     await search.setValue('soğan')

@@ -749,6 +749,20 @@ body.body--dark .q-notification.menu-toast,
   margin-top: 10px;
 }
 
+.menu-footer__legal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 14px;
+  margin-top: 16px;
+}
+
+.menu-footer__legal a {
+  color: inherit;
+  font-size: 0.75rem;
+  text-decoration: none;
+}
+
 .menu-font--sans {
   --menu-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }

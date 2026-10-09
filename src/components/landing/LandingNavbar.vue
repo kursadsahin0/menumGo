@@ -6,9 +6,14 @@
       </router-link>
 
       <nav class="landing-nav__links" aria-label="Sayfa bölümleri">
-        <a v-for="item in landingNav" :key="item.href" class="landing-nav__link" :href="item.href">
-          {{ item.label }}
-        </a>
+        <template v-for="item in landingNav" :key="item.label">
+          <router-link v-if="item.to" class="landing-nav__link" :to="item.to">
+            {{ item.label }}
+          </router-link>
+          <a v-else class="landing-nav__link" :href="item.href">
+            {{ item.label }}
+          </a>
+        </template>
       </nav>
 
       <div class="landing-nav__actions">
@@ -56,10 +61,11 @@
         <q-list padding>
           <q-item
             v-for="item in landingNav"
-            :key="item.href"
+            :key="item.label"
             v-ripple
             clickable
-            :href="item.href"
+            :to="item.to"
+            :href="item.to ? undefined : item.href"
             @click="menuOpen = false"
           >
             <q-item-section>{{ item.label }}</q-item-section>

@@ -29,6 +29,15 @@ export default [
         component: () => import('@/pages/public/LegalPage.vue'),
       },
       {
+        path: 'iletisim',
+        name: 'contact',
+        meta: {
+          title: 'İletişim',
+          description: 'menümGo hakkında bilgi ve satın alma hattı.',
+        },
+        component: () => import('@/pages/public/ContactPage.vue'),
+      },
+      {
         path: 'kvkk',
         name: 'kvkk',
         meta: {
