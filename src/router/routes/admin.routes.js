@@ -63,7 +63,7 @@ export default [
       {
         path: 'billing',
         name: 'admin-billing',
-        meta: { title: 'Satın alma', allowWithoutSubscription: true },
+        meta: { title: 'İletişim', allowWithoutSubscription: true },
         component: () => import('@/pages/admin/BillingPage.vue'),
       },
       {

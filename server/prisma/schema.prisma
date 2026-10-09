@@ -18,6 +18,8 @@ model User {
   verifyTokenExpiresAt DateTime?
   resetTokenHash       String?
   resetTokenExpiresAt  DateTime?
+  termsVersion         String?
+  termsAcceptedAt      DateTime?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   tenant              Tenant?
@@ -60,6 +62,7 @@ model Notification {
   id        String    @id
   tenantId  String
   title     String
+  body      String    @default("")
   readAt    DateTime?
   createdAt DateTime  @default(now())
   tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -92,6 +95,7 @@ model MenuView {
   table     DiningTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, createdAt])
+  @@index([createdAt])
 }
 
 model ProductView {
@@ -101,8 +105,11 @@ model ProductView {
   categoryId String
   createdAt  DateTime @default(now())
   tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, createdAt])
+  @@index([productId])
+  @@index([createdAt])
 }
 
 model Category {
@@ -115,9 +122,10 @@ model Category {
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
   tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([tenantId, sortOrder])
 }
@@ -137,15 +145,18 @@ model Product {
   discountedPrice Decimal? @db.Decimal(10, 2)
   image           String?  @db.Text
   categoryId      String
-  isAvailable     Boolean  @default(true)
-  isFeatured      Boolean  @default(false)
-  sortOrder       Int      @default(0)
+  category        Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  isAvailable     Boolean       @default(true)
+  isFeatured      Boolean       @default(false)
+  sortOrder       Int           @default(0)
   tenantId        String
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  views           ProductView[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@index([tenantId, sortOrder])
+  @@index([categoryId])
 }
 
 model MenuSettings {
@@ -179,10 +190,16 @@ model MenuSettings {
 }
 
 model Subscription {
-  id       String @id
-  status   String
-  tenantId String @unique
-  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id                String    @id
+  status            String
+  plan              String    @default("Tek seferlik panel") @map("planId")
+  amount            Decimal?  @db.Decimal(10, 2)
+  paidAt            DateTime?
+  provider          String?
+  cancelAtPeriodEnd Boolean   @default(false)
+  currentPeriodEnd  DateTime?
+  tenantId          String    @unique
+  tenant            Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 }
 
 model PushSubscription {
@@ -204,4 +221,10 @@ model RateHit {
   createdAt DateTime @default(now())
 
   @@index([bucket, ip, createdAt])
+}
+
+model Upload {
+  id        String   @id
+  bytes     Bytes
+  createdAt DateTime @default(now())
 }

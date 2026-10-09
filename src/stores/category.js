@@ -7,38 +7,28 @@ import {
   updateCategory,
   updateCategoryOrder,
 } from '@/services/categoryService'
-import { getProducts } from '@/services/productService'
-
-function withCounts(categories, products) {
-  const counts = products.reduce((map, product) => {
-    map[product.categoryId] = (map[product.categoryId] || 0) + 1
-    return map
-  }, {})
-
-  return categories.map((category) => ({
-    ...category,
-    productCount: counts[category.id] || 0,
-  }))
-}
 
 export const useCategoryStore = defineStore('category', {
   state: () => ({
     categories: [],
+    page: 1,
+    pageSize: 20,
+    total: 0,
     status: 'idle',
     error: null,
   }),
 
   actions: {
-    async fetchCategories() {
+    async fetchCategories(page = this.page) {
       this.status = 'loading'
       this.error = null
 
       try {
-        const [categories, products] = await Promise.all([
-          getCategories(),
-          getProducts().catch(() => []),
-        ])
-        this.categories = withCounts(categories, products)
+        const result = await getCategories({ page })
+        this.categories = result.items
+        this.page = result.page
+        this.pageSize = result.pageSize
+        this.total = result.total
         this.status = 'success'
       } catch (error) {
         this.status = 'error'
@@ -89,9 +79,6 @@ export const useCategoryStore = defineStore('category', {
 
     async reorder(ids) {
       const previous = this.categories.map((category) => ({ ...category }))
-      const counts = Object.fromEntries(
-        previous.map((category) => [category.id, category.productCount]),
-      )
 
       this.categories = ids.map((id, index) => {
         const category = previous.find((entry) => entry.id === id)
@@ -99,11 +86,7 @@ export const useCategoryStore = defineStore('category', {
       })
 
       try {
-        const updated = await updateCategoryOrder(ids)
-        this.categories = updated.map((category) => ({
-          ...category,
-          productCount: counts[category.id] || 0,
-        }))
+        this.categories = await updateCategoryOrder(ids)
       } catch (error) {
         this.categories = previous
         this.error = error

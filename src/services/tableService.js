@@ -1,10 +1,11 @@
 import { request } from '@/services/api/http'
 import { endpoints } from '@/services/api/endpoints'
 
-export function getTables() {
+export function getTables(params) {
   return request({
     method: 'get',
     url: endpoints.tables.list,
+    params,
   })
 }
 

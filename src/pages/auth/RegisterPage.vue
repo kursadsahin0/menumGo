@@ -4,7 +4,7 @@
       <header>
         <h1 class="auth-card__title">Hesap oluştur</h1>
         <p class="auth-card__text">
-          Kayıt ve giriş ücretsizdir. Paneli kullanmak için satın alma gerekir.
+          Kayıtla 7 gün ücretsiz denersiniz. Süre bitince satın almak için ararsınız.
         </p>
       </header>
 
@@ -78,11 +78,15 @@
           :rules="[rules.accepted]"
         >
           <template #control>
-            <q-checkbox
-              v-model="form.acceptedTerms"
-              dense
-              label="Kullanım koşullarını kabul ediyorum."
-            />
+            <q-checkbox v-model="form.acceptedTerms" dense>
+              <span class="auth-consent">
+                <router-link class="auth-link" :to="{ name: 'terms' }" target="_blank" rel="noopener" @click.stop>Kullanım koşullarını</router-link>,
+                <router-link class="auth-link" :to="{ name: 'privacy' }" target="_blank" rel="noopener" @click.stop>gizlilik bildirimini</router-link>
+                ve
+                <router-link class="auth-link" :to="{ name: 'kvkk' }" target="_blank" rel="noopener" @click.stop>KVKK aydınlatma metnini</router-link>
+                okudum, kabul ediyorum.
+              </span>
+            </q-checkbox>
           </template>
         </q-field>
 
@@ -114,6 +118,7 @@ import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthPasswordField from '@/components/auth/AuthPasswordField.vue'
 import { useAuth } from '@/composables/useAuth'
+import { termsVersion } from '@/data/legal'
 import { matches, rules } from '@/utils/validators'
 
 const router = useRouter()
@@ -146,6 +151,7 @@ async function onSubmit() {
       phone: form.phone,
       password: form.password,
       acceptedTerms: form.acceptedTerms,
+      termsVersion,
     })
     router.push({ name: auth.entryRoute })
   } catch (error) {

@@ -1,7 +1,19 @@
 <template>
   <q-page class="admin-page">
     <div class="admin-page__wrap">
-      <section class="venue-qr">
+      <div v-if="pending" class="venue-qr" role="status">
+        <span class="sr-only">İşletme bilgisi yükleniyor</span>
+        <q-skeleton type="text" width="180px" />
+        <q-skeleton type="rect" width="240px" height="240px" />
+        <q-skeleton type="text" width="220px" />
+      </div>
+
+      <div v-else-if="failed" class="venue-qr">
+        <AppError :error="businessStore.error" />
+        <q-btn unelevated no-caps color="primary" label="Yeniden dene" @click="load" />
+      </div>
+
+      <section v-else class="venue-qr">
         <div class="venue-qr__copy">
           <h2 class="venue-qr__title">{{ restaurantName }}</h2>
           <p class="venue-qr__lead">
@@ -34,6 +46,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import AppError from '@/components/common/AppError.vue'
 import QRCode from '@/components/common/QRCode.vue'
 import { useNotify } from '@/composables/useNotify'
 import { useAuthStore } from '@/stores/auth'
@@ -45,6 +58,8 @@ const businessStore = useBusinessStore()
 const { notifySuccess, notifyError } = useNotify()
 const qrRef = ref(null)
 
+const pending = computed(() => !businessStore.profile && businessStore.status !== 'error')
+const failed = computed(() => !businessStore.profile && businessStore.status === 'error')
 const restaurantName = computed(
   () => businessStore.profile?.name || auth.user?.tenant?.name || 'Menü',
 )
@@ -76,7 +91,13 @@ function print() {
   })
 }
 
-onMounted(() => {
-  businessStore.fetchBusiness()
-})
+async function load() {
+  try {
+    await businessStore.fetchBusiness()
+  } catch {
+    // The store keeps the error on the page.
+  }
+}
+
+onMounted(load)
 </script>

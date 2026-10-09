@@ -1,5 +1,9 @@
 import nodemailer from 'nodemailer'
+import { resetTtlMs } from '../auth/token.js'
 import { env } from '../env.js'
+import { fail } from '../http.js'
+
+const resetMinutes = Math.round(resetTtlMs / 60_000)
 
 function appLink(path, token) {
   const base = env.appUrl.replace(/\/$/, '')
@@ -14,25 +18,9 @@ export function emailVerificationUrl(token) {
   return appLink('/auth/verify-email', token)
 }
 
-export async function sendPasswordResetEmail(log, { to, token }) {
-  const url = passwordResetUrl(token)
-  const message = {
-    from: env.mailFrom,
-    to,
-    subject: 'menümGo şifre sıfırlama',
-    text: [
-      'Şifrenizi sıfırlamak için aşağıdaki bağlantıyı açın.',
-      'Bağlantı 2 dakika geçerlidir.',
-      '',
-      url,
-      '',
-      'Bu isteği siz yapmadıysanız bu e-postayı yok sayın.',
-    ].join('\n'),
-  }
-
+async function deliver(message) {
   if (!env.smtpHost || !env.smtpPass) {
-    log.warn({ to, url }, 'SMTP ayarı yok. Şifre sıfırlama bağlantısı yalnızca sunucu günlüğünde.')
-    return
+    throw fail(422, 'E-posta gönderilemiyor. Daha sonra yeniden deneyin.')
   }
 
   const transport = nodemailer.createTransport({
@@ -45,9 +33,24 @@ export async function sendPasswordResetEmail(log, { to, token }) {
   await transport.sendMail(message)
 }
 
-export async function sendVerificationEmail(log, { to, token }) {
-  const url = emailVerificationUrl(token)
-  const message = {
+export async function sendPasswordResetEmail({ to, token }) {
+  await deliver({
+    from: env.mailFrom,
+    to,
+    subject: 'menümGo şifre sıfırlama',
+    text: [
+      'Şifrenizi sıfırlamak için aşağıdaki bağlantıyı açın.',
+      `Bağlantı ${resetMinutes} dakika geçerlidir.`,
+      '',
+      passwordResetUrl(token),
+      '',
+      'Bu isteği siz yapmadıysanız bu e-postayı yok sayın.',
+    ].join('\n'),
+  })
+}
+
+export async function sendVerificationEmail({ to, token }) {
+  await deliver({
     from: env.mailFrom,
     to,
     subject: 'menümGo e-posta doğrulama',
@@ -55,23 +58,9 @@ export async function sendVerificationEmail(log, { to, token }) {
       'E-posta adresinizi doğrulamak için aşağıdaki bağlantıyı açın.',
       'Bağlantı 24 saat geçerlidir.',
       '',
-      url,
+      emailVerificationUrl(token),
       '',
       'Bu isteği siz yapmadıysanız bu e-postayı yok sayın.',
     ].join('\n'),
-  }
-
-  if (!env.smtpHost || !env.smtpPass) {
-    log.warn({ to, url }, 'SMTP ayarı yok. Doğrulama bağlantısı yalnızca sunucu günlüğünde.')
-    return
-  }
-
-  const transport = nodemailer.createTransport({
-    host: env.smtpHost,
-    port: env.smtpPort,
-    secure: env.smtpSecure,
-    auth: env.smtpUser ? { user: env.smtpUser, pass: env.smtpPass } : undefined,
   })
-
-  await transport.sendMail(message)
 }

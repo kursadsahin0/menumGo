@@ -1,7 +1,11 @@
 <template>
-  <q-layout view="lHh Lpr lFf" class="admin-layout">
+  <q-layout view="lHh Lpr lFf" class="admin-layout" :class="{ 'admin-layout--trial': showTrial }">
     <q-header bordered class="admin-topbar">
       <AdminTopbar :title="pageTitle" :show-menu="showSidebar" @toggle="toggleDrawer" />
+      <div v-if="showTrial" class="admin-trial">
+        <span>Deneme sürüyor. {{ daysLeft }} gün kaldı.</span>
+        <a :href="salesPhoneHref">{{ salesPhone }}</a>
+      </div>
     </q-header>
 
     <q-drawer
@@ -28,10 +32,20 @@ import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import AdminTopbar from '@/components/admin/AdminTopbar.vue'
+import { useAuthStore } from '@/stores/auth'
+import { SALES_PHONE, SALES_PHONE_HREF } from '@/utils/constants'
+import { trialDaysRemaining } from '@/utils/trial'
 
 const route = useRoute()
+const auth = useAuthStore()
 const $q = useQuasar()
 const drawerOpen = ref(false)
+const salesPhone = SALES_PHONE
+const salesPhoneHref = SALES_PHONE_HREF
+const daysLeft = computed(() => trialDaysRemaining(auth.user?.subscription?.trialEndsAt))
+const showTrial = computed(
+  () => auth.hasAccess && auth.user?.subscription?.status === 'trial' && route.name !== 'admin-billing',
+)
 
 const pageTitle = computed(() => {
   if (route.name === 'admin-billing') return ''

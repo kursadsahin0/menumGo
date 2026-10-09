@@ -15,6 +15,10 @@ const demo = {
   subscription: {
     id: 'sub_demo',
     status: 'active',
+    plan: 'Tek seferlik panel',
+    amount: 9900,
+    paidAt: new Date('2026-01-01T00:00:00.000Z'),
+    provider: 'demo',
   },
 }
 

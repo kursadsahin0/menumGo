@@ -88,6 +88,16 @@
   margin-top: 4px;
 }
 
+.auth-consent {
+  line-height: 1.45;
+  white-space: normal;
+}
+
+.auth-consent .auth-link {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .auth-layout:has(.auth-card--fit),
 .auth-layout:has(.auth-card--fit) .q-page-container,
 .auth-layout:has(.auth-card--fit) .auth-layout__page {

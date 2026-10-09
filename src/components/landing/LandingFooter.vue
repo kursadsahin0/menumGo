@@ -18,6 +18,9 @@
           {{ item.label }}
         </a>
         <router-link class="landing-footer__link" :to="{ name: 'login' }">Giriş Yap</router-link>
+        <router-link class="landing-footer__link" :to="{ name: 'terms' }">Kullanım koşulları</router-link>
+        <router-link class="landing-footer__link" :to="{ name: 'privacy' }">Gizlilik</router-link>
+        <router-link class="landing-footer__link" :to="{ name: 'kvkk' }">KVKK</router-link>
       </nav>
     </div>
 

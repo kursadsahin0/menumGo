@@ -20,6 +20,7 @@ import {
   persistSession,
   setStoredUser,
 } from '@/utils/storage'
+import { trialDaysRemaining } from '@/utils/trial'
 import { disableWaiterPush } from '@/utils/waiterPush'
 
 export const useAuthStore = defineStore('auth', {
@@ -34,7 +35,15 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isAuthenticated: (state) => Boolean(state.token),
     emailVerified: (state) => state.user?.emailVerified === true,
-    hasAccess: (state) => state.user?.subscription?.status === 'active',
+    hasAccess: (state) => {
+      const subscription = state.user?.subscription
+
+      if (subscription?.status === 'active') {
+        return true
+      }
+
+      return subscription?.status === 'trial' && trialDaysRemaining(subscription.trialEndsAt) > 0
+    },
     entryRoute() {
       if (!this.emailVerified) return 'verify-pending'
       return this.hasAccess ? 'admin-dashboard' : 'admin-billing'
@@ -75,14 +84,36 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    applySubscription(status) {
-      if (!this.user || this.user.subscription?.status === status) {
+    applySubscription(subscription) {
+      if (!this.user) {
+        return
+      }
+
+      const source = typeof subscription === 'string' ? { status: subscription } : subscription || {}
+      const current = this.user.subscription || {}
+      const next = {
+        status: source.status === 'active' || source.status === 'trial' ? source.status : 'inactive',
+        plan: source.plan ?? current.plan ?? null,
+        amount: source.amount !== undefined ? source.amount : (current.amount ?? null),
+        paidAt: source.paidAt !== undefined ? source.paidAt : (current.paidAt ?? null),
+        provider: source.provider !== undefined ? source.provider : (current.provider ?? null),
+        trialEndsAt: source.trialEndsAt !== undefined ? source.trialEndsAt : (current.trialEndsAt ?? null),
+      }
+
+      if (
+        current.status === next.status &&
+        current.plan === next.plan &&
+        current.amount === next.amount &&
+        current.paidAt === next.paidAt &&
+        current.provider === next.provider &&
+        current.trialEndsAt === next.trialEndsAt
+      ) {
         return
       }
 
       this.user = {
         ...this.user,
-        subscription: { status },
+        subscription: next,
       }
       setStoredUser(this.user)
     },

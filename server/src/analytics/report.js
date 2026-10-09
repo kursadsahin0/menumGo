@@ -2,6 +2,7 @@ import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { newId } from '../auth/users.js'
 import { findActiveTable } from '../tables/tables.js'
+import { pruneExpiredViews, viewCutoff, viewRetentionDays } from './retention.js'
 import { dayKeys, dayLabel, relativeTime, startOfDay, weekdayLabel, zonedParts } from './time.js'
 
 export async function recordMenuView(tenantId, language, tableId) {
@@ -25,6 +26,7 @@ export async function recordMenuView(tenantId, language, tableId) {
       tableId: table?.id || null,
     },
   })
+  void pruneExpiredViews()
 
   return { ok: true }
 }
@@ -47,6 +49,7 @@ export async function recordProductView(tenantId, productId) {
       categoryId: product.categoryId,
     },
   })
+  void pruneExpiredViews()
 
   return { ok: true }
 }
@@ -70,11 +73,7 @@ function viewSeries(views, days) {
 }
 
 async function rankings(tenantId, since) {
-  const where = { tenantId }
-
-  if (since) {
-    where.createdAt = { gte: since }
-  }
+  const where = { tenantId, createdAt: { gte: since || viewCutoff() } }
 
   const [productCounts, categoryCounts, products, categories] = await Promise.all([
     prisma.productView.groupBy({
@@ -140,43 +139,63 @@ async function rankings(tenantId, since) {
   return { popularProducts, popularCategories }
 }
 
-function activityTitle(name, kind, fresh) {
-  if (kind === 'product') {
-    return fresh ? `${name} eklendi` : `${name} güncellendi`
+const activityPatterns = [
+  { title: 'Ürün eklendi', suffix: ' menüye eklendi.', verb: 'eklendi', icon: 'lunch_dining' },
+  { title: 'Ürün güncellendi', suffix: ' kaydedildi.', verb: 'güncellendi', icon: 'lunch_dining' },
+  { title: 'Fiyat güncellendi', suffix: ' fiyatı kaydedildi.', verb: 'fiyatı güncellendi', icon: 'lunch_dining' },
+  { title: 'Ürün silindi', suffix: ' menüden kaldırıldı.', verb: 'silindi', icon: 'lunch_dining' },
+  { title: 'Kategori eklendi', suffix: ' menüye eklendi.', verb: 'kategorisi eklendi', icon: 'category' },
+  { title: 'Kategori güncellendi', suffix: ' kaydedildi.', verb: 'kategorisi güncellendi', icon: 'category' },
+  { title: 'Kategori silindi', suffix: ' menüden kaldırıldı.', verb: 'kategorisi silindi', icon: 'category' },
+  { title: 'Masa eklendi', suffix: ' eklendi.', verb: 'masası eklendi', icon: 'table_restaurant' },
+  { title: 'Masa güncellendi', suffix: ' kaydedildi.', verb: 'masası güncellendi', icon: 'table_restaurant' },
+  { title: 'Masa silindi', suffix: ' kaldırıldı.', verb: 'masası silindi', icon: 'table_restaurant' },
+]
+
+function activityName(body, suffix) {
+  const text = String(body || '').trim()
+
+  if (!suffix || !text.endsWith(suffix)) {
+    return ''
   }
 
-  return fresh ? `${name} kategorisi eklendi` : `${name} kategorisi güncellendi`
+  return text.slice(0, -suffix.length).trim()
+}
+
+export function recentActivityItems(notifications) {
+  return notifications
+    .map((notice) => {
+      const pattern = activityPatterns.find((item) => item.title === notice.title)
+
+      if (!pattern) {
+        return null
+      }
+
+      const name = activityName(notice.body, pattern.suffix)
+
+      return {
+        id: notice.id,
+        title: name ? `${name} ${pattern.verb}` : notice.title,
+        time: relativeTime(notice.createdAt),
+        icon: pattern.icon,
+      }
+    })
+    .filter(Boolean)
+    .slice(0, 6)
 }
 
 async function recentActivity(tenantId) {
-  const [products, categories] = await Promise.all([
-    prisma.product.findMany({
-      where: { tenantId },
-      orderBy: { updatedAt: 'desc' },
-      take: 8,
-      select: { id: true, name: true, createdAt: true, updatedAt: true },
-    }),
-    prisma.category.findMany({
-      where: { tenantId },
-      orderBy: { updatedAt: 'desc' },
-      take: 8,
-      select: { id: true, name: true, createdAt: true, updatedAt: true },
-    }),
-  ])
+  const notifications = await prisma.notification.findMany({
+    where: {
+      tenantId,
+      title: { in: activityPatterns.map((item) => item.title) },
+    },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    take: 6,
+    select: { id: true, title: true, body: true, createdAt: true },
+  })
 
-  return [...products.map((item) => ({ ...item, kind: 'product' })), ...categories.map((item) => ({ ...item, kind: 'category' }))]
-    .sort((a, b) => b.updatedAt - a.updatedAt)
-    .slice(0, 6)
-    .map((item) => {
-      const fresh = item.updatedAt.getTime() - item.createdAt.getTime() < 2000
-
-      return {
-        id: `${item.kind}_${item.id}`,
-        title: activityTitle(item.name, item.kind, fresh),
-        time: relativeTime(item.updatedAt),
-        icon: item.kind === 'product' ? 'lunch_dining' : 'category',
-      }
-    })
+  return recentActivityItems(notifications)
 }
 
 export async function dashboardOverview(tenantId) {
@@ -191,7 +210,7 @@ export async function dashboardOverview(tenantId) {
       prisma.product.count({ where: { tenantId, isAvailable: true } }),
       prisma.category.count({ where: { tenantId } }),
       prisma.diningTable.count({ where: { tenantId } }),
-      prisma.menuView.count({ where: { tenantId } }),
+      prisma.menuView.count({ where: { tenantId, createdAt: { gte: viewCutoff(now) } } }),
       prisma.menuView.count({ where: { tenantId, createdAt: { gte: startOfDay(todayKey) } } }),
       prisma.menuView.count({ where: { tenantId, createdAt: { gte: monthStart } } }),
       prisma.menuView.findMany({
@@ -210,7 +229,7 @@ export async function dashboardOverview(tenantId) {
       { key: 'activeProducts', label: 'Aktif ürün', value: activeProductCount, icon: 'check_circle' },
       { key: 'categories', label: 'Kategori sayısı', value: categoryCount, icon: 'category' },
       { key: 'tables', label: 'Masa sayısı', value: tableCount, icon: 'table_restaurant' },
-      { key: 'views', label: 'Menü görüntülenme', value: viewCount, icon: 'visibility' },
+      { key: 'views', label: `Son ${viewRetentionDays} gün`, value: viewCount, icon: 'visibility' },
       { key: 'viewsToday', label: 'Bugünkü görüntülenme', value: todayCount, icon: 'today' },
       { key: 'viewsMonth', label: 'Aylık görüntülenme', value: monthCount, icon: 'calendar_month' },
     ],

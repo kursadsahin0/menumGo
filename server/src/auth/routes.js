@@ -11,7 +11,9 @@ import {
   limitRegistrations,
   limitVerificationSends,
 } from '../rateLimit.js'
+import { panelPlan, trialDeadline } from '../subscription/record.js'
 import { hashPassword, verifyPassword } from './password.js'
+import { acceptedCurrentTerms, termsVersion } from './terms.js'
 import {
   openSession,
   requireTenant,
@@ -20,7 +22,7 @@ import {
   revokeOtherSessions,
   revokeRequestSession,
 } from './session.js'
-import { createResetToken, hashResetToken } from './token.js'
+import { createResetToken, hashResetToken, resetTtlMs } from './token.js'
 import {
   assertAccount,
   assertAvailableSlug,
@@ -47,9 +49,17 @@ async function issueEmailVerification(log, user) {
   })
 
   try {
-    await sendVerificationEmail(log, { to: user.email, token })
+    await sendVerificationEmail({ to: user.email, token })
   } catch (error) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verifyTokenHash: null,
+        verifyTokenExpiresAt: null,
+      },
+    })
     log.error({ err: error }, 'Doğrulama e-postası gönderilemedi')
+    throw error.statusCode ? error : fail(422, 'Doğrulama e-postası gönderilemedi.')
   }
 }
 
@@ -63,8 +73,11 @@ export async function authRoutes(app) {
       throw fail(422, 'Kayıt bilgileri eksik.')
     }
 
-    if (request.body?.acceptedTerms !== true) {
-      throw fail(422, 'Devam etmek için koşulları kabul edin.')
+    if (!acceptedCurrentTerms(request.body)) {
+      throw fail(
+        422,
+        'Güncel kullanım koşullarını, gizlilik bildirimini ve KVKK aydınlatma metnini kabul edin.',
+      )
     }
 
     const existing = await findUserByEmail(account.email)
@@ -73,35 +86,49 @@ export async function authRoutes(app) {
       throw fail(409, 'Bu e-posta ile kayıtlı bir hesap var.')
     }
 
-    const user = await prisma.user.create({
-      data: {
-        id: newId('usr'),
-        fullName: account.fullName,
-        email: account.email,
-        phone: account.phone,
-        passwordHash: await hashPassword(password),
-        tenant: {
-          create: {
-            id: newId('ten'),
-            name: businessName,
-            slug: await uniqueSlug(businessName),
-            subscription: {
-              create: {
-                id: newId('sub'),
-                status: 'inactive',
+    let user = null
+
+    try {
+      user = await prisma.user.create({
+        data: {
+          id: newId('usr'),
+          fullName: account.fullName,
+          email: account.email,
+          phone: account.phone,
+          passwordHash: await hashPassword(password),
+          termsVersion,
+          termsAcceptedAt: new Date(),
+          tenant: {
+            create: {
+              id: newId('ten'),
+              name: businessName,
+              slug: await uniqueSlug(businessName),
+              subscription: {
+                create: {
+                  id: newId('sub'),
+                  status: 'trial',
+                  plan: panelPlan.name,
+                  currentPeriodEnd: trialDeadline(),
+                },
               },
             },
           },
         },
-      },
-      include: {
-        tenant: { include: { subscription: true } },
-      },
-    })
+        include: {
+          tenant: { include: { subscription: true } },
+        },
+      })
 
-    await ensureTenantCategories(user.tenant.id)
-    await ensureMenuSettings({ ...user.tenant, user })
-    await issueEmailVerification(request.log, user)
+      await ensureTenantCategories(user.tenant.id)
+      await ensureMenuSettings({ ...user.tenant, user })
+      await issueEmailVerification(request.log, user)
+    } catch (error) {
+      if (user) {
+        await prisma.user.delete({ where: { id: user.id } }).catch(() => {})
+      }
+
+      throw error
+    }
 
     return {
       token: await openSession(user.id),
@@ -161,7 +188,22 @@ export async function authRoutes(app) {
     })
 
     if (emailChanged) {
-      await issueEmailVerification(request.log, user)
+      try {
+        await issueEmailVerification(request.log, user)
+      } catch (error) {
+        await prisma.user.update({
+          where: { id: current.id },
+          data: {
+            fullName: current.fullName,
+            email: current.email,
+            phone: current.phone,
+            emailVerifiedAt: current.emailVerifiedAt,
+            verifyTokenHash: current.verifyTokenHash,
+            verifyTokenExpiresAt: current.verifyTokenExpiresAt,
+          },
+        })
+        throw error
+      }
     }
 
     return toPublicUser(user)
@@ -279,18 +321,17 @@ export async function authRoutes(app) {
     }
 
     const resetToken = createResetToken()
-    const resetWindow = 2 * 60 * 1000
 
     await prisma.user.update({
       where: { id: user.id },
       data: {
         resetTokenHash: hashResetToken(resetToken),
-        resetTokenExpiresAt: new Date(Date.now() + resetWindow),
+        resetTokenExpiresAt: new Date(Date.now() + resetTtlMs),
       },
     })
 
     try {
-      await sendPasswordResetEmail(request.log, { to: user.email, token: resetToken })
+      await sendPasswordResetEmail({ to: user.email, token: resetToken })
     } catch (error) {
       await prisma.user.update({
         where: { id: user.id },

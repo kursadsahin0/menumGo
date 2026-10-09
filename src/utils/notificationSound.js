@@ -47,13 +47,13 @@ export function playWaiterChime() {
   start()
 }
 
-export function showWaiterNotice(title) {
+export function showWaiterNotice(title, body = '') {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') {
     return
   }
 
   try {
-    const notice = new Notification(title, { silent: false })
+    const notice = new Notification(title, { body, silent: false })
     window.setTimeout(() => notice.close(), 6000)
   } catch {
     // The in-page chime still plays when the system notice is blocked.

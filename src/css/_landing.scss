@@ -29,6 +29,48 @@ html:has(.landing-page) {
   max-width: 760px;
 }
 
+.legal {
+  padding-top: 32px;
+  padding-bottom: 64px;
+}
+
+.legal__header {
+  margin-bottom: 28px;
+}
+
+.legal__section + .legal__section {
+  margin-top: 28px;
+}
+
+.legal__section h2 {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.legal__section p {
+  margin: 0;
+  color: $landing-muted;
+  line-height: 1.6;
+}
+
+.legal__section p + p {
+  margin-top: 10px;
+}
+
+.legal__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin-top: 40px;
+}
+
+.legal__link {
+  color: $primary;
+  font-weight: 600;
+  text-decoration: none;
+}
+
 .landing-section {
   padding: 64px 0;
   scroll-margin-top: 80px;

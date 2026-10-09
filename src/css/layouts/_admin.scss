@@ -18,6 +18,30 @@
   padding-top: 64px;
 }
 
+.admin-layout--trial .q-page {
+  padding-top: 120px;
+}
+
+.admin-trial {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 16px;
+  min-height: 40px;
+  padding: 8px 20px 10px;
+  background: color-mix(in srgb, $primary 12%, var(--app-surface));
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.admin-trial a {
+  color: inherit;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
 body.body--dark .admin-layout .q-header.admin-topbar {
   background: color-mix(in srgb, var(--app-bg) 78%, transparent);
 }
@@ -176,6 +200,12 @@ body.body--dark .admin-layout .q-header.admin-topbar {
   line-height: 1.35;
 }
 
+.notice-menu__body {
+  color: var(--app-muted);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
 .notice-menu__time {
   color: var(--app-muted);
   font-size: 0.75rem;
@@ -318,6 +348,32 @@ body.body--dark .admin-nav__group--active {
   margin: 0;
   color: var(--app-muted);
   line-height: 1.5;
+}
+
+.list-pager {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 16px;
+  color: var(--app-muted);
+  font-size: 0.875rem;
+}
+
+.list-pager button {
+  padding: 6px 12px;
+  border: 1px solid var(--app-line);
+  border-radius: 10px;
+  background: var(--app-surface);
+  color: var(--app-ink);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.list-pager button:disabled {
+  cursor: default;
+  opacity: 0.45;
 }
 
 @media (min-width: 960px) {
@@ -512,11 +568,11 @@ body.body--dark .account-delete__text {
   opacity: 0.72;
 }
 
-.billing-checkout {
+.billing-contact {
   display: grid;
   gap: 22px;
   width: 100%;
-  max-width: 980px;
+  max-width: 640px;
   margin: 4px auto 0;
 }
 
@@ -524,7 +580,10 @@ body.body--dark .account-delete__text {
   min-width: 0;
 }
 
-.billing-pay {
+.billing-contact__card {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
   padding: 28px 24px 24px;
   border: 1px solid var(--app-line);
   border-radius: 24px;
@@ -532,45 +591,42 @@ body.body--dark .account-delete__text {
   box-shadow: 0 18px 40px rgba(28, 25, 23, 0.06);
 }
 
-.billing-pay {
-  display: flex;
-  flex-direction: column;
-}
-
-.billing-pay__form {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-}
-
-.billing-pay h2 {
-  margin: 0 0 18px;
+.billing-contact__card h2 {
+  margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.2;
 }
 
-.billing-pay__submit {
-  margin-top: 20px;
+.billing-contact__phone {
+  color: inherit;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  text-decoration: none;
 }
 
-.billing-pay__grid {
-  display: grid;
-  gap: 12px;
+.billing-contact__card p {
+  margin: 0 0 8px;
+  color: var(--app-muted);
+  line-height: 1.45;
 }
 
-.billing-pay__grid .q-field {
-  margin-bottom: 0;
+.billing-contact__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
 }
 
-.billing-pay__grid .q-field--outlined .q-field__control {
+.billing-contact__button {
+  min-height: 48px;
+  padding: 0 22px;
   border-radius: 12px;
-  background: var(--app-bg);
-}
-
-body.body--dark .billing-pay__grid .q-field--outlined .q-field__control {
-  background: rgba(255, 255, 255, 0.04);
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .billing-offer__head h1 {
@@ -582,7 +638,6 @@ body.body--dark .billing-pay__grid .q-field--outlined .q-field__control {
 }
 
 .billing-offer__head p,
-.billing-offer__note,
 .billing-offer__price span {
   color: var(--app-muted);
 }
@@ -594,224 +649,11 @@ body.body--dark .billing-pay__grid .q-field--outlined .q-field__control {
   line-height: 1.5;
 }
 
-.billing-offer__head .billing-call {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  max-width: 36rem;
-  margin-top: 14px;
-  color: var(--app-ink);
-}
-
-.billing-call .q-icon {
-  flex: 0 0 auto;
-  margin-top: 2px;
-  color: $primary;
-}
-
-.billing-call a,
-.billing-offer__note a {
-  color: inherit;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  text-decoration: none;
-}
-
-.billing-call a {
-  font-size: 1.125rem;
-}
-
-.pay-card-scene {
-  margin-top: 0;
-  perspective: 1200px;
-  aspect-ratio: 1.586;
-}
-
-.pay-card {
-  position: relative;
-  height: 100%;
-  transform-style: preserve-3d;
-  transition: transform 0.55s ease;
-}
-
-.pay-card.is-back {
-  transform: rotateY(180deg);
-}
-
-.pay-card__face {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 18px 18px 16px;
-  overflow: hidden;
-  border-radius: 18px;
-  color: #f6f3ee;
-  background:
-    radial-gradient(90% 80% at 100% 0%, rgba(212, 184, 150, 0.42), transparent 46%),
-    linear-gradient(155deg, #3d6a5c 0%, #1f3a34 48%, #142824 100%);
-  box-shadow: 0 16px 28px rgba(20, 40, 36, 0.28);
-  transform: rotateY(0deg);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-.pay-card__face--front::before {
-  content: '';
-  position: absolute;
-  right: -48px;
-  bottom: -72px;
-  width: 170px;
-  height: 170px;
-  border-radius: 50%;
-  background: rgba(212, 184, 150, 0.16);
-}
-
-.pay-card__face--front::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(115deg, rgba(255, 255, 255, 0.16), transparent 38%);
-  pointer-events: none;
-}
-
-.pay-card__top,
-.pay-card__number,
-.pay-card__bottom {
-  position: relative;
-}
-
-.pay-card__top,
-.pay-card__bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.pay-card__tools {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.pay-card__chip {
-  width: 42px;
-  height: 31px;
-}
-
-.pay-card__wave {
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: rgba(246, 243, 238, 0.85);
-  stroke-width: 1.6;
-  stroke-linecap: round;
-}
-
-.pay-card__number {
-  display: flex;
-  justify-content: space-between;
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-}
-
-.pay-card__number.is-hot,
-.pay-card__bottom .is-hot strong {
-  color: #fff;
-}
-
-.pay-card__group .is-empty,
-.pay-card__bottom .is-empty {
-  opacity: 0.45;
-}
-
-.pay-card__bottom {
-  align-items: flex-end;
-}
-
-.pay-card__bottom p {
-  min-width: 0;
-  margin: 0;
-}
-
-.pay-card__bottom span,
-.pay-card__sign span {
-  display: block;
-  margin-bottom: 4px;
-  font-size: 0.625rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.72;
-}
-
-.pay-card__bottom strong {
-  display: block;
-  overflow: hidden;
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pay-card__bottom p:first-child {
-  flex: 1;
-}
-
-.pay-card__bottom p:first-child strong {
-  max-width: 168px;
-}
-
-.pay-card__bottom p:last-child {
-  text-align: right;
-}
-
-.pay-card__face--back {
-  justify-content: flex-start;
-  padding: 0;
-  transform: rotateY(180deg);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-.pay-card__stripe {
-  display: block;
-  height: 46px;
-  margin-top: 24px;
-  background: #0d1210;
-}
-
-.pay-card__sign {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 16px 18px 0;
-  padding: 8px 12px;
-  border-radius: 6px;
-  background: repeating-linear-gradient(90deg, #f4efe6, #f4efe6 8px, #e7dfd2 8px, #e7dfd2 10px);
-  color: #1c1917;
-}
-
-.pay-card__sign span {
-  margin: 0;
-  opacity: 0.7;
-}
-
-.pay-card__sign strong {
-  letter-spacing: 0.18em;
-  font-weight: 600;
-}
-
 .billing-offer__price {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin: 20px 0 0;
+  margin: 0;
 }
 
 .billing-offer__price strong {
@@ -852,29 +694,13 @@ body.body--dark .billing-pay__grid .q-field--outlined .q-field__control {
   font-size: 14px;
 }
 
-.billing-offer__button {
-  width: 100%;
-  min-height: 48px;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.billing-offer__note {
-  margin: 12px 0 0;
-  font-size: 0.8125rem;
-  line-height: 1.4;
-  text-align: center;
-}
-
 body.body--dark .billing-offer__head p,
-body.body--dark .billing-offer__price span,
-body.body--dark .billing-offer__note {
+body.body--dark .billing-offer__price span {
   opacity: 0.72;
 }
 
-body.body--dark .billing-offer__head .billing-call {
-  opacity: 1;
+body.body--dark .billing-contact__card p {
+  opacity: 0.72;
 }
 
 body.body--dark .billing-offer__list .q-icon {
@@ -883,36 +709,7 @@ body.body--dark .billing-offer__list .q-icon {
 }
 
 @media (min-width: 640px) {
-  .account-sheet__split,
-  .billing-pay__grid {
+  .account-sheet__split {
     grid-template-columns: 1fr 1fr;
-  }
-
-  .billing-pay__wide {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (min-width: 900px) {
-  .billing-checkout {
-    grid-template-columns: minmax(0, 420px) minmax(320px, 1fr);
-    grid-template-areas:
-      'head head'
-      'offer pay';
-    column-gap: 36px;
-    row-gap: 28px;
-    align-items: start;
-  }
-
-  .billing-offer__head {
-    grid-area: head;
-  }
-
-  .billing-offer {
-    grid-area: offer;
-  }
-
-  .billing-pay {
-    grid-area: pay;
   }
 }

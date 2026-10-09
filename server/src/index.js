@@ -7,6 +7,7 @@ import { ensureDemoUser } from './auth/seed.js'
 import { prisma } from './db.js'
 import { env } from './env.js'
 import { analyticsRoutes } from './analytics/routes.js'
+import { pruneExpiredViews } from './analytics/retention.js'
 import { businessRoutes } from './business/routes.js'
 import { categoryRoutes } from './categories/routes.js'
 import { ensureAllTenantCategories } from './categories/categories.js'
@@ -15,16 +16,18 @@ import { notificationRoutes } from './notifications/routes.js'
 import { pushRoutes } from './push/routes.js'
 
 import { menuSettingsRoutes } from './menuSettings/routes.js'
-import { ensureAllMenuSettings } from './menuSettings/settings.js'
+import { ensureAllMenuSettings, sealStoredWifiPasswords } from './menuSettings/settings.js'
 import { productRoutes } from './products/routes.js'
+import { opensPanel } from './subscription/record.js'
 import { subscriptionRoutes } from './subscription/routes.js'
 import { tableRoutes } from './tables/routes.js'
-import { openUpload, relocateStoredImages } from './images/files.js'
+import { importDiskUploads, openUpload, relocateStoredImages } from './images/files.js'
 
 
 const app = Fastify({
   logger: true,
   bodyLimit: 8 * 1024 * 1024,
+  trustProxy: env.trustProxy,
 })
 
 const localOrigin = [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/]
@@ -73,6 +76,8 @@ app.setErrorHandler((error, request, reply) => {
 
 const operatorPaths = new Set(['/api/subscription/activate'])
 
+const unpaidAllowed = new Set(['/api/subscription', '/api/subscription/cancel'])
+
 const unverifiedAllowed = new Set([
   '/api/health',
   '/api/auth/register',
@@ -107,9 +112,25 @@ app.addHook('preHandler', async (request) => {
   if (!user.emailVerifiedAt) {
     throw fail(403, 'Panele girmek için e-postanızı doğrulayın.')
   }
+
+  if (!opensPanel(user.tenant?.subscription) && !unpaidAllowed.has(path)) {
+    throw fail(403, 'Deneme süreniz bitti. Satın almak için arayın.')
+  }
 })
 
-app.get('/api/health', async () => ({ ok: true }))
+app.get('/api/health', async (request, reply) => {
+  reply.header('Cache-Control', 'no-store')
+
+  try {
+    await prisma.$queryRaw`SELECT 1`
+  } catch (error) {
+    request.log.error(error)
+    reply.code(503)
+    return { ok: false }
+  }
+
+  return { ok: true }
+})
 
 app.get('/api/uploads/:name', async (request, reply) => {
   const file = await openUpload(request.params.name)
@@ -120,7 +141,7 @@ app.get('/api/uploads/:name', async (request, reply) => {
 
   reply.header('Cache-Control', 'public, max-age=31536000, immutable')
   reply.type(file.type)
-  return file.stream
+  return file.body
 })
 await authRoutes(app)
 await productRoutes(app)
@@ -134,10 +155,13 @@ await pushRoutes(app)
 await menuSettingsRoutes(app)
 await subscriptionRoutes(app)
 
-await relocateStoredImages(prisma)
+await importDiskUploads()
+await relocateStoredImages()
+await pruneExpiredViews({ force: true })
 await ensureDemoUser()
 await ensureAllTenantCategories()
 await ensureAllMenuSettings()
+await sealStoredWifiPasswords()
 
 await app.listen({ port: env.port, host: '0.0.0.0' })
 

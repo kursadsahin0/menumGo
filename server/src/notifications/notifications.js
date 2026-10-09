@@ -6,8 +6,9 @@ import { pushWaiterCall } from '../push/push.js'
 
 const pageSize = 20
 
-export async function createNotification(tenantId, title) {
+export async function createNotification(tenantId, title, body = '') {
   const text = String(title || '').trim()
+  const detail = String(body || '').trim()
 
   if (!text) {
     return null
@@ -18,11 +19,12 @@ export async function createNotification(tenantId, title) {
       id: newId('ntf'),
       tenantId,
       title: text.slice(0, 160),
+      body: detail.slice(0, 240),
     },
   })
 
   if (created.title.includes('Garson')) {
-    void pushWaiterCall(tenantId, created.title)
+    void pushWaiterCall(tenantId, created.title, created.body)
   }
 
   return created
@@ -122,6 +124,7 @@ function toNotification(row) {
   return {
     id: row.id,
     title: row.title,
+    body: row.body || '',
     time: relativeTime(row.createdAt),
     unread: row.readAt == null,
   }

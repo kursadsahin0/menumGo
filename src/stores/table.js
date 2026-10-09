@@ -4,17 +4,24 @@ import { createTable, deleteTable, getTable, getTables, updateTable } from '@/se
 export const useTableStore = defineStore('table', {
   state: () => ({
     tables: [],
+    page: 1,
+    pageSize: 20,
+    total: 0,
     status: 'idle',
     error: null,
   }),
 
   actions: {
-    async fetchTables() {
+    async fetchTables(page = this.page) {
       this.status = 'loading'
       this.error = null
 
       try {
-        this.tables = await getTables()
+        const result = await getTables({ page })
+        this.tables = result.items
+        this.page = result.page
+        this.pageSize = result.pageSize
+        this.total = result.total
         this.status = 'success'
       } catch (error) {
         this.status = 'error'

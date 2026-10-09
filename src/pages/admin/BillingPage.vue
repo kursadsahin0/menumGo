@@ -1,30 +1,15 @@
 <template>
   <q-page class="admin-page">
     <div class="admin-page__wrap">
-      <div class="billing-checkout">
+      <div class="billing-contact">
         <header class="billing-offer__head">
           <h1>Tek seferlik panel</h1>
+          <p v-if="onTrial">Denemeniz sürüyor. {{ daysLeft }} gün kaldı.</p>
+          <p v-else>Deneme süreniz bitti. Satın alınca menü yeniden açılır.</p>
           <p>Aylık ücret yok. Bir kez ödersiniz, menü bu işletmede kalır.</p>
-          <p class="billing-call">
-            <q-icon name="call" size="18px" />
-            <span>
-              Satın almak için
-              <a :href="salesPhoneHref">{{ salesPhone }}</a>
-              numarasını arayın.
-            </span>
-          </p>
         </header>
 
         <article class="billing-offer">
-          <PaymentCard
-            :holder="form.holder"
-            :number="form.number"
-            :expiry="form.expiry"
-            :cvc="form.cvc"
-            :active="activeField"
-            :flipped="activeField === 'cvc'"
-          />
-
           <p class="billing-offer__price">
             <strong>{{ formatTry(price) }}</strong>
             <span>tek sefer</span>
@@ -38,88 +23,45 @@
           </ul>
         </article>
 
-        <div class="billing-pay" @focusin="onPayFocus" @focusout="clearField">
-          <q-form class="billing-pay__form" @submit="onSubmit">
-          <h2>Kart bilgisi</h2>
-
-          <div class="billing-pay__grid">
-            <q-input
-              v-model="form.holder"
-              class="billing-pay__wide"
-              label="Kart üzerindeki isim"
-              autocomplete="cc-name"
-              outlined
-              hide-bottom-space
-              lazy-rules
-              :rules="[required]"
+        <section class="billing-contact__card">
+          <h2>Satın almak için arayın</h2>
+          <a class="billing-contact__phone" :href="salesPhoneHref">{{ salesPhone }}</a>
+          <p v-if="onTrial">Ödeme tamamlanınca deneme kalkar, panel sizde kalır.</p>
+          <p v-else>Ödeme tamamlanınca panel açılır.</p>
+          <div class="billing-contact__actions">
+            <q-btn
+              class="billing-contact__button"
+              unelevated
+              no-caps
+              color="primary"
+              icon="call"
+              :href="salesPhoneHref"
+              label="Ara"
             />
-            <q-input
-              v-model="form.number"
-              class="billing-pay__wide"
-              label="Kart numarası"
-              mask="#### #### #### ####"
-              unmasked-value
-              inputmode="numeric"
-              autocomplete="cc-number"
-              outlined
-              hide-bottom-space
-              lazy-rules
-              :rules="[cardRule]"
-            />
-            <q-input
-              v-model="form.expiry"
-              label="Son kullanma"
-              mask="##/##"
-              inputmode="numeric"
-              autocomplete="cc-exp"
-              outlined
-              hide-bottom-space
-              lazy-rules
-              :rules="[expiryRule]"
-            />
-            <q-input
-              v-model="form.cvc"
-              label="Güvenlik kodu"
-              mask="####"
-              inputmode="numeric"
-              autocomplete="cc-csc"
-              outlined
-              hide-bottom-space
-              lazy-rules
-              :rules="[cvcRule]"
+            <q-btn
+              v-if="onTrial"
+              class="billing-contact__button"
+              outline
+              no-caps
+              color="primary"
+              label="Panele dön"
+              :to="{ name: 'admin-dashboard' }"
             />
           </div>
-
-            <div class="billing-pay__submit">
-              <q-btn
-                unelevated
-                no-caps
-                color="primary"
-                type="submit"
-                class="billing-offer__button"
-                :label="`Satın al · ${formatTry(price)}`"
-              />
-              <p class="billing-offer__note">
-                Ödeme şu an alınamıyor. Satın almak için
-                <a :href="salesPhoneHref">{{ salesPhone }}</a>
-                numarasını arayın. Ödeme tamamlanınca panel açılır.
-              </p>
-            </div>
-          </q-form>
-        </div>
+        </section>
       </div>
     </div>
   </q-page>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import PaymentCard from '@/components/admin/PaymentCard.vue'
-import { useNotify } from '@/composables/useNotify'
 import { getCurrentSubscription } from '@/services/subscriptionService'
 import { useAuthStore } from '@/stores/auth'
+import { SALES_PHONE, SALES_PHONE_HREF } from '@/utils/constants'
 import { formatTry } from '@/utils/currency'
+import { trialDaysRemaining } from '@/utils/trial'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -127,10 +69,10 @@ let accessTimer = 0
 let checkingAccess = false
 
 const price = 9900
-const salesPhone = '0555 123 45 67'
-const salesPhoneHref = `tel:+90${salesPhone.replace(/\D/g, '').replace(/^0/, '')}`
-const { notifyError } = useNotify()
-const activeField = ref('')
+const salesPhone = SALES_PHONE
+const salesPhoneHref = SALES_PHONE_HREF
+const onTrial = computed(() => auth.hasAccess && auth.user?.subscription?.status === 'trial')
+const daysLeft = computed(() => trialDaysRemaining(auth.user?.subscription?.trialEndsAt))
 
 const includes = [
   'Misafir menüsü ve tek QR kod',
@@ -138,52 +80,6 @@ const includes = [
   'Fiyat, fotoğraf ve tükenen ürün',
   'Menü görüntülenme istatistikleri',
 ]
-
-const form = reactive({
-  holder: '',
-  number: '',
-  expiry: '',
-  cvc: '',
-})
-
-const required = (value) => (String(value || '').trim() ? true : 'Bu alan gerekli')
-
-const cardRule = (value) =>
-  String(value || '').replace(/\D/g, '').length === 16 ? true : 'Kart numarası 16 hane olmalı'
-
-const expiryRule = (value) => {
-  const match = /^(\d{2})\/(\d{2})$/.exec(String(value || ''))
-  if (!match) return 'AA/YY olarak girin'
-  const month = Number(match[1])
-  if (month < 1 || month > 12) return 'Ay 01 ile 12 arasında olmalı'
-  return true
-}
-
-const cvcRule = (value) => (/^\d{3,4}$/.test(String(value || '')) ? true : '3 veya 4 hane girin')
-
-const fieldByAuto = {
-  'cc-name': 'holder',
-  'cc-number': 'number',
-  'cc-exp': 'expiry',
-  'cc-csc': 'cvc',
-}
-
-function onPayFocus(event) {
-  const name = event.target?.getAttribute?.('autocomplete')
-  if (fieldByAuto[name]) activeField.value = fieldByAuto[name]
-}
-
-function clearField(event) {
-  const next = event.relatedTarget
-  const staying = next && next.closest && next.closest('.billing-pay .q-field')
-  if (!staying) activeField.value = ''
-}
-
-function onSubmit() {
-  notifyError(
-    `Ödeme şu an alınamıyor. Satın almak için ${salesPhone} numarasını arayın. Panel, ödeme tamamlanınca açılır.`,
-  )
-}
 
 async function syncAccess() {
   if (checkingAccess) {
@@ -194,9 +90,9 @@ async function syncAccess() {
 
   try {
     const subscription = await getCurrentSubscription()
-    auth.applySubscription(subscription.status)
+    auth.applySubscription(subscription)
 
-    if (auth.hasAccess) {
+    if (auth.user?.subscription?.status === 'active') {
       router.replace({ name: 'admin-dashboard' })
     }
   } catch (error) {

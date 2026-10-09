@@ -1,6 +1,7 @@
 import { prisma } from '../db.js'
 import { requireTenant, requireUser } from '../auth/session.js'
 import { ensureMenuSettings, readMenuSettings, toPublicSettings } from './settings.js'
+import { sealWifiPassword } from './wifi.js'
 
 export async function menuSettingsRoutes(app) {
   app.get('/api/menu-settings', async (request) => {
@@ -25,7 +26,7 @@ export async function menuSettingsRoutes(app) {
         website: data.website,
         instagram: data.instagram,
         wifiName: data.wifiName,
-        wifiPassword: data.wifiPassword,
+        wifiPassword: sealWifiPassword(data.wifiPassword),
         hoursTr: data.hoursTr,
         hoursEn: data.hoursEn,
         theme: data.theme,

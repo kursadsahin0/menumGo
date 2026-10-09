@@ -8,6 +8,7 @@ function sign(payload) {
 }
 
 export const sessionTtlMs = 7 * 24 * 60 * 60 * 1000
+export const resetTtlMs = 15 * 60 * 1000
 
 export function createSessionToken(userId, sessionId, expiresAt = Date.now() + sessionTtlMs) {
   return sign({

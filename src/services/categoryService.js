@@ -1,11 +1,27 @@
 import { request } from '@/services/api/http'
 import { endpoints } from '@/services/api/endpoints'
 
-export function getCategories() {
+export function getCategories(params) {
   return request({
     method: 'get',
     url: endpoints.categories.list,
+    params,
   })
+}
+
+export async function getAllCategories() {
+  const items = []
+
+  for (let page = 1; page <= 50; page += 1) {
+    const result = await getCategories({ page, pageSize: 100 })
+    items.push(...result.items)
+
+    if (!result.hasMore) {
+      return items
+    }
+  }
+
+  return items
 }
 
 export function getCategory(id) {

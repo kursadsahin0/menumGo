@@ -5,26 +5,43 @@ import { prisma } from '../db.js'
 import { env } from '../env.js'
 import { fail } from '../http.js'
 import { limitActivationAttempts } from '../rateLimit.js'
+import {
+  moneyOr,
+  panelPlan,
+  readAmount,
+  readPaidAt,
+  readPlan,
+  readProvider,
+  toPublicSubscription,
+} from './record.js'
 
-function toPublicSubscription(subscription) {
-  if (!subscription) {
-    return { id: null, status: 'inactive' }
+async function writeSubscription(tenantId, input) {
+  const current = await prisma.subscription.findUnique({ where: { tenantId } })
+  const activating = input.status === 'active'
+  const data = {
+    status: input.status,
+    plan: readPlan(input.plan, current?.plan || panelPlan.name),
+    amount: readAmount(
+      input.amount,
+      activating ? moneyOr(current?.amount, panelPlan.amount) : moneyOr(current?.amount, null),
+    ),
+    paidAt: readPaidAt(
+      input.paidAt,
+      activating ? current?.paidAt || new Date() : current?.paidAt || null,
+    ),
+    provider: readProvider(
+      input.provider,
+      activating ? current?.provider || panelPlan.provider : current?.provider || null,
+    ),
   }
 
-  return {
-    id: subscription.id,
-    status: subscription.status === 'active' ? 'active' : 'inactive',
-  }
-}
-
-async function writeStatus(tenantId, status) {
   return prisma.subscription.upsert({
     where: { tenantId },
-    update: { status },
+    update: data,
     create: {
       id: newId('sub'),
       tenantId,
-      status,
+      ...data,
     },
   })
 }
@@ -101,7 +118,7 @@ export async function subscriptionRoutes(app) {
 
   app.post('/api/subscription/cancel', async (request) => {
     const tenant = requireTenant(await requireUser(request))
-    const subscription = await writeStatus(tenant.id, 'inactive')
+    const subscription = await writeSubscription(tenant.id, { status: 'inactive' })
     return toPublicSubscription(subscription)
   })
 
@@ -112,7 +129,13 @@ export async function subscriptionRoutes(app) {
       assertActivationKey(request)
       const tenant = await findTenant(request.body)
       const status = readStatus(request.body?.status)
-      const subscription = await writeStatus(tenant.id, status)
+      const subscription = await writeSubscription(tenant.id, {
+        status,
+        plan: request.body?.plan,
+        amount: request.body?.amount,
+        paidAt: request.body?.paidAt,
+        provider: request.body?.provider,
+      })
 
       request.log.info({ tenantId: tenant.id, status }, 'Abonelik güncellendi')
       return toPublicSubscription(subscription)

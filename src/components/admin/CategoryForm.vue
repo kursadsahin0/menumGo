@@ -60,7 +60,8 @@
         no-caps
         color="primary"
         :label="mode === 'edit' ? 'Kaydet' : 'Kategori ekle'"
-        :loading="saving"
+        :loading="saving || imageBusy"
+        :disable="imageBusy"
       />
     </div>
   </q-form>
@@ -68,7 +69,9 @@
 
 <script setup>
 import { reactive, ref, watch } from 'vue'
+import { useNotify } from '@/composables/useNotify'
 import { localeField } from '@/utils/localeText'
+import { prepareImage } from '@/utils/prepareImage'
 import { rules } from '@/utils/validators'
 
 const props = defineProps({
@@ -87,6 +90,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['submit', 'cancel'])
+const { notifyError } = useNotify()
 
 const statusOptions = [
   { label: 'Yayında', value: true },
@@ -94,6 +98,7 @@ const statusOptions = [
 ]
 
 const imageFile = ref(null)
+const imageBusy = ref(false)
 const form = reactive(blankForm())
 
 function blankForm() {
@@ -126,16 +131,21 @@ function fillForm(category) {
 
 watch(() => props.category, fillForm, { immediate: true })
 
-function onImage(file) {
+async function onImage(file) {
   if (!file) {
     return
   }
 
-  const reader = new FileReader()
-  reader.onload = () => {
-    form.image = reader.result
+  imageBusy.value = true
+
+  try {
+    form.image = await prepareImage(file)
+  } catch (error) {
+    imageFile.value = null
+    notifyError(error instanceof Error ? error.message : 'Görsel okunamadı.')
+  } finally {
+    imageBusy.value = false
   }
-  reader.readAsDataURL(file)
 }
 
 function clearImage() {

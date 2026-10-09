@@ -23,7 +23,6 @@ npm run dev
 | Değişken | Açıklama |
 | --- | --- |
 | `VITE_API_BASE_URL` | API adresi. `/api` iken geliştirme sunucusu istekleri `http://127.0.0.1:3000` adresine iletir. |
-| `VITE_USE_MOCK` | Varsayılan kapalıdır. `true` yalnızca abonelik çağrılarını yerel veriye çevirir. Ürün, kategori, menü ve hesap istekleri her zaman API'ye gider. |
 
 ## Deneme
 
@@ -36,7 +35,13 @@ Misafir menüsü: `/menu/burger-house`
 ```bash
 npm run dev         # arayüz ve API birlikte
 npm run build       # üretim derlemesi
+npm test            # API ve arayüz testleri
 npm run lint        # biçim ve lint düzeltmesi
 npm run lint:check  # biçim ve lint kontrolü
 ```
-# deneme
+
+Veritabanı şeması `server/prisma/migrations` altındaki migration ile kurulur. Mevcut bir veritabanında `npm run db:migrate --prefix server` bekleyen migration’ları uygular.
+
+## Dağıtım
+
+`docker compose up --build` Postgres, API ve arayüzü açar. Arayüz `http://localhost:8080` adresindedir. API `server/.env` içindeki gizli değerleri kullanır; veritabanı adresi compose tarafından `db` servisine yönlendirilir.

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getCategories } from '@/services/categoryService'
+import { getAllCategories } from '@/services/categoryService'
 import {
   createProduct,
   deleteProduct,
@@ -13,6 +13,9 @@ export const useProductStore = defineStore('product', {
   state: () => ({
     products: [],
     categories: [],
+    page: 1,
+    pageSize: 20,
+    total: 0,
     query: {
       search: '',
       categoryId: '',
@@ -24,16 +27,27 @@ export const useProductStore = defineStore('product', {
 
   actions: {
     async fetchCategories() {
-      this.categories = await getCategories()
+      this.categories = await getAllCategories()
     },
 
-    async fetchProducts(query = this.query) {
-      this.query = { ...this.query, ...query }
+    async fetchProducts(query = {}) {
+      const page = query.page || this.page || 1
+      const given = (key, fallback) =>
+        Object.prototype.hasOwnProperty.call(query, key) ? query[key] || fallback : this.query[key]
+      this.query = {
+        search: given('search', ''),
+        categoryId: given('categoryId', ''),
+        status: given('status', 'all'),
+      }
       this.status = 'loading'
       this.error = null
 
       try {
-        this.products = await getProducts(this.query)
+        const result = await getProducts({ ...this.query, page })
+        this.products = result.items
+        this.page = result.page
+        this.pageSize = result.pageSize
+        this.total = result.total
         this.status = 'success'
       } catch (error) {
         this.status = 'error'

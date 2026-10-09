@@ -51,6 +51,7 @@
               </span>
               <span class="notice-menu__copy">
                 <span class="notice-menu__title">{{ item.title }}</span>
+                <span v-if="item.body" class="notice-menu__body">{{ item.body }}</span>
                 <span class="notice-menu__time">{{ item.time }}</span>
               </span>
             </li>
@@ -168,7 +169,7 @@ function applyNotifications(next, { announce = true } = {}) {
       .filter((item) => !seenIds.has(item.id) && String(item.title).includes('Garson'))
       .forEach((item, index) => {
         window.setTimeout(() => playWaiterChime(), index * 400)
-        showWaiterNotice(item.title)
+        showWaiterNotice(item.title, item.body)
       })
   }
 
@@ -300,11 +301,11 @@ function notificationIcon(title) {
     return 'room_service'
   }
 
-  if (text.includes('fiyatı')) {
+  if (text.toLocaleLowerCase('tr').includes('fiyat')) {
     return 'payments'
   }
 
-  if (text.includes('kategorisi')) {
+  if (text.toLocaleLowerCase('tr').includes('kategori')) {
     return 'category'
   }
 

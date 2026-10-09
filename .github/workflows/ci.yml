@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: menumgo
+          POSTGRES_PASSWORD: menumgo
+          POSTGRES_DB: menumgo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U menumgo -d menumgo"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://menumgo:menumgo@localhost:5432/menumgo
+      JWT_SECRET: ci-jwt-secret
+      WIFI_SECRET: ci-wifi-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+        working-directory: server
+      - run: npx prisma migrate deploy
+        working-directory: server
+      - run: npm test
+        working-directory: server
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:ui
+      - run: npm run build

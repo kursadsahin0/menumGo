@@ -1,10 +1,11 @@
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { newId } from '../auth/users.js'
+import { clampPage, pageResult, placeIds, readPage } from '../paging.js'
 import { requireTenant, requireUser } from '../auth/session.js'
 import { assertOwnedCategory } from '../categories/categories.js'
 import { createNotification } from '../notifications/notifications.js'
-import { assertDiscount, readProductInput, toPublicProduct } from './products.js'
+import { allergenIdsMatching, assertDiscount, readProductInput, toPublicProduct } from './products.js'
 import { removeImage, replaceImage, saveImage } from '../images/files.js'
 
 function listWhere(tenantId, query) {
@@ -34,6 +35,12 @@ function listWhere(tenantId, query) {
       { ingredients: { contains: search, mode: 'insensitive' } },
       { ingredientsEn: { contains: search, mode: 'insensitive' } },
     ]
+
+    const allergenIds = allergenIdsMatching(search)
+
+    if (allergenIds.length) {
+      where.OR.push({ allergens: { hasSome: allergenIds } })
+    }
   }
 
   return where
@@ -54,51 +61,48 @@ async function findOwnedProduct(tenantId, id) {
 export async function productRoutes(app) {
   app.get('/api/products', async (request) => {
     const tenant = requireTenant(await requireUser(request))
+    const requested = readPage(request.query)
+    const where = listWhere(tenant.id, request.query || {})
+    const total = await prisma.product.count({ where })
+    const page = clampPage(requested.page, total, requested.pageSize)
     const products = await prisma.product.findMany({
-      where: listWhere(tenant.id, request.query || {}),
-      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      where,
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }, { id: 'asc' }],
+      skip: (page - 1) * requested.pageSize,
+      take: requested.pageSize,
     })
 
-    return products.map(toPublicProduct)
+    return pageResult(products.map(toPublicProduct), total, page, requested.pageSize)
   })
 
   app.patch('/api/products/order', async (request) => {
     const tenant = requireTenant(await requireUser(request))
     const ids = Array.isArray(request.body?.ids) ? request.body.ids.map((id) => String(id)) : []
-    const products = await prisma.product.findMany({ where: { tenantId: tenant.id } })
-    const byId = new Map(products.map((product) => [product.id, product]))
-    const ordered = []
-    const seen = new Set()
+    const picked = ids.length
+      ? await prisma.product.findMany({
+          where: { tenantId: tenant.id, id: { in: ids } },
+        })
+      : []
 
-    ids.forEach((id) => {
-      const product = byId.get(id)
+    if (!picked.length) {
+      throw fail(422, 'Sıralanacak ürün yok.')
+    }
 
-      if (!product || seen.has(id)) {
-        return
-      }
+    const categoryId = picked[0].categoryId || null
 
-      seen.add(id)
-      ordered.push(product)
+    if (picked.some((product) => (product.categoryId || null) !== categoryId)) {
+      throw fail(422, 'Ürünler aynı kategoride olmalı.')
+    }
+
+    const products = await prisma.product.findMany({
+      where: { tenantId: tenant.id, categoryId },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }, { id: 'asc' }],
     })
+    const ordered = placeIds(products, ids)
 
     if (!ordered.length) {
       throw fail(422, 'Sıralanacak ürün yok.')
     }
-
-    const categoryId = ordered[0].categoryId || null
-
-    if (ordered.some((product) => (product.categoryId || null) !== categoryId)) {
-      throw fail(422, 'Ürünler aynı kategoride olmalı.')
-    }
-
-    products
-      .filter((product) => (product.categoryId || null) === categoryId)
-      .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'tr'))
-      .forEach((product) => {
-        if (!seen.has(product.id)) {
-          ordered.push(product)
-        }
-      })
 
     await prisma.$transaction(
       ordered.map((product, index) =>
@@ -109,12 +113,14 @@ export async function productRoutes(app) {
       ),
     )
 
+    const moved = new Set(ids)
     const updated = await prisma.product.findMany({
       where: {
         tenantId: tenant.id,
         categoryId,
+        id: { in: [...moved] },
       },
-      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }, { id: 'asc' }],
     })
 
     return updated.map(toPublicProduct)
@@ -141,7 +147,7 @@ export async function productRoutes(app) {
       },
     })
 
-    await createNotification(tenant.id, `${product.name} eklendi`)
+    await createNotification(tenant.id, 'Ürün eklendi', `${product.name} menüye eklendi.`)
 
     return toPublicProduct(product)
   })
@@ -181,7 +187,8 @@ export async function productRoutes(app) {
 
     await createNotification(
       tenant.id,
-      priceChanged ? `${product.name} fiyatı kaydedildi` : `${product.name} güncellendi`,
+      priceChanged ? 'Fiyat güncellendi' : 'Ürün güncellendi',
+      priceChanged ? `${product.name} fiyatı kaydedildi.` : `${product.name} kaydedildi.`,
     )
 
     return toPublicProduct(product)
@@ -193,7 +200,7 @@ export async function productRoutes(app) {
 
     await prisma.product.delete({ where: { id: current.id } })
     await removeImage(current.image)
-    await createNotification(tenant.id, `${current.name} silindi`)
+    await createNotification(tenant.id, 'Ürün silindi', `${current.name} menüden kaldırıldı.`)
     return { ok: true }
   })
 }

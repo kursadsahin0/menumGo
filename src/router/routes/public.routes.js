@@ -8,6 +8,36 @@ export default [
         name: 'public-home',
         component: () => import('@/pages/public/HomePage.vue'),
       },
+      {
+        path: 'kullanim-kosullari',
+        name: 'terms',
+        meta: {
+          title: 'Kullanım koşulları',
+          description: 'menümGo hesabı ve dijital menünün kullanım koşulları.',
+          document: 'terms',
+        },
+        component: () => import('@/pages/public/LegalPage.vue'),
+      },
+      {
+        path: 'gizlilik',
+        name: 'privacy',
+        meta: {
+          title: 'Gizlilik bildirimi',
+          description: 'menümGo hesabında ve misafir menüsünde işlenen veriler.',
+          document: 'privacy',
+        },
+        component: () => import('@/pages/public/LegalPage.vue'),
+      },
+      {
+        path: 'kvkk',
+        name: 'kvkk',
+        meta: {
+          title: 'KVKK aydınlatma metni',
+          description: '6698 sayılı Kanun kapsamında menümGo aydınlatma metni.',
+          document: 'kvkk',
+        },
+        component: () => import('@/pages/public/LegalPage.vue'),
+      },
     ],
   },
   {

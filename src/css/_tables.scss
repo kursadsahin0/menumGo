@@ -44,6 +44,26 @@
   line-height: 1;
 }
 
+.table-card__status {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.table-card__status:disabled {
+  cursor: progress;
+}
+
+.table-card__note {
+  margin: -6px 0 0;
+  color: var(--app-muted);
+  font-size: 0.8125rem;
+}
+
+.table-card--closed .table-card__plate {
+  opacity: 0.45;
+}
+
 .table-card__name {
   margin: -4px 0 0;
   color: var(--app-muted);

@@ -3,9 +3,12 @@
     <div class="admin-page__wrap">
       <p class="dashboard-intro">{{ intro }}</p>
 
-      <AppError class="q-mb-md" :error="dashboard.error" />
+      <div v-if="failed" class="load-failure">
+        <AppError :error="dashboard.error" />
+        <q-btn unelevated no-caps color="primary" label="Yeniden dene" @click="load" />
+      </div>
 
-      <AdminSkeleton v-if="dashboard.status === 'loading' && !overview" variant="cards" />
+      <AdminSkeleton v-else-if="dashboard.status === 'loading' && !overview" variant="cards" />
 
       <template v-else-if="overview">
         <DashboardStats :stats="overview.stats" />
@@ -41,8 +44,11 @@ const intro = computed(() => {
   const name = auth.user?.tenant?.name
   return name ? `${name} için bugünkü özet.` : 'İşletmeniz için bugünkü özet.'
 })
+const failed = computed(() => dashboard.status === 'error' && !overview.value)
 
-onMounted(() => {
+function load() {
   dashboard.fetchOverview()
-})
+}
+
+onMounted(load)
 </script>

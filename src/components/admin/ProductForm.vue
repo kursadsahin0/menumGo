@@ -147,7 +147,8 @@
         no-caps
         color="primary"
         :label="mode === 'edit' ? 'Kaydet' : 'Ürün ekle'"
-        :loading="saving"
+        :loading="saving || imageBusy"
+        :disable="imageBusy"
       />
     </div>
   </q-form>
@@ -156,7 +157,9 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { allergens } from '@/data/allergens'
+import { useNotify } from '@/composables/useNotify'
 import { localeField, trText } from '@/utils/localeText'
+import { prepareImage } from '@/utils/prepareImage'
 import { rules } from '@/utils/validators'
 
 const props = defineProps({
@@ -179,6 +182,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['submit', 'cancel'])
+const { notifyError } = useNotify()
 
 const availabilityOptions = [
   { label: 'Mevcut', value: true },
@@ -190,6 +194,7 @@ const allergenOptions = allergens.map((item) => ({
   label: item.tr,
 }))
 const imageFile = ref(null)
+const imageBusy = ref(false)
 const form = reactive(blankForm())
 const categoryChoices = computed(() =>
   props.categories.map((category) => ({
@@ -275,16 +280,21 @@ function sortRule(value) {
   return (Number.isInteger(Number(value)) && Number(value) >= 0) || 'Sıra 0 veya daha büyük olmalı.'
 }
 
-function onImage(file) {
+async function onImage(file) {
   if (!file) {
     return
   }
 
-  const reader = new FileReader()
-  reader.onload = () => {
-    form.image = reader.result
+  imageBusy.value = true
+
+  try {
+    form.image = await prepareImage(file)
+  } catch (error) {
+    imageFile.value = null
+    notifyError(error instanceof Error ? error.message : 'Görsel okunamadı.')
+  } finally {
+    imageBusy.value = false
   }
-  reader.readAsDataURL(file)
 }
 
 function clearImage() {

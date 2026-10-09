@@ -1,18 +1,35 @@
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { newId } from '../auth/users.js'
+import { clampPage, pageResult, placeIds, readPage } from '../paging.js'
 import { requireTenant, requireUser } from '../auth/session.js'
 import { createNotification } from '../notifications/notifications.js'
 import { readCategoryInput, toPublicCategory } from './categories.js'
 import { removeImage, replaceImage, saveImage } from '../images/files.js'
 
-async function listCategories(tenantId) {
+const categoryOrder = [{ sortOrder: 'asc' }, { name: 'asc' }, { id: 'asc' }]
+
+function toListCategory(category) {
+  return {
+    ...toPublicCategory(category),
+    productCount: category._count?.products || 0,
+  }
+}
+
+async function listCategories(tenantId, query) {
+  const requested = readPage(query)
+  const where = { tenantId }
+  const total = await prisma.category.count({ where })
+  const page = clampPage(requested.page, total, requested.pageSize)
   const categories = await prisma.category.findMany({
-    where: { tenantId },
-    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    where,
+    orderBy: categoryOrder,
+    skip: (page - 1) * requested.pageSize,
+    take: requested.pageSize,
+    include: { _count: { select: { products: true } } },
   })
 
-  return categories.map(toPublicCategory)
+  return pageResult(categories.map(toListCategory), total, page, requested.pageSize)
 }
 
 async function findOwnedCategory(tenantId, id) {
@@ -30,35 +47,21 @@ async function findOwnedCategory(tenantId, id) {
 export async function categoryRoutes(app) {
   app.get('/api/categories', async (request) => {
     const tenant = requireTenant(await requireUser(request))
-    return listCategories(tenant.id)
+    return listCategories(tenant.id, request.query)
   })
 
   app.patch('/api/categories/order', async (request) => {
     const tenant = requireTenant(await requireUser(request))
     const ids = Array.isArray(request.body?.ids) ? request.body.ids.map((id) => String(id)) : []
-    const categories = await prisma.category.findMany({ where: { tenantId: tenant.id } })
-    const byId = new Map(categories.map((category) => [category.id, category]))
-    const ordered = []
-    const seen = new Set()
-
-    ids.forEach((id) => {
-      const category = byId.get(id)
-
-      if (!category || seen.has(id)) {
-        return
-      }
-
-      seen.add(id)
-      ordered.push(category)
+    const categories = await prisma.category.findMany({
+      where: { tenantId: tenant.id },
+      orderBy: categoryOrder,
     })
+    const ordered = placeIds(categories, ids)
 
-    categories
-      .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'tr'))
-      .forEach((category) => {
-        if (!seen.has(category.id)) {
-          ordered.push(category)
-        }
-      })
+    if (!ordered.length) {
+      throw fail(422, 'Sıralanacak kategori yok.')
+    }
 
     await prisma.$transaction(
       ordered.map((category, index) =>
@@ -69,7 +72,13 @@ export async function categoryRoutes(app) {
       ),
     )
 
-    return listCategories(tenant.id)
+    const moved = await prisma.category.findMany({
+      where: { tenantId: tenant.id, id: { in: ids } },
+      orderBy: categoryOrder,
+      include: { _count: { select: { products: true } } },
+    })
+
+    return moved.map(toListCategory)
   })
 
   app.get('/api/categories/:id', async (request) => {
@@ -93,7 +102,7 @@ export async function categoryRoutes(app) {
       },
     })
 
-    await createNotification(tenant.id, `${category.name} kategorisi eklendi`)
+    await createNotification(tenant.id, 'Kategori eklendi', `${category.name} menüye eklendi.`)
 
     return toPublicCategory(category)
   })
@@ -116,7 +125,7 @@ export async function categoryRoutes(app) {
       await replaceImage(current.image, data.image)
     }
 
-    await createNotification(tenant.id, `${category.name} kategorisi güncellendi`)
+    await createNotification(tenant.id, 'Kategori güncellendi', `${category.name} kaydedildi.`)
 
     return toPublicCategory(category)
   })
@@ -135,9 +144,20 @@ export async function categoryRoutes(app) {
       )
     }
 
-    await prisma.category.delete({ where: { id: current.id } })
+    try {
+      await prisma.category.delete({ where: { id: current.id } })
+    } catch (error) {
+      if (error.code === 'P2003') {
+        throw fail(
+          409,
+          `${current.name} kategorisinde ürün var. Silmeden önce ürünleri başka bir kategoriye taşıyın.`,
+        )
+      }
+
+      throw error
+    }
     await removeImage(current.image)
-    await createNotification(tenant.id, `${current.name} kategorisi silindi`)
+    await createNotification(tenant.id, 'Kategori silindi', `${current.name} menüden kaldırıldı.`)
     return { ok: true }
   })
 }

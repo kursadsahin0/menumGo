@@ -16,6 +16,10 @@ export async function limitWifiReads(request, reply) {
   return limitWrites(request, reply, 'wifi', 20)
 }
 
+export async function limitMenuReads(request, reply) {
+  return limitWrites(request, reply, 'menu', 120)
+}
+
 export async function limitVerificationSends(request, reply, userId) {
   return limitWrites({ ip: `user:${userId}` }, reply, 'verify', 5)
 }

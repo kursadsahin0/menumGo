@@ -2,10 +2,18 @@
   <q-page class="admin-page">
     <div class="admin-page__wrap">
       <div class="table-toolbar">
-        <p class="table-toolbar__hint">Her masanın kendi QR kodu vardır. Misafir okuttuğunda o masanın adı menüde görünür.</p>
+        <p class="table-toolbar__hint">
+          Her masanın kendi QR kodu vardır. Misafir okuttuğunda o masanın adı menüde görünür. Kapalı masanın QR’ı menüyü açmaz.
+        </p>
         <q-btn unelevated no-caps color="primary" label="Yeni masa" icon="add" @click="openCreate" />
       </div>
 
+      <div v-if="failed" class="load-failure q-mt-md">
+        <AppError :error="tableStore.error" />
+        <q-btn unelevated no-caps color="primary" label="Yeniden dene" @click="load" />
+      </div>
+
+      <template v-else>
       <AppError class="q-mt-md" :error="tableStore.error" />
 
       <AdminSkeleton v-if="tableStore.status === 'loading' && !tableStore.tables.length" />
@@ -18,16 +26,29 @@
         text="Masa ekleyince ona özel bir QR kodu oluşur."
       />
 
-      <div v-else class="table-grid">
+      <template v-else>
+      <div class="table-grid">
         <article
           v-for="table in tableStore.tables"
           :key="table.id"
           class="table-card"
+          :class="{ 'table-card--closed': !table.isActive }"
         >
           <div class="table-card__head">
             <span class="table-card__mark">{{ table.tableNumber }}</span>
+            <button
+              type="button"
+              class="table-card__status product-status"
+              :class="{ 'is-off': !table.isActive }"
+              :aria-label="`${table.name} ${table.isActive ? 'açık' : 'kapalı'}. Durumu değiştir`"
+              :disabled="togglingId === table.id"
+              @click="toggle(table)"
+            >
+              {{ table.isActive ? 'Açık' : 'Kapalı' }}
+            </button>
           </div>
           <h2 class="table-card__name">{{ table.name }}</h2>
+          <p v-if="!table.isActive" class="table-card__note">Bu masanın QR kodu menüyü açmaz.</p>
           <button
             type="button"
             class="table-card__plate"
@@ -55,6 +76,14 @@
           </div>
         </article>
       </div>
+      <ListPager
+        :page="tableStore.page"
+        :page-size="tableStore.pageSize"
+        :total="tableStore.total"
+        @change="tableStore.fetchTables"
+      />
+      </template>
+      </template>
     </div>
 
     <q-dialog v-model="formOpen" persistent>
@@ -64,6 +93,13 @@
             <h2 class="table-form__title">{{ editing ? 'Masayı düzenle' : 'Yeni masa' }}</h2>
             <q-input v-model="form.name" label="Masa adı" outlined :rules="[rules.required]" />
             <q-input v-model="form.tableNumber" label="Masa numarası" outlined :rules="[rules.required]" />
+            <q-btn-toggle
+              v-model="form.isActive"
+              no-caps
+              unelevated
+              toggle-color="primary"
+              :options="statusOptions"
+            />
             <div class="table-form__actions">
               <q-btn flat no-caps label="Vazgeç" :disable="saving" @click="formOpen = false" />
               <q-btn unelevated no-caps color="primary" type="submit" label="Kaydet" :loading="saving" />
@@ -78,6 +114,7 @@
         <q-card-section class="table-qr__body">
           <h2 class="table-qr__title">{{ qrTable.name }}</h2>
           <p class="table-qr__lead">No {{ qrTable.tableNumber }}</p>
+          <p v-if="!qrTable.isActive" class="table-qr__lead">Masa kapalı. Bu QR menüyü açmaz.</p>
           <QRCode
             ref="qrRef"
             :value="qrUrl"
@@ -113,6 +150,7 @@ import AdminSkeleton from '@/components/common/AdminSkeleton.vue'
 import AppError from '@/components/common/AppError.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import ListPager from '@/components/admin/ListPager.vue'
 import { useNotify } from '@/composables/useNotify'
 import { useAuthStore } from '@/stores/auth'
 import { useTableStore } from '@/stores/table'
@@ -127,6 +165,11 @@ const qrOpen = ref(false)
 const confirmOpen = ref(false)
 const saving = ref(false)
 const removing = ref(false)
+const togglingId = ref('')
+const statusOptions = [
+  { label: 'Açık', value: true },
+  { label: 'Kapalı', value: false },
+]
 const editing = ref(null)
 const pending = ref(null)
 const qrTable = ref(null)
@@ -134,6 +177,7 @@ const qrRef = ref(null)
 const form = reactive({
   name: '',
   tableNumber: '',
+  isActive: true,
 })
 
 const qrUrl = computed(() => absoluteMenuUrl(qrTable.value?.qrCode || ''))
@@ -146,6 +190,7 @@ function menuUrl(table) {
 function fillForm(table) {
   form.name = table?.name || ''
   form.tableNumber = table?.tableNumber || ''
+  form.isActive = table ? table.isActive !== false : true
 }
 
 function openCreate() {
@@ -173,6 +218,7 @@ async function onSave() {
       {
         name: form.name,
         tableNumber: form.tableNumber,
+        isActive: form.isActive,
       },
       editing.value?.id,
     )
@@ -183,6 +229,18 @@ async function onSave() {
     notifyError(error)
   } finally {
     saving.value = false
+  }
+}
+
+async function toggle(table) {
+  togglingId.value = table.id
+
+  try {
+    await tableStore.patchTable(table.id, { isActive: !table.isActive })
+  } catch (error) {
+    notifyError(error)
+  } finally {
+    togglingId.value = ''
   }
 }
 
@@ -241,7 +299,11 @@ function printQr() {
   })
 }
 
-onMounted(() => {
+const failed = computed(() => tableStore.status === 'error' && tableStore.tables.length === 0)
+
+function load() {
   tableStore.fetchTables()
-})
+}
+
+onMounted(load)
 </script>

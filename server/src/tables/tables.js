@@ -65,6 +65,16 @@ export function readTableInput(body, { partial = false } = {}) {
     data.tableNumber = readText(source.tableNumber, 'Masa numarası', { required: true, max: 20 })
   }
 
+  if (has('isActive')) {
+    if (typeof source.isActive !== 'boolean') {
+      throw fail(422, 'Masa durumu açık veya kapalı olmalı.')
+    }
+
+    data.isActive = source.isActive
+  } else if (!partial) {
+    data.isActive = true
+  }
+
   return data
 }
 

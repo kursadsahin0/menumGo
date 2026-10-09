@@ -22,7 +22,7 @@ export function pushPublicKey() {
   return canPush() ? env.vapidPublicKey : ''
 }
 
-export async function pushWaiterCall(tenantId, title) {
+export async function pushWaiterCall(tenantId, title, body = '') {
   if (!configure() || !String(title).includes('Garson')) {
     return
   }
@@ -42,6 +42,7 @@ export async function pushWaiterCall(tenantId, title) {
     })
     const payload = JSON.stringify({
       title,
+      body: body || 'Misafir garson istiyor.',
       url: `${env.appUrl}/admin`,
     })
 

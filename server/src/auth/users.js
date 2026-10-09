@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto'
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
+import { toPublicSubscription } from '../subscription/record.js'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -34,9 +35,7 @@ export function toPublicUser(user) {
           slug: user.tenant.slug,
         }
       : null,
-    subscription: {
-      status: user.tenant?.subscription?.status || 'inactive',
-    },
+    subscription: toPublicSubscription(user.tenant?.subscription),
   }
 }
 

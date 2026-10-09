@@ -1,9 +1,12 @@
 <template>
   <q-page class="admin-page">
     <div class="admin-page__wrap">
-      <AppError v-if="businessStore.error && !draft" :error="businessStore.error" />
+      <AdminSkeleton v-if="pending" variant="form" />
 
-      <AdminSkeleton v-if="!draft" variant="form" />
+      <div v-else-if="failed" class="load-failure">
+        <AppError :error="businessStore.error" />
+        <q-btn unelevated no-caps color="primary" label="Yeniden dene" @click="load" />
+      </div>
 
       <q-form v-else greedy class="business-profile" @submit="save">
         <div class="business-profile__hero">
@@ -139,8 +142,8 @@
             no-caps
             color="primary"
             label="Kaydet"
-            :loading="businessStore.saving"
-            :disable="!dirty"
+            :loading="businessStore.saving || imageBusy"
+            :disable="!dirty || imageBusy"
           />
         </div>
       </q-form>
@@ -156,13 +159,17 @@ import { businessTypes } from '@/data/business'
 import { useNotify } from '@/composables/useNotify'
 import { useBusinessStore } from '@/stores/business'
 import { menuImage } from '@/utils/menuImage'
+import { imageEdges, prepareImage } from '@/utils/prepareImage'
 import { rules } from '@/utils/validators'
 
 const { notifySuccess, notifyError } = useNotify()
 const businessStore = useBusinessStore()
 const coverInput = ref(null)
 const logoInput = ref(null)
+const imageBusy = ref(false)
 const draft = computed(() => businessStore.draft)
+const pending = computed(() => !draft.value && businessStore.status !== 'error')
+const failed = computed(() => !draft.value && businessStore.status === 'error')
 const dirty = computed(
   () => JSON.stringify(businessStore.draft) !== JSON.stringify(businessStore.profile),
 )
@@ -188,16 +195,22 @@ function onFile(field, event) {
   onImage(field, file)
 }
 
-function onImage(field, file) {
+async function onImage(field, file) {
   if (!draft.value) {
     return
   }
 
-  const reader = new FileReader()
-  reader.onload = () => {
-    draft.value[field] = reader.result
+  imageBusy.value = true
+
+  try {
+    draft.value[field] = await prepareImage(file, {
+      maxEdge: field === 'coverImage' ? imageEdges.cover : imageEdges.photo,
+    })
+  } catch (error) {
+    notifyError(error instanceof Error ? error.message : 'Görsel okunamadı.')
+  } finally {
+    imageBusy.value = false
   }
-  reader.readAsDataURL(file)
 }
 
 function clearImage(field) {
@@ -217,8 +230,14 @@ async function save() {
   }
 }
 
-onMounted(async () => {
-  await businessStore.fetchBusiness()
-  businessStore.resetDraft()
-})
+async function load() {
+  try {
+    await businessStore.fetchBusiness()
+    businessStore.resetDraft()
+  } catch {
+    // The store keeps the error on the page.
+  }
+}
+
+onMounted(load)
 </script>

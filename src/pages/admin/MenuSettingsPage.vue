@@ -1,9 +1,12 @@
 <template>
   <q-page class="admin-page">
     <div class="admin-page__wrap">
-      <AppError v-if="settingsStore.error && !draft" :error="settingsStore.error" />
+      <AdminSkeleton v-if="pending" variant="form" />
 
-      <AdminSkeleton v-if="!draft" variant="form" />
+      <div v-else-if="failed" class="load-failure">
+        <AppError :error="settingsStore.error" />
+        <q-btn unelevated no-caps color="primary" label="Yeniden dene" @click="load" />
+      </div>
 
       <div v-else class="menu-settings">
         <form class="menu-settings__form" @submit.prevent="save">
@@ -128,6 +131,8 @@ const menu = useMenuStore()
 const settingsStore = useMenuSettingsStore()
 const { notifySuccess, notifyError } = useNotify()
 const draft = computed(() => settingsStore.draft)
+const pending = computed(() => !draft.value && settingsStore.status !== 'error')
+const failed = computed(() => !draft.value && settingsStore.status === 'error')
 const categories = computed(() => menu.publicMenu?.categories || [])
 const dirty = computed(
   () => JSON.stringify(settingsStore.draft) !== JSON.stringify(settingsStore.settings),
@@ -142,10 +147,17 @@ async function save() {
   }
 }
 
-onMounted(async () => {
-  await Promise.all([settingsStore.fetchSettings(), businessStore.fetchBusiness()])
+async function load() {
+  await Promise.allSettled([settingsStore.fetchSettings(), businessStore.fetchBusiness()])
+
+  if (!settingsStore.settings) {
+    return
+  }
+
   settingsStore.resetDraft()
   const slug = auth.user?.tenant?.slug || 'burger-house'
   menu.fetchPublicMenu(slug).catch(() => {})
-})
+}
+
+onMounted(load)
 </script>

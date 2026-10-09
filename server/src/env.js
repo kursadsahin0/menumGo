@@ -1,4 +1,6 @@
-import { readFileSync, existsSync } from 'node:fs'
+import { randomBytes } from 'node:crypto'
+import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { BlockList, isIP } from 'node:net'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -26,6 +28,68 @@ if (existsSync(envPath)) {
       process.env[key] = value
     }
   }
+}
+
+if (!process.env.WIFI_SECRET) {
+  const secret = randomBytes(32).toString('hex')
+  process.env.WIFI_SECRET = secret
+
+  if (existsSync(envPath)) {
+    const text = readFileSync(envPath, 'utf8')
+    const line = `WIFI_SECRET=${secret}`
+    const next = /^WIFI_SECRET=.*$/m.test(text)
+      ? text.replace(/^WIFI_SECRET=.*$/m, line)
+      : `${text.endsWith('\n') || !text ? text : `${text}\n`}${line}\n`
+    writeFileSync(envPath, next)
+  }
+}
+
+const privatePeers = new BlockList()
+
+for (const [address, prefix, family] of [
+  ['127.0.0.0', 8, 'ipv4'],
+  ['10.0.0.0', 8, 'ipv4'],
+  ['172.16.0.0', 12, 'ipv4'],
+  ['192.168.0.0', 16, 'ipv4'],
+  ['::1', 128, 'ipv6'],
+  ['fc00::', 7, 'ipv6'],
+  ['fe80::', 10, 'ipv6'],
+]) {
+  privatePeers.addSubnet(address, prefix, family)
+}
+
+function isPrivatePeer(address) {
+  const host = String(address || '').replace(/^::ffff:/i, '')
+  const family = isIP(host)
+
+  if (!family) {
+    return false
+  }
+
+  return privatePeers.check(host, family === 6 ? 'ipv6' : 'ipv4')
+}
+
+function readTrustProxy(value) {
+  const text = String(value || '').trim()
+  const normalized = text.toLowerCase()
+
+  if (!normalized) {
+    return isPrivatePeer
+  }
+
+  if (normalized === 'false' || normalized === '0') {
+    return false
+  }
+
+  if (normalized === 'true') {
+    return true
+  }
+
+  if (/^\d+$/.test(normalized)) {
+    return Number(normalized)
+  }
+
+  return text
 }
 
 function readOrigins(value) {
@@ -69,6 +133,8 @@ export const env = {
   vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
   vapidSubject: process.env.VAPID_SUBJECT || 'mailto:noreply@menumgo.local',
   activationKey: process.env.ACTIVATION_KEY || '',
+  wifiSecret: process.env.WIFI_SECRET || '',
+  trustProxy: readTrustProxy(process.env.TRUST_PROXY),
 }
 
 if (!env.databaseUrl || !env.jwtSecret) {

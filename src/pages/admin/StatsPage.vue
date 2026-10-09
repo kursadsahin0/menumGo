@@ -15,9 +15,12 @@
         />
       </div>
 
-      <AppError class="q-mt-md" :error="stats.error" />
+      <div v-if="failed" class="load-failure q-mt-md">
+        <AppError :error="stats.error" />
+        <q-btn unelevated no-caps color="primary" label="Yeniden dene" @click="load" />
+      </div>
 
-      <AdminSkeleton v-if="stats.status === 'loading' && !report" variant="cards" />
+      <AdminSkeleton v-else-if="stats.status === 'loading' && !report" variant="cards" />
 
       <template v-else-if="report">
         <DashboardStats class="stats-summary" :stats="report.summary" />
@@ -79,7 +82,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import DashboardChart from '@/components/admin/DashboardChart.vue'
 import DashboardStats from '@/components/admin/DashboardStats.vue'
@@ -106,11 +109,15 @@ function share(views, items) {
   return views / max
 }
 
+const failed = computed(() => stats.status === 'error' && !report.value)
+
+function load() {
+  stats.fetchReport(period.value)
+}
+
 function onPeriod(value) {
   stats.fetchReport(value)
 }
 
-onMounted(() => {
-  stats.fetchReport(period.value)
-})
+onMounted(load)
 </script>

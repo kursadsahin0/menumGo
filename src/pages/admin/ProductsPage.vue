@@ -52,6 +52,12 @@
         }}
       </p>
 
+      <div v-if="failed" class="load-failure q-mt-md">
+        <AppError :error="productStore.error" />
+        <q-btn unelevated no-caps color="primary" label="Yeniden dene" @click="load" />
+      </div>
+
+      <template v-else>
       <AppError class="q-mt-md" :error="productStore.error" />
 
       <AdminSkeleton
@@ -68,6 +74,13 @@
         @remove="askRemove"
         @reorder="reorder"
       />
+      <ListPager
+        :page="productStore.page"
+        :page-size="productStore.pageSize"
+        :total="productStore.total"
+        @change="showPage"
+      />
+      </template>
     </div>
 
     <q-dialog v-model="formOpen" persistent>
@@ -103,6 +116,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import AdminSkeleton from '@/components/common/AdminSkeleton.vue'
 import AppError from '@/components/common/AppError.vue'
+import ListPager from '@/components/admin/ListPager.vue'
 import ProductForm from '@/components/admin/ProductForm.vue'
 import ProductList from '@/components/admin/ProductList.vue'
 import { useNotify } from '@/composables/useNotify'
@@ -131,6 +145,9 @@ const statusOptions = [
   { label: 'Tükendi', value: 'unavailable' },
 ]
 
+const failed = computed(
+  () => productStore.status === 'error' && productStore.products.length === 0,
+)
 const canReorder = computed(
   () => !String(filters.search || '').trim() && filters.status === 'all',
 )
@@ -144,7 +161,11 @@ const categoryOptions = computed(() => [
 ])
 
 function load() {
-  productStore.fetchProducts({ ...filters })
+  productStore.fetchProducts({ ...filters, page: 1 })
+}
+
+function showPage(page) {
+  productStore.fetchProducts({ page })
 }
 
 function reorder(ids) {

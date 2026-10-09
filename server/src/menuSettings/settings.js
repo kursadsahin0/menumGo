@@ -1,6 +1,7 @@
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { newId } from '../auth/users.js'
+import { isSealedWifiPassword, openWifiPassword, sealWifiPassword } from './wifi.js'
 
 const imageLimit = 4_000_000
 const themes = new Set(['classic', 'modern', 'minimal', 'elegant'])
@@ -20,7 +21,8 @@ const classic = {
 
 export function toPublicSettings(settings, tenant, { includeWifiPassword = true } = {}) {
   const source = settings || defaultRecord(tenant)
-  const wifiPassword = source.wifiPassword || ''
+  const storedWifiPassword = source.wifiPassword || ''
+  const wifiPassword = includeWifiPassword ? openWifiPassword(storedWifiPassword) : ''
 
   return {
     name: source.name,
@@ -38,7 +40,7 @@ export function toPublicSettings(settings, tenant, { includeWifiPassword = true 
     wifiName: source.wifiName || '',
     ...(includeWifiPassword
       ? { wifiPassword }
-      : { hasWifiPassword: Boolean(wifiPassword) }),
+      : { hasWifiPassword: Boolean(storedWifiPassword) }),
     hours: {
       tr: source.hoursTr || '',
       en: source.hoursEn || '',
@@ -178,6 +180,23 @@ export async function ensureMenuSettings(tenant) {
       ...data,
     },
   })
+}
+
+export async function sealStoredWifiPasswords() {
+  const rows = await prisma.menuSettings.findMany({
+    select: { id: true, wifiPassword: true },
+  })
+
+  for (const row of rows) {
+    if (!row.wifiPassword || isSealedWifiPassword(row.wifiPassword)) {
+      continue
+    }
+
+    await prisma.menuSettings.update({
+      where: { id: row.id },
+      data: { wifiPassword: sealWifiPassword(row.wifiPassword) },
+    })
+  }
 }
 
 export async function ensureAllMenuSettings() {

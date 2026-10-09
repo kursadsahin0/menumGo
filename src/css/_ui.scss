@@ -76,6 +76,12 @@ body.body--dark .app-brand__logo,
   color: #8f2d24;
 }
 
+.load-failure {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+
 .confirm-dialog {
   width: min(420px, calc(100vw - 32px));
   border-radius: 16px;
@@ -189,4 +195,54 @@ body.body--dark .landing-footer__bar {
   .row-label {
     display: none;
   }
+}
+
+.install-prompt {
+  position: fixed;
+  z-index: 40;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  display: grid;
+  gap: 12px;
+  width: min(420px, calc(100% - 32px));
+  margin: 0 auto;
+  margin-bottom: env(safe-area-inset-bottom);
+  padding: 14px 16px;
+  border: 1px solid #d7ddd8;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(20, 40, 36, 0.16);
+  color: #1f3a34;
+}
+
+.install-prompt__text {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.install-prompt__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.install-prompt__install,
+.install-prompt__dismiss {
+  border: 0;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.install-prompt__install {
+  background: #1f3a34;
+  color: #fff;
+}
+
+.install-prompt__dismiss {
+  background: transparent;
+  color: #1f3a34;
 }

@@ -26,8 +26,6 @@ export const endpoints = {
   },
   subscription: {
     current: '/subscription',
-    checkout: '/subscription/checkout',
-    cancel: '/subscription/cancel',
   },
   dashboard: {
     overview: '/dashboard',

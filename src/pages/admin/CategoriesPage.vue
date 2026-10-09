@@ -6,6 +6,12 @@
         <q-btn unelevated no-caps color="primary" label="Yeni kategori" icon="add" @click="openCreate" />
       </div>
 
+      <div v-if="failed" class="load-failure q-mt-md">
+        <AppError :error="categoryStore.error" />
+        <q-btn unelevated no-caps color="primary" label="Yeniden dene" @click="load" />
+      </div>
+
+      <template v-else>
       <AppError class="q-mt-md" :error="categoryStore.error" />
 
       <AdminSkeleton
@@ -21,6 +27,13 @@
         @toggle="toggle"
         @reorder="reorder"
       />
+      <ListPager
+        :page="categoryStore.page"
+        :page-size="categoryStore.pageSize"
+        :total="categoryStore.total"
+        @change="categoryStore.fetchCategories"
+      />
+      </template>
     </div>
 
     <q-dialog v-model="formOpen" persistent>
@@ -51,9 +64,10 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import CategoryForm from '@/components/admin/CategoryForm.vue'
 import CategoryList from '@/components/admin/CategoryList.vue'
+import ListPager from '@/components/admin/ListPager.vue'
 import AdminSkeleton from '@/components/common/AdminSkeleton.vue'
 import AppError from '@/components/common/AppError.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
@@ -62,6 +76,9 @@ import { useCategoryStore } from '@/stores/category'
 import { trText } from '@/utils/localeText'
 
 const categoryStore = useCategoryStore()
+const failed = computed(
+  () => categoryStore.status === 'error' && categoryStore.categories.length === 0,
+)
 const { notifySuccess, notifyError } = useNotify()
 const formOpen = ref(false)
 const formKey = ref(0)
@@ -135,7 +152,9 @@ function reorder(ids) {
   categoryStore.reorder(ids)
 }
 
-onMounted(() => {
+function load() {
   categoryStore.fetchCategories()
-})
+}
+
+onMounted(load)
 </script>

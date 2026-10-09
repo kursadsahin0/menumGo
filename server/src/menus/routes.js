@@ -1,10 +1,12 @@
 import { recordMenuView, recordProductView } from '../analytics/report.js'
-import { limitViewWrites, limitWaiterCalls, limitWifiReads } from '../rateLimit.js'
+import { limitMenuReads, limitViewWrites, limitWaiterCalls, limitWifiReads } from '../rateLimit.js'
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import { createNotification } from '../notifications/notifications.js'
 import { toPublicProduct } from '../products/products.js'
 import { ensureMenuSettings, toPublicSettings } from '../menuSettings/settings.js'
+import { openWifiPassword } from '../menuSettings/wifi.js'
+import { opensPanel } from '../subscription/record.js'
 import { findActiveTable } from '../tables/tables.js'
 
 function groupProducts(categories, products) {
@@ -55,7 +57,7 @@ function groupProducts(categories, products) {
 }
 
 function assertPublished(tenant) {
-  if (tenant?.subscription?.status !== 'active') {
+  if (!opensPanel(tenant?.subscription)) {
     throw fail(404, 'Menü bulunamadı.')
   }
 }
@@ -65,7 +67,7 @@ async function publicTenant(slug) {
     where: { slug: String(slug || '').trim() },
     select: {
       id: true,
-      subscription: { select: { status: true } },
+      subscription: { select: { status: true, currentPeriodEnd: true } },
     },
   })
 
@@ -86,7 +88,7 @@ export async function menuRoutes(app) {
 
       return {
         name: settings?.wifiName || '',
-        password: settings?.wifiPassword || '',
+        password: openWifiPassword(settings?.wifiPassword || ''),
       }
     },
   )
@@ -112,17 +114,21 @@ export async function menuRoutes(app) {
         throw fail(404, 'Menü bulunamadı.')
       }
 
-      const title = table?.name ? `Garson çağrıldı · ${table.name}` : 'Garson çağrıldı'
+      const title = 'Garson çağrıldı'
+      const body = table?.name
+        ? `${table.name} masasından garson istendi.`
+        : 'Salondan garson istendi.'
       const recent = await prisma.notification.findFirst({
         where: {
           tenantId: tenant.id,
           title,
+          body,
           createdAt: { gte: new Date(Date.now() - 45_000) },
         },
       })
 
       if (!recent) {
-        await createNotification(tenant.id, title)
+        await createNotification(tenant.id, title, body)
       }
 
       return { ok: true }
@@ -138,13 +144,13 @@ export async function menuRoutes(app) {
     },
   )
 
-  app.get('/api/public/menus/:slug', async (request) => {
+  app.get('/api/public/menus/:slug', { preHandler: limitMenuReads }, async (request) => {
     const slug = String(request.params.slug || '').trim()
     const tenant = await prisma.tenant.findUnique({
       where: { slug },
       include: {
         user: true,
-        subscription: { select: { status: true } },
+        subscription: { select: { status: true, currentPeriodEnd: true } },
         menuSettings: true,
         categories: {
           orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],

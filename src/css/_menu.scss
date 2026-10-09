@@ -505,6 +505,16 @@ body.body--dark .q-notification.menu-toast,
   color: var(--menu-primary);
 }
 
+.menu-offline {
+  margin: 0;
+  padding: 8px 16px;
+  background: var(--menu-primary);
+  color: #fff;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .menu-notice {
   display: grid;
   justify-items: center;

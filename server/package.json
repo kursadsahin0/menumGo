@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
-    "db:push": "prisma db push",
+    "test": "node --test",
+    "db:migrate": "prisma migrate deploy",
     "db:seed": "node prisma/seed.js"
   },
   "dependencies": {

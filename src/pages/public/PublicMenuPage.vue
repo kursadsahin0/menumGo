@@ -10,10 +10,11 @@
     <div v-else-if="menu.error" class="menu-page">
       <div class="menu-state menu-state--block">
         <div class="menu-notice">
-          <q-icon name="link_off" size="32px" />
-          <h1 class="menu-notice__title">{{ messages.notFoundTitle }}</h1>
-          <p class="menu-notice__text">{{ messages.notFoundText }}</p>
+          <q-icon :name="noticeIcon" size="32px" />
+          <h1 class="menu-notice__title">{{ noticeTitle }}</h1>
+          <p class="menu-notice__text">{{ noticeText }}</p>
           <q-btn
+            v-if="menuMissing"
             class="menu-notice__action"
             unelevated
             no-caps
@@ -21,11 +22,21 @@
             :label="messages.home"
             to="/"
           />
+          <q-btn
+            v-else
+            class="menu-notice__action"
+            unelevated
+            no-caps
+            color="primary"
+            :label="messages.retry"
+            @click="load"
+          />
         </div>
       </div>
     </div>
 
     <div v-else-if="restaurant" class="menu-page">
+      <p v-if="offline" class="menu-offline" role="status">{{ messages.offline }}</p>
       <MenuHeader
         :restaurant="restaurant"
         :table="menu.publicMenu?.table"
@@ -106,7 +117,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import MenuCategoryNav from '@/components/menu/MenuCategoryNav.vue'
 import MenuFooter from '@/components/menu/MenuFooter.vue'
@@ -116,6 +127,7 @@ import MenuProductCard from '@/components/menu/MenuProductCard.vue'
 import MenuProductDialog from '@/components/menu/MenuProductDialog.vue'
 import MenuSectionHeading from '@/components/menu/MenuSectionHeading.vue'
 import { useMenuLanguage } from '@/composables/useMenuLanguage'
+import { allergenLabel } from '@/data/allergens'
 import { getWifi, recordMenuView, recordProductView, requestWaiter } from '@/services/menuService'
 import { useMenuStore } from '@/stores/menu'
 import { menuAppearance, presentRestaurant } from '@/utils/menuAppearance'
@@ -127,16 +139,43 @@ const route = useRoute()
 const menu = useMenuStore()
 const { locale, messages, text, setLocale } = useMenuLanguage()
 const query = ref('')
+const offline = ref(typeof navigator !== 'undefined' && !navigator.onLine)
 const searching = computed(() => String(query.value || '').trim().length > 0)
 const activeId = ref('')
 const selected = ref(null)
 const dialogOpen = ref(false)
 let observer
 
+const menuMissing = computed(() => menu.error?.status === 404)
+const menuLimited = computed(() => menu.error?.status === 429)
+const noticeIcon = computed(() => (menuMissing.value ? 'link_off' : menuLimited.value ? 'hourglass_empty' : 'wifi_off'))
+const noticeTitle = computed(() => {
+  if (menuMissing.value) return messages.value.notFoundTitle
+  if (menuLimited.value) return messages.value.rateLimitTitle
+  return messages.value.loadErrorTitle
+})
+const noticeText = computed(() => {
+  if (menuMissing.value) return messages.value.notFoundText
+  if (menuLimited.value) return messages.value.rateLimitText
+  return messages.value.loadErrorText
+})
 const restaurant = computed(() =>
   presentRestaurant(menu.publicMenu?.restaurant, menu.publicMenu?.settings),
 )
 const appearance = computed(() => menuAppearance(menu.publicMenu?.settings))
+
+function productText(product) {
+  const lang = locale.value === 'en' ? 'en' : 'tr'
+  const fold = (value) => text(value).toLocaleLowerCase(lang)
+  const allergens = (product.allergens || [])
+    .map((id) => allergenLabel(id, lang))
+    .filter(Boolean)
+    .join(' ')
+
+  return [fold(product.name), fold(product.description), fold(product.ingredients), fold(allergens)].join(
+    '\n',
+  )
+}
 
 const visibleCategories = computed(() => {
   const categories = menu.publicMenu?.categories || []
@@ -151,13 +190,7 @@ const visibleCategories = computed(() => {
   return categories
     .map((category) => ({
       ...category,
-      products: category.products.filter((product) => {
-        const name = text(product.name).toLocaleLowerCase(locale.value === 'en' ? 'en' : 'tr')
-        const description = text(product.description).toLocaleLowerCase(
-          locale.value === 'en' ? 'en' : 'tr',
-        )
-        return name.includes(term) || description.includes(term)
-      }),
+      products: category.products.filter((product) => productText(product).includes(term)),
     }))
     .filter((category) => category.products.length > 0)
 })
@@ -241,8 +274,13 @@ watch(visibleCategories, async (categories) => {
 
 function syncMenuSeo() {
   if (menu.error) {
+    const title = menuMissing.value
+      ? messages.value.notFoundTitle
+      : menuLimited.value
+        ? messages.value.rateLimitTitle
+        : messages.value.loadErrorTitle
     applySeo({
-      title: `Menü bulunamadı · ${APP_NAME}`,
+      title: `${title} · ${APP_NAME}`,
       description: SITE_DESCRIPTION,
       robots: 'noindex, nofollow',
       path: route.path,
@@ -279,8 +317,25 @@ function syncMenuSeo() {
 
 watch([restaurant, locale, () => menu.error], syncMenuSeo)
 
+function onConnectivity() {
+  const next = !navigator.onLine
+  const wasOffline = offline.value
+  offline.value = next
+
+  if (wasOffline && !next) {
+    load()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('online', onConnectivity)
+  window.addEventListener('offline', onConnectivity)
+})
+
 onBeforeUnmount(() => {
   observer?.disconnect()
+  window.removeEventListener('online', onConnectivity)
+  window.removeEventListener('offline', onConnectivity)
 })
 
 setLocale(locale.value)
