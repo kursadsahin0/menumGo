@@ -137,7 +137,10 @@ app.get('/api/health', async (request, reply) => {
     return { ok: false }
   }
 
-  return { ok: true }
+  return {
+    ok: true,
+    mail: { configured: Boolean(env.smtpHost && env.smtpPass) },
+  }
 })
 
 app.get('/api/uploads/:name', async (request, reply) => {
@@ -176,6 +179,17 @@ await ensureAllMenuSettings()
 await sealStoredWifiPasswords()
 
 await app.listen({ port: env.port, host: env.host })
+
+app.log.info(
+  {
+    mailConfigured: Boolean(env.smtpHost && env.smtpPass),
+    smtpHost: env.smtpHost || null,
+    appUrl: env.appUrl,
+  },
+  env.smtpHost && env.smtpPass
+    ? 'SMTP hazır'
+    : 'SMTP eksik — SMTP_HOST ve SMTP_PASS tanımlayın (backend/.env veya Render Environment)',
+)
 
 async function shutdown() {
   await app.close()

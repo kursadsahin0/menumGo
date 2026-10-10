@@ -40,7 +40,9 @@ async function deliver(message, { log, link } = {}) {
     ].filter(Boolean)
     throw fail(
       422,
-      `E-posta gönderilemiyor. Eksik ayar: ${missing.join(', ')}. backend/.env veya Render Environment’ı kontrol edin.`,
+      env.production
+        ? `E-posta gönderilemiyor. Render → Environment’a ekleyin: ${missing.join(', ')}.`
+        : `E-posta gönderilemiyor. backend/.env içinde eksik: ${missing.join(', ')}. API’yi yeniden başlatın.`,
     )
   }
 
