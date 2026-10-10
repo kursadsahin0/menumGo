@@ -14,9 +14,9 @@ services:
       retries: 10
 
   api:
-    build: ./server
+    build: ./backend
     env_file:
-      - server/.env
+      - backend/.env
     environment:
       DATABASE_URL: postgresql://menumgo:menumgo@db:5432/menumgo
       NODE_ENV: production
@@ -26,7 +26,9 @@ services:
         condition: service_healthy
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     depends_on:
       - api
     ports:

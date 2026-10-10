@@ -9,10 +9,10 @@ Menü Türkçe ve İngilizce açılır. Üründe fiyat, porsiyon, içerik ve ale
 Node.js 22 veya üzeri gerekir.
 
 ```bash
-npm install
-cp .env.example .env
-npm install --prefix server
-cp server/.env.example server/.env
+npm install --prefix backend
+cp backend/.env.example backend/.env
+npm install --prefix frontend
+cp frontend/.env.example frontend/.env
 npm run dev
 ```
 
@@ -22,7 +22,7 @@ npm run dev
 
 | Değişken | Açıklama |
 | --- | --- |
-| `VITE_API_BASE_URL` | API adresi. `/api` iken geliştirme sunucusu istekleri `http://127.0.0.1:3000` adresine iletir. |
+| `VITE_API_BASE_URL` | API adresi. `/api` iken geliştirme sunucusu istekleri `http://127.0.0.1:3000` adresine iletir. `frontend/.env` içinde tutulur. |
 
 ## Deneme
 
@@ -40,7 +40,7 @@ npm run lint        # biçim ve lint düzeltmesi
 npm run lint:check  # biçim ve lint kontrolü
 ```
 
-Veritabanı şeması `server/prisma/migrations` altındaki migration ile kurulur. Mevcut bir veritabanında `npm run db:migrate --prefix server` bekleyen migration’ları uygular.
+Veritabanı şeması `backend/prisma/migrations` altındaki migration ile kurulur. Mevcut bir veritabanında `npm run db:migrate --prefix backend` bekleyen migration’ları uygular.
 
 ## Dağıtım
 

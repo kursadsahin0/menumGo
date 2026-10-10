@@ -1,60 +1,18 @@
 {
-  "name": "qr-menu",
+  "name": "menumgo",
   "version": "0.0.1",
-  "description": "Kafeler, restoranlar ve barlar için dijital QR menü SaaS platformu",
-  "productName": "menümGo",
-  "author": "kursadsahin0 <kursatsahin565@gmail.com>",
-  "type": "module",
   "private": true,
+  "description": "Kafeler, restoranlar ve barlar için dijital QR menü SaaS platformu",
   "scripts": {
-    "lint": "prettier --write \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore && eslint --fix -c ./eslint.config.js \"./src*/**/*.{js,cjs,mjs,vue}\"",
-    "lint:check": "prettier \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore && eslint -c ./eslint.config.js \"./src*/**/*.{js,cjs,mjs,vue}\"",
     "dev": "node scripts/dev.mjs",
-    "dev:ui": "quasar dev",
-    "api": "npm run dev --prefix server",
-    "build": "quasar build",
-    "test": "npm test --prefix server && npm run test:ui",
-    "test:ui": "vitest run",
-    "postinstall": "quasar prepare --silent"
+    "dev:ui": "npm run dev --prefix frontend",
+    "api": "npm run dev --prefix backend",
+    "build": "npm run build --prefix frontend",
+    "test": "npm test --prefix backend && npm test --prefix frontend",
+    "test:ui": "npm test --prefix frontend",
+    "lint": "npm run lint --prefix frontend",
+    "lint:check": "npm run lint:check --prefix frontend"
   },
-  "dependencies": {
-    "@quasar/extras": "^2.1.0",
-    "axios": "^1.20.0",
-    "chart.js": "^4.5.1",
-    "pinia": "^4.0.3",
-    "qrcode": "^1.5.4",
-    "quasar": "^2.33.1",
-    "vue": "^3.5.22",
-    "vue-chartjs": "^5.3.4",
-    "vue-router": "^5.0.6"
-  },
-  "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@quasar/app-vite": "^3.10.0",
-    "@vitejs/plugin-vue": "^6.0.9",
-    "@vue/eslint-config-prettier": "^10.2.0",
-    "@vue/test-utils": "^2.5.1",
-    "autoprefixer": "^10.4.27",
-    "eslint": "^10.8.0",
-    "eslint-plugin-vue": "^10.8.0",
-    "globals": "^17.4.0",
-    "happy-dom": "^20.14.6",
-    "postcss": "^8.5.8",
-    "prettier": "^3.8.1",
-    "sass": "^1.105.0",
-    "vite-plugin-checker": "^0.14.5",
-    "vitest": "^5.0.3",
-    "vue-eslint-parser": "^10.4.0"
-  },
-  "keywords": [
-    "quasar",
-    "quasar-app",
-    "quasar-cli",
-    "quasar-app-vite",
-    "vite",
-    "vue",
-    "vuejs"
-  ],
   "engines": {
     "node": ">= 26 || ^24 || ^22.12"
   }

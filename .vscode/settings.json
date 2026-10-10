@@ -7,7 +7,9 @@
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "vue"],
   "search.exclude": {
     "dist/": true,
+    "frontend/dist/": true,
     ".quasar/": true,
+    "frontend/.quasar/": true,
     "/quasar.config.js.temporary.*": true
   }
 }

@@ -144,5 +144,5 @@ export const env = {
 }
 
 if (!env.databaseUrl || !env.jwtSecret) {
-  throw new Error('server/.env içinde DATABASE_URL ve JWT_SECRET olmalı.')
+  throw new Error('backend/.env içinde DATABASE_URL ve JWT_SECRET olmalı.')
 }
