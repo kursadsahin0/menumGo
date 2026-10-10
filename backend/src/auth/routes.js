@@ -40,7 +40,7 @@ import {
 } from './users.js'
 
 export async function authRoutes(app) {
-  app.post('/api/auth/register', { preHandler: limitRegistrations }, async (request) => {
+  app.post('/api/auth/register', { preHandler: limitRegistrations }, async (request, reply) => {
     const businessName = String(request.body?.businessName || '').trim()
     const account = assertAccount(request.body)
     const password = assertPassword(request.body?.password)
@@ -111,7 +111,15 @@ export async function authRoutes(app) {
       throw error
     }
 
-    return { ok: true }
+    reply.header(
+      'Set-Cookie',
+      sessionCookie(await openSession(user.id), {
+        secure: requestIsSecure(request),
+        remember: true,
+      }),
+    )
+
+    return { user: toPublicUser(user) }
   })
 
   app.post('/api/auth/login', { preHandler: limitLoginAttempts }, async (request, reply) => {

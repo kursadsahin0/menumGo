@@ -8,11 +8,7 @@
         </p>
       </header>
 
-      <q-banner v-if="sent" class="bg-green-1 text-positive q-mt-md" rounded>
-        Hesap oluşturuldu. Giriş yaparak panele devam edebilirsiniz.
-      </q-banner>
-
-      <q-form v-else class="auth-form" @submit="onSubmit">
+      <q-form class="auth-form" @submit="onSubmit">
         <q-input
           v-model="form.fullName"
           label="Ad Soyad"
@@ -119,14 +115,15 @@
 
 <script setup>
 import { computed, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import AuthPasswordField from '@/components/auth/AuthPasswordField.vue'
 import { useAuth } from '@/composables/useAuth'
 import { termsVersion } from '@/data/legal'
 import { matches, rules } from '@/utils/validators'
 
+const router = useRouter()
 const { auth, register } = useAuth()
 const errorMessage = ref('')
-const sent = ref(false)
 
 const form = reactive({
   fullName: '',
@@ -156,7 +153,7 @@ async function onSubmit() {
       acceptedTerms: form.acceptedTerms,
       termsVersion,
     })
-    sent.value = true
+    await router.push({ name: auth.entryRoute })
   } catch (error) {
     errorMessage.value = error?.message || 'Kayıt tamamlanamadı.'
   }

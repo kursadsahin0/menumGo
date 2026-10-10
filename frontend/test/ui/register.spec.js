@@ -5,8 +5,25 @@ import RegisterPage from '@/pages/auth/RegisterPage.vue'
 import { register } from '@/services/auth.service'
 import { mountPage } from './mount.js'
 
+const push = vi.fn()
+
+vi.mock('vue-router', async () => {
+  const actual = await vi.importActual('vue-router')
+  return {
+    ...actual,
+    useRouter: () => ({ push }),
+  }
+})
+
 vi.mock('@/services/auth.service', () => ({
-  register: vi.fn(async () => ({ ok: true })),
+  register: vi.fn(async () => ({
+    user: {
+      id: 'usr_1',
+      email: 'ada@example.com',
+      emailVerified: true,
+      subscription: { status: 'trial', trialEndsAt: new Date(Date.now() + 86400000).toISOString() },
+    },
+  })),
   fetchCurrentUser: vi.fn(),
   login: vi.fn(),
   logout: vi.fn(),
@@ -40,7 +57,9 @@ describe('kayıt onayı', () => {
     expect(wrapper.text()).toContain('7 gün')
   })
 
-  it('adres kayıtlı olsa da aynı onay metnini gösterir', async () => {
+  it('kayıttan sonra panele yönlendirir', async () => {
+    push.mockClear()
+
     const { wrapper } = await mountPage(RegisterPage, {
       path: '/auth/register',
       name: 'register',
@@ -49,6 +68,7 @@ describe('kayıt onayı', () => {
         { path: '/gizlilik', name: 'privacy', component: { template: '<div />' } },
         { path: '/kvkk', name: 'kvkk', component: { template: '<div />' } },
         { path: '/auth/login', name: 'login', component: { template: '<div />' } },
+        { path: '/admin', name: 'admin-dashboard', component: { template: '<div />' } },
       ],
     })
 
@@ -64,9 +84,8 @@ describe('kayıt onayı', () => {
     await flushPromises()
 
     expect(register).toHaveBeenCalled()
-    expect(wrapper.text()).toContain('Hesap oluşturuldu')
-    expect(wrapper.text()).toContain('Giriş yaparak')
-    expect(wrapper.text()).not.toContain('kayıtlı bir hesap')
+    expect(push).toHaveBeenCalledWith({ name: 'admin-dashboard' })
+    expect(wrapper.text()).not.toContain('Hesap oluşturuldu')
   })
 
   it('şifre sıfırlama onayında istenmeyen klasörünü söyler', async () => {
