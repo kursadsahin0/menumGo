@@ -51,9 +51,9 @@ async function deliver(message, { log, link } = {}) {
     port: smtpPort,
     secure: smtpSecure,
     requireTLS: !smtpSecure && smtpPort === 587,
-    connectionTimeout: 15_000,
-    greetingTimeout: 15_000,
-    socketTimeout: 20_000,
+    connectionTimeout: 8_000,
+    greetingTimeout: 8_000,
+    socketTimeout: 10_000,
     auth: smtpUser ? { user: smtpUser, pass: smtpPass } : undefined,
   })
 

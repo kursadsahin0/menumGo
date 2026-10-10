@@ -14,6 +14,7 @@ export function register(payload) {
     method: 'post',
     url: endpoints.auth.register,
     data: payload,
+    timeout: 60000,
   })
 }
 
@@ -36,6 +37,7 @@ export function forgotPassword(payload) {
     method: 'post',
     url: endpoints.auth.forgotPassword,
     data: payload,
+    timeout: 60000,
   })
 }
 

@@ -138,12 +138,11 @@ export async function authRoutes(app) {
       throw error
     }
 
-    try {
-      await issueEmailVerification(request.log, user)
-    } catch (error) {
-      await prisma.user.delete({ where: { id: user.id } }).catch(() => {})
-      throw error.statusCode ? error : fail(422, 'Doğrulama e-postası gönderilemedi.')
-    }
+    // Mail'i bekletme: Render soğuk açılış + SMTP axios/Netlify timeout'una takılıyor.
+    // Hesap kalsın; mail gitmezse giriş sonrası "Doğrulama gönder" ile yeniden denenir.
+    issueEmailVerification(request.log, user).catch((error) => {
+      request.log.error({ err: error }, 'Kayıt doğrulama e-postası gönderilemedi')
+    })
 
     return { ok: true }
   })

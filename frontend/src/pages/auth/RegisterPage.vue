@@ -9,7 +9,7 @@
       </header>
 
       <q-banner v-if="sent" class="bg-green-1 text-positive q-mt-md" rounded>
-        Doğrulama e-postası gönderildi. Gelen kutunuzu ve istenmeyen klasörünü kontrol edin, ardından giriş yapın.
+        Hesap oluşturuldu. Doğrulama maili geliyorsa gelen kutusu / spam’e bakın; gelmezse giriş yapıp “Doğrulama gönder” deyin.
       </q-banner>
 
       <q-form v-else class="auth-form" @submit="onSubmit">
