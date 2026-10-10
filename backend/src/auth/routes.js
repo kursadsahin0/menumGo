@@ -42,6 +42,10 @@ import {
 
 const verifyWindow = 24 * 60 * 60 * 1000
 
+function mailConfigured() {
+  return Boolean((process.env.SMTP_HOST || env.smtpHost) && (process.env.SMTP_PASS || env.smtpPass))
+}
+
 async function issueEmailVerification(log, user) {
   const token = createResetToken()
 
@@ -56,14 +60,19 @@ async function issueEmailVerification(log, user) {
   try {
     await sendVerificationEmail({ to: user.email, token, log })
   } catch (error) {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        verifyTokenHash: null,
-        verifyTokenExpiresAt: null,
-      },
-    })
+    // Token kalsın; kullanıcı giriş sonrası yeniden gönderebilir.
+    log.error({ err: error }, 'Doğrulama e-postası gönderilemedi')
     throw error.statusCode ? error : fail(422, 'Doğrulama e-postası gönderilemedi.')
+  }
+}
+
+async function sendVerificationBestEffort(log, user) {
+  try {
+    await issueEmailVerification(log, user)
+    return true
+  } catch (error) {
+    log.error({ err: error }, 'Doğrulama e-postası gönderilemedi')
+    return false
   }
 }
 
@@ -84,10 +93,22 @@ export async function authRoutes(app) {
       )
     }
 
+    if (!mailConfigured()) {
+      throw fail(
+        422,
+        env.production
+          ? 'E-posta gönderilemiyor. Render Environment’a SMTP_HOST ve SMTP_PASS ekleyin.'
+          : 'E-posta gönderilemiyor. backend/.env içinde SMTP_HOST ve SMTP_PASS olmalı.',
+      )
+    }
+
     const existing = await findUserByEmail(account.email)
 
     if (existing) {
       await hashPassword(password)
+      if (!existing.emailVerifiedAt) {
+        await sendVerificationBestEffort(request.log, existing)
+      }
       return { ok: true }
     }
 
@@ -138,11 +159,14 @@ export async function authRoutes(app) {
       throw error
     }
 
-    // Mail'i bekletme: Render soğuk açılış + SMTP axios/Netlify timeout'una takılıyor.
-    // Hesap kalsın; mail gitmezse giriş sonrası "Doğrulama gönder" ile yeniden denenir.
-    issueEmailVerification(request.log, user).catch((error) => {
-      request.log.error({ err: error }, 'Kayıt doğrulama e-postası gönderilemedi')
-    })
+    const emailSent = await sendVerificationBestEffort(request.log, user)
+
+    if (!emailSent) {
+      throw fail(
+        422,
+        'Hesap oluştu ama doğrulama e-postası gönderilemedi. Giriş yapıp “Doğrulama gönder”e basın veya SMTP ayarlarını kontrol edin.',
+      )
+    }
 
     return { ok: true }
   })
