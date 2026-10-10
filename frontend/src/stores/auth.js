@@ -45,7 +45,6 @@ export const useAuthStore = defineStore('auth', {
       return subscription?.status === 'trial' && trialDaysRemaining(subscription.trialEndsAt) > 0
     },
     entryRoute() {
-      if (!this.emailVerified) return 'verify-pending'
       return this.hasAccess ? 'admin-dashboard' : 'admin-billing'
     },
   },

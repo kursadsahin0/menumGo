@@ -41,12 +41,8 @@ export function registerGuards(router, pinia) {
       }
     }
 
-    if (to.name === 'verify-pending' && auth.isAuthenticated && auth.emailVerified) {
+    if (to.name === 'verify-pending' && auth.isAuthenticated) {
       return { name: auth.entryRoute }
-    }
-
-    if (requiresAuth && auth.isAuthenticated && !auth.emailVerified) {
-      return { name: 'verify-pending' }
     }
 
     const allowsUnpaid = to.matched.some((record) => record.meta.allowWithoutSubscription)

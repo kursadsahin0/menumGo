@@ -1,11 +1,6 @@
 import { ensureTenantCategories } from '../categories/categories.js'
 import { removeImage } from '../images/files.js'
-import {
-  mailConfigured,
-  sendPasswordResetEmail,
-  sendProbeEmail,
-  sendVerificationEmail,
-} from '../mail/mail.js'
+import { sendPasswordResetEmail, sendProbeEmail } from '../mail/mail.js'
 import { ensureMenuSettings } from '../menuSettings/settings.js'
 import { clearSessionCookie, requestIsSecure, sessionCookie } from './cookie.js'
 import { demoAccountEmail } from './seed.js'
@@ -19,7 +14,6 @@ import {
   limitPasswordChanges,
   limitPasswordResets,
   limitRegistrations,
-  limitVerificationSends,
 } from '../rateLimit.js'
 import { panelPlan, trialDeadline } from '../subscription/record.js'
 import { hashPassword, verifyPassword } from './password.js'
@@ -45,38 +39,6 @@ import {
   uniqueSlug,
 } from './users.js'
 
-const verifyWindow = 24 * 60 * 60 * 1000
-
-async function issueEmailVerification(log, user) {
-  const token = createResetToken()
-
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      verifyTokenHash: hashResetToken(token),
-      verifyTokenExpiresAt: new Date(Date.now() + verifyWindow),
-    },
-  })
-
-  try {
-    await sendVerificationEmail({ to: user.email, token, log })
-  } catch (error) {
-    // Token kalsın; kullanıcı giriş sonrası yeniden gönderebilir.
-    log.error({ err: error }, 'Doğrulama e-postası gönderilemedi')
-    throw error.statusCode ? error : fail(422, 'Doğrulama e-postası gönderilemedi.')
-  }
-}
-
-async function sendVerificationBestEffort(log, user) {
-  try {
-    await issueEmailVerification(log, user)
-    return true
-  } catch (error) {
-    log.error({ err: error }, 'Doğrulama e-postası gönderilemedi')
-    return false
-  }
-}
-
 export async function authRoutes(app) {
   app.post('/api/auth/register', { preHandler: limitRegistrations }, async (request) => {
     const businessName = String(request.body?.businessName || '').trim()
@@ -94,28 +56,10 @@ export async function authRoutes(app) {
       )
     }
 
-    if (!mailConfigured()) {
-      throw fail(
-        422,
-        env.production
-          ? 'E-posta gönderilemiyor. Render Environment’a SMTP_HOST ve SMTP_PASS ekleyin.'
-          : 'E-posta gönderilemiyor. backend/.env içinde SMTP_HOST ve SMTP_PASS olmalı.',
-      )
-    }
-
     const existing = await findUserByEmail(account.email)
 
     if (existing) {
       await hashPassword(password)
-      if (!existing.emailVerifiedAt) {
-        const emailSent = await sendVerificationBestEffort(request.log, existing)
-        if (!emailSent) {
-          throw fail(
-            422,
-            'Hesap zaten var ama doğrulama e-postası gönderilemedi. SMTP ayarlarını kontrol edin veya giriş yapıp “Doğrulama gönder”e basın.',
-          )
-        }
-      }
       return { ok: true }
     }
 
@@ -129,6 +73,7 @@ export async function authRoutes(app) {
           email: account.email,
           phone: account.phone,
           passwordHash: await hashPassword(password),
+          emailVerifiedAt: new Date(),
           termsVersion,
           termsAcceptedAt: new Date(),
           tenant: {
@@ -166,15 +111,6 @@ export async function authRoutes(app) {
       throw error
     }
 
-    const emailSent = await sendVerificationBestEffort(request.log, user)
-
-    if (!emailSent) {
-      throw fail(
-        422,
-        'Hesap oluştu ama doğrulama e-postası gönderilemedi. Giriş yapıp “Doğrulama gönder”e basın veya SMTP ayarlarını kontrol edin.',
-      )
-    }
-
     return { ok: true }
   })
 
@@ -186,6 +122,14 @@ export async function authRoutes(app) {
 
     if (demoClosed || !user || !(await verifyPassword(password, user.passwordHash))) {
       throw fail(401, 'E-posta veya şifre hatalı.')
+    }
+
+    if (!user.emailVerifiedAt) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerifiedAt: new Date() },
+      })
+      user.emailVerifiedAt = new Date()
     }
 
     reply.header(
@@ -219,41 +163,16 @@ export async function authRoutes(app) {
       throw fail(409, 'Bu e-posta ile kayıtlı bir hesap var.')
     }
 
-    const emailChanged = account.email !== current.email
-
-    if (emailChanged) {
-      await limitVerificationSends(request, reply, current.id)
-    }
-
     const user = await prisma.user.update({
       where: { id: current.id },
       data: {
         ...account,
-        ...(emailChanged ? { emailVerifiedAt: null } : {}),
+        emailVerifiedAt: current.emailVerifiedAt || new Date(),
       },
       include: {
         tenant: { include: { subscription: true } },
       },
     })
-
-    if (emailChanged) {
-      try {
-        await issueEmailVerification(request.log, user)
-      } catch (error) {
-        await prisma.user.update({
-          where: { id: current.id },
-          data: {
-            fullName: current.fullName,
-            email: current.email,
-            phone: current.phone,
-            emailVerifiedAt: current.emailVerifiedAt,
-            verifyTokenHash: current.verifyTokenHash,
-            verifyTokenExpiresAt: current.verifyTokenExpiresAt,
-          },
-        })
-        throw error
-      }
-    }
 
     return toPublicUser(user)
   })
@@ -283,15 +202,16 @@ export async function authRoutes(app) {
     return { ok: true, email: user.email }
   })
 
-  app.post('/api/auth/verify-email/send', async (request, reply) => {
+  app.post('/api/auth/verify-email/send', async (request) => {
     const user = await requireUser(request)
 
-    if (user.emailVerifiedAt) {
-      return { ok: true }
+    if (!user.emailVerifiedAt) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerifiedAt: new Date() },
+      })
     }
 
-    await limitVerificationSends(request, reply, user.id)
-    await issueEmailVerification(request.log, user)
     return { ok: true }
   })
 

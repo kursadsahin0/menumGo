@@ -8,7 +8,6 @@
             <div>
               <h2>{{ displayName }}</h2>
               <p>{{ auth.user?.email }}</p>
-              <p>{{ auth.user?.emailVerified ? 'E-posta doğrulandı' : 'E-posta doğrulanmadı' }}</p>
             </div>
           </header>
 
@@ -46,17 +45,6 @@
                   :rules="[rules.required, rules.phone]"
                 />
               </div>
-              <p v-if="!auth.user?.emailVerified" class="account-sheet__note">
-                Doğrulama bağlantısı e-postanıza gider.
-                <button
-                  type="button"
-                  class="account-sheet__link"
-                  :disabled="sendingVerification"
-                  @click="sendVerification"
-                >
-                  Doğrulama gönder
-                </button>
-              </p>
               <div class="account-sheet__footer">
                 <p v-if="accountDirty" class="account-sheet__status">Kaydedilmemiş değişiklik var.</p>
                 <q-btn
@@ -244,7 +232,6 @@ const passwordForm = ref(null)
 const savingAccount = ref(false)
 const savingPassword = ref(false)
 const savingSlug = ref(false)
-const sendingVerification = ref(false)
 const deleting = ref(false)
 const deleteOpen = ref(false)
 const deletePassword = ref('')
@@ -325,8 +312,6 @@ function setDark(value) {
 
 async function saveAccount() {
   savingAccount.value = true
-  const emailChanged =
-    account.email.trim().toLowerCase() !== String(auth.user?.email || '').toLowerCase()
 
   try {
     await auth.updateAccount({
@@ -334,30 +319,11 @@ async function saveAccount() {
       email: account.email,
       phone: account.phone,
     })
-    notifySuccess(
-      emailChanged ? 'Hesap kaydedildi. Doğrulama e-postası gönderildi.' : 'Hesap kaydedildi.',
-    )
-
-    if (emailChanged) {
-      await router.push({ name: 'verify-pending' })
-    }
+    notifySuccess('Hesap kaydedildi.')
   } catch (error) {
     notifyError(error)
   } finally {
     savingAccount.value = false
-  }
-}
-
-async function sendVerification() {
-  sendingVerification.value = true
-
-  try {
-    await auth.sendVerification()
-    notifySuccess('Doğrulama e-postası gönderildi.')
-  } catch (error) {
-    notifyError(error)
-  } finally {
-    sendingVerification.value = false
   }
 }
 

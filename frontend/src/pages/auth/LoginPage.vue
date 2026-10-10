@@ -82,11 +82,6 @@ async function onSubmit() {
   try {
     await login(form)
 
-    if (!auth.emailVerified) {
-      router.push({ name: 'verify-pending' })
-      return
-    }
-
     if (!auth.hasAccess) {
       router.push({ name: 'admin-billing' })
       return

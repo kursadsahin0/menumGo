@@ -119,10 +119,6 @@ app.addHook('preHandler', async (request) => {
 
   const user = await requireUser(request)
 
-  if (!user.emailVerifiedAt) {
-    throw fail(403, 'Panele girmek için e-postanızı doğrulayın.')
-  }
-
   if (!opensPanel(user.tenant?.subscription) && !unpaidAllowed.has(path)) {
     throw fail(403, 'Deneme süreniz bitti. Satın almak için arayın.')
   }

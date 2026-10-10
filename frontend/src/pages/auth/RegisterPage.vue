@@ -9,7 +9,7 @@
       </header>
 
       <q-banner v-if="sent" class="bg-green-1 text-positive q-mt-md" rounded>
-        Hesap oluşturuldu. Gelen kutusu ve spam klasörünü kontrol edin. Mail yoksa giriş yapıp “Doğrulama gönder”e basın.
+        Hesap oluşturuldu. Giriş yaparak panele devam edebilirsiniz.
       </q-banner>
 
       <q-form v-else class="auth-form" @submit="onSubmit">
