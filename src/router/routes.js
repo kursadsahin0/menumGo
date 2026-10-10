@@ -9,6 +9,9 @@ const routes = [
   {
     path: '/:catchAll(.*)*',
     name: 'not-found',
+    meta: {
+      title: 'Sayfa bulunamadı',
+    },
     component: () => import('@/pages/ErrorNotFound.vue'),
   },
 ]

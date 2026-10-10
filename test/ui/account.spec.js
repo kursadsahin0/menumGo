@@ -47,7 +47,7 @@ function savedUser(patch) {
 }
 
 async function openAccount() {
-  persistSession('test-token', user, true)
+  persistSession(user, true)
   return mountPage(SettingsPage, {
     path: '/admin/settings',
     name: 'admin-profile',

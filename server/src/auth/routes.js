@@ -2,6 +2,9 @@ import { ensureTenantCategories } from '../categories/categories.js'
 import { removeImage } from '../images/files.js'
 import { sendPasswordResetEmail, sendVerificationEmail } from '../mail/mail.js'
 import { ensureMenuSettings } from '../menuSettings/settings.js'
+import { clearSessionCookie, requestIsSecure, sessionCookie } from './cookie.js'
+import { demoAccountEmail } from './seed.js'
+import { env } from '../env.js'
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import {
@@ -83,7 +86,8 @@ export async function authRoutes(app) {
     const existing = await findUserByEmail(account.email)
 
     if (existing) {
-      throw fail(409, 'Bu e-posta ile kayıtlı bir hesap var.')
+      await hashPassword(password)
+      return { ok: true }
     }
 
     let user = null
@@ -121,38 +125,50 @@ export async function authRoutes(app) {
 
       await ensureTenantCategories(user.tenant.id)
       await ensureMenuSettings({ ...user.tenant, user })
-      await issueEmailVerification(request.log, user)
     } catch (error) {
       if (user) {
         await prisma.user.delete({ where: { id: user.id } }).catch(() => {})
       }
 
+      if (error?.code === 'P2002') {
+        return { ok: true }
+      }
+
       throw error
     }
 
-    return {
-      token: await openSession(user.id),
-      user: toPublicUser(user),
-    }
+    issueEmailVerification(request.log, user).catch(async (error) => {
+      request.log.error({ err: error }, 'Doğrulama e-postası gönderilemedi')
+      await prisma.user.delete({ where: { id: user.id } }).catch(() => {})
+    })
+
+    return { ok: true }
   })
 
-  app.post('/api/auth/login', { preHandler: limitLoginAttempts }, async (request) => {
+  app.post('/api/auth/login', { preHandler: limitLoginAttempts }, async (request, reply) => {
     const email = normalizeEmail(request.body?.email)
     const password = request.body?.password ?? ''
     const user = await findUserByEmail(email)
+    const demoClosed = env.production && email === demoAccountEmail
 
-    if (!user || !(await verifyPassword(password, user.passwordHash))) {
+    if (demoClosed || !user || !(await verifyPassword(password, user.passwordHash))) {
       throw fail(401, 'E-posta veya şifre hatalı.')
     }
 
-    return {
-      token: await openSession(user.id),
-      user: toPublicUser(user),
-    }
+    reply.header(
+      'Set-Cookie',
+      sessionCookie(await openSession(user.id), {
+        secure: requestIsSecure(request),
+        remember: request.body?.remember === true,
+      }),
+    )
+
+    return { user: toPublicUser(user) }
   })
 
-  app.post('/api/auth/logout', async (request) => {
+  app.post('/api/auth/logout', async (request, reply) => {
     await revokeRequestSession(request)
+    reply.header('Set-Cookie', clearSessionCookie(requestIsSecure(request)))
     return { ok: true }
   })
 
@@ -257,7 +273,7 @@ export async function authRoutes(app) {
     return toPublicUser(await findUserById(user.id))
   })
 
-  app.delete('/api/auth/me', async (request) => {
+  app.delete('/api/auth/me', async (request, reply) => {
     const user = await requireUser(request)
     const matches = await verifyPassword(request.body?.password ?? '', user.passwordHash)
 
@@ -292,6 +308,7 @@ export async function authRoutes(app) {
 
     await prisma.user.delete({ where: { id: user.id } })
     await Promise.all(images.map((image) => removeImage(image)))
+    reply.header('Set-Cookie', clearSessionCookie(requestIsSecure(request)))
     return { ok: true }
   })
 
@@ -314,9 +331,10 @@ export async function authRoutes(app) {
   })
 
   app.post('/api/auth/forgot-password', { preHandler: limitForgotPassword }, async (request) => {
-    const user = await findUserByEmail(request.body?.email)
+    const email = normalizeEmail(request.body?.email)
+    const user = await findUserByEmail(email)
 
-    if (!user) {
+    if (!user || (env.production && email === demoAccountEmail)) {
       return { ok: true }
     }
 
@@ -330,19 +348,18 @@ export async function authRoutes(app) {
       },
     })
 
-    try {
-      await sendPasswordResetEmail({ to: user.email, token: resetToken })
-    } catch (error) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          resetTokenHash: null,
-          resetTokenExpiresAt: null,
-        },
-      })
+    sendPasswordResetEmail({ to: user.email, token: resetToken }).catch(async (error) => {
       request.log.error({ err: error }, 'Şifre sıfırlama e-postası gönderilemedi')
-      throw fail(422, 'Sıfırlama e-postası gönderilemedi.')
-    }
+      await prisma.user
+        .update({
+          where: { id: user.id },
+          data: {
+            resetTokenHash: null,
+            resetTokenExpiresAt: null,
+          },
+        })
+        .catch(() => {})
+    })
 
     return { ok: true }
   })
@@ -357,7 +374,7 @@ export async function authRoutes(app) {
       },
     })
 
-    if (!user) {
+    if (!user || (env.production && user.email === demoAccountEmail)) {
       throw fail(400, 'Sıfırlama bağlantısı geçersiz veya süresi dolmuş.')
     }
 

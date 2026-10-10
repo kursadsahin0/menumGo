@@ -70,7 +70,7 @@ const auth = useAuthStore()
 let accessTimer = 0
 let checkingAccess = false
 
-const price = 9900
+const price = 5000
 const salesPhone = SALES_PHONE
 const salesPhoneHref = SALES_PHONE_HREF
 const onTrial = computed(() => auth.hasAccess && auth.user?.subscription?.status === 'trial')

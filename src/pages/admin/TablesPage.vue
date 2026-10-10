@@ -3,7 +3,7 @@
     <div class="admin-page__wrap">
       <div class="table-toolbar">
         <p class="table-toolbar__hint">
-          Her masanın kendi QR kodu vardır. Misafir okuttuğunda o masanın adı menüde görünür. Kapalı masanın QR’ı menüyü açmaz.
+          Her masanın kendi QR kodu vardır. Misafir okuttuğunda o masanın adı menüde görünür ve Wi-Fi şifresi açılır. Kapalı masanın QR’ı menüyü açmaz.
         </p>
         <q-btn unelevated no-caps color="primary" label="Yeni masa" icon="add" @click="openCreate" />
       </div>

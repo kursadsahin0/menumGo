@@ -29,6 +29,27 @@ html:has(.landing-page) {
   max-width: 760px;
 }
 
+.not-found {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.not-found__main {
+  flex: 1;
+  display: grid;
+  align-content: center;
+  padding: 48px 0 64px;
+}
+
+.not-found__main .landing-heading__text {
+  max-width: 36em;
+}
+
+.not-found__main .landing-btn {
+  margin-top: 8px;
+}
+
 .legal {
   padding-top: 32px;
   padding-bottom: 64px;

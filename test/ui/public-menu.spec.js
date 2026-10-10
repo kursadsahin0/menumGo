@@ -112,6 +112,30 @@ describe('misafir menüsü', () => {
     expect(wrapper.text()).not.toContain('Bağlantı kurulamadı')
   })
 
+  it('işletme kodunda şifrenin masa koduyla açıldığını yazar', async () => {
+    getPublicMenu.mockResolvedValue({
+      ...menu,
+      settings: { ...menu.settings, wifiAtTable: true },
+    })
+    const { wrapper } = await openMenu()
+
+    expect(wrapper.text()).toContain('Wi-Fi şifresi masadaki kodla açılır.')
+    expect(wrapper.findAll('button').some((node) => node.text().trim() === 'Wi-Fi')).toBe(false)
+  })
+
+  it('masa kodunda Wi-Fi düğmesini açar', async () => {
+    getPublicMenu.mockResolvedValue({
+      ...menu,
+      table: { id: 'tbl', name: 'Bahçe' },
+      settings: { ...menu.settings, wifiName: 'Kafe', hasWifiPassword: true },
+    })
+    const { wrapper } = await openMenu()
+
+    expect(wrapper.text()).toContain('Bahçe')
+    expect(wrapper.findAll('button').some((node) => node.text().includes('Wi-Fi'))).toBe(true)
+    expect(wrapper.text()).not.toContain('masadaki kodla açılır')
+  })
+
   it('aramada içerik ve alerjen adına da bakar', async () => {
     getPublicMenu.mockResolvedValue(menu)
     const { wrapper } = await openMenu()

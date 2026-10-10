@@ -47,15 +47,10 @@
   line-height: 1.15;
 }
 
-.auth-card__text,
-.auth-card__hint {
+.auth-card__text {
   margin: 8px 0 0;
   color: var(--app-muted);
   line-height: 1.5;
-}
-
-.auth-card__hint {
-  font-size: 0.875rem;
 }
 
 .auth-card__row {
@@ -123,7 +118,7 @@
 }
 
 .auth-layout:has(.auth-card--fit) .auth-layout__brand .app-brand__logo {
-  height: 36px;
+  height: 28px;
 }
 
 .auth-card--fit .q-card__section {
@@ -190,7 +185,7 @@
   }
 
   .auth-layout__wordmark .app-brand__logo {
-    height: 64px;
+    height: 36px;
   }
 
   .auth-layout__headline {

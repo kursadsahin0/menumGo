@@ -27,16 +27,35 @@
           @dragover.prevent
           @drop="move(group, index)"
         >
-          <span
-            v-if="sortable"
-            class="product-handle"
-            draggable="true"
-            aria-label="Sırayı değiştir"
-            @dragstart="startDrag(group.id, index, $event)"
-            @dragend="drag = { groupId: '', index: -1 }"
-          >
-            <q-icon name="drag_indicator" />
-          </span>
+          <div v-if="sortable" class="product-order">
+            <button
+              type="button"
+              class="order-step"
+              aria-label="Yukarı taşı"
+              :disabled="index === 0"
+              @click="step(group, index, -1)"
+            >
+              <q-icon name="keyboard_arrow_up" />
+            </button>
+            <button
+              type="button"
+              class="order-step"
+              aria-label="Aşağı taşı"
+              :disabled="index === group.products.length - 1"
+              @click="step(group, index, 1)"
+            >
+              <q-icon name="keyboard_arrow_down" />
+            </button>
+            <span
+              class="product-handle"
+              draggable="true"
+              aria-label="Sırayı sürükle"
+              @dragstart="startDrag(group.id, index, $event)"
+              @dragend="drag = { groupId: '', index: -1 }"
+            >
+              <q-icon name="drag_indicator" />
+            </span>
+          </div>
           <div class="product-row__media">
             <img
               v-if="product.image"
@@ -93,8 +112,12 @@
     <EmptyState
       v-if="products.length === 0"
       icon="restaurant_menu"
-      title="Ürün bulunamadı"
-      text="Aramayı değiştirin veya yeni bir ürün ekleyin."
+      :title="filtered ? 'Ürün bulunamadı' : 'Henüz ürün yok'"
+      :text="
+        filtered
+          ? 'Aramayı değiştirin veya yeni bir ürün ekleyin.'
+          : 'Yeni bir ürün eklediğinizde burada görünür.'
+      "
     />
   </div>
 </template>
@@ -118,6 +141,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  filtered: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['edit', 'remove', 'reorder'])
@@ -139,21 +166,33 @@ function startDrag(groupId, index, event) {
   }
 }
 
-function move(group, index) {
-  const from = drag.value
-  drag.value = { groupId: '', index: -1 }
-
-  if (from.groupId !== group.id || from.index < 0 || from.index === index) {
+function place(group, from, index) {
+  if (from < 0 || index < 0 || index >= group.products.length || from === index) {
     return
   }
 
   const next = group.products.slice()
-  const [item] = next.splice(from.index, 1)
+  const [item] = next.splice(from, 1)
   next.splice(index, 0, item)
   emit(
     'reorder',
     next.map((product) => product.id),
   )
+}
+
+function step(group, index, delta) {
+  place(group, index, index + delta)
+}
+
+function move(group, index) {
+  const from = drag.value
+  drag.value = { groupId: '', index: -1 }
+
+  if (from.groupId !== group.id) {
+    return
+  }
+
+  place(group, from.index, index)
 }
 
 function hasDiscount(product) {

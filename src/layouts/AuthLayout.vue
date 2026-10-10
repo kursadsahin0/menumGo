@@ -4,7 +4,7 @@
       <q-page class="auth-layout__page">
         <aside class="auth-layout__aside">
           <router-link class="auth-layout__wordmark" :to="{ name: 'public-home' }">
-            <img class="app-brand__logo" src="/brand/logo.png" alt="menümGo" />
+            <AppBrand />
           </router-link>
           <div>
             <h2 class="auth-layout__headline">Menünüz her masada, kontrol panelinizde.</h2>

@@ -2,7 +2,9 @@
   <q-page class="admin-page">
     <div class="admin-page__wrap">
       <div class="category-toolbar">
-        <p class="category-toolbar__hint">Sırayı tutamaçtan sürükleyerek değiştirin.</p>
+        <p class="category-toolbar__hint">
+          Sırayı yukarı ve aşağı düğmeleriyle değiştirin. Geniş ekranda tutamaçtan da sürükleyebilirsiniz.
+        </p>
         <q-btn unelevated no-caps color="primary" label="Yeni kategori" icon="add" @click="openCreate" />
       </div>
 

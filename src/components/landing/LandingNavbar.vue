@@ -1,7 +1,7 @@
 <template>
   <header class="landing-nav">
     <q-toolbar class="landing-nav__bar">
-      <router-link class="landing-nav__brand" :to="{ name: 'admin-dashboard' }">
+      <router-link class="landing-nav__brand" :to="{ name: 'public-home' }">
         <AppBrand />
       </router-link>
 
@@ -49,7 +49,7 @@
         <q-card-section class="row items-center">
           <router-link
             class="landing-nav__brand"
-            :to="{ name: 'admin-dashboard' }"
+            :to="{ name: 'public-home' }"
             @click="menuOpen = false"
           >
             <AppBrand />

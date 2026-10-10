@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto'
+import { listenHost } from './headers.js'
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { BlockList, isIP } from 'node:net'
 import { dirname, resolve } from 'node:path'
@@ -113,6 +114,11 @@ function readOrigins(value) {
 }
 
 export const env = {
+  production: process.env.NODE_ENV === 'production',
+  host: listenHost({
+    production: process.env.NODE_ENV === 'production',
+    configured: process.env.HOST,
+  }),
   port: Number(process.env.PORT || 3000),
   databaseUrl: process.env.DATABASE_URL || '',
   jwtSecret: process.env.JWT_SECRET || '',

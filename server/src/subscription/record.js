@@ -2,7 +2,7 @@ import { fail } from '../http.js'
 
 export const panelPlan = {
   name: 'Tek seferlik panel',
-  amount: 9900,
+  amount: 5000,
   provider: 'telefon',
 }
 

@@ -47,6 +47,11 @@ export const adminNavigation = [
     to: { name: 'admin-business' },
   },
   {
+    label: 'Profil',
+    icon: 'person_outline',
+    to: { name: 'admin-profile' },
+  },
+  {
     label: 'İletişim',
     icon: 'call',
     to: { name: 'admin-billing' },

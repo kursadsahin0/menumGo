@@ -58,11 +58,22 @@ export const useAuthStore = defineStore('auth', {
         password: payload?.password,
       }
 
-      return this.authenticate(() => loginRequest(credentials), remember)
+      return this.authenticate(() => loginRequest({ ...credentials, remember }), remember)
     },
 
     async register(payload) {
-      return this.authenticate(() => registerRequest(payload), true)
+      this.status = 'loading'
+      this.error = null
+
+      try {
+        const result = await registerRequest(payload)
+        this.status = 'success'
+        return result
+      } catch (error) {
+        this.status = 'error'
+        this.error = error
+        throw error
+      }
     },
 
     async authenticate(request, remember) {
@@ -71,10 +82,10 @@ export const useAuthStore = defineStore('auth', {
 
       try {
         const session = await request()
-        this.token = session.token
         this.user = session.user
+        persistSession(session.user, remember)
+        this.token = getToken()
         this.sessionChecked = true
-        persistSession(session.token, session.user, remember)
         this.status = 'success'
         return session
       } catch (error) {

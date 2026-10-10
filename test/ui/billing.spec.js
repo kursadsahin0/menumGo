@@ -24,7 +24,7 @@ const routes = [
 ]
 
 async function openBilling(subscription = { status: 'inactive' }) {
-  persistSession('test-token', { ...user, subscription }, true)
+  persistSession({ ...user, subscription }, true)
   return mountPage(BillingPage, {
     path: '/admin/billing',
     name: 'admin-billing',

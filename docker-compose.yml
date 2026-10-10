@@ -19,11 +19,11 @@ services:
       - server/.env
     environment:
       DATABASE_URL: postgresql://menumgo:menumgo@db:5432/menumgo
+      NODE_ENV: production
+      HOST: 0.0.0.0
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - '3000:3000'
 
   web:
     build: .

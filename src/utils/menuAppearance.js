@@ -68,6 +68,7 @@ export function presentRestaurant(restaurant, settings) {
     wifiName: String(settings.wifiName || ''),
     wifiPassword: String(settings.wifiPassword || ''),
     hasWifiPassword: Boolean(settings.hasWifiPassword || settings.wifiPassword),
+    wifiAtTable: Boolean(settings.wifiAtTable),
     address,
     hours: localeCopy(settings.hours, restaurant.hours),
     mapsUrl:

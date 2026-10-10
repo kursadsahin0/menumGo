@@ -2,6 +2,7 @@ import { config } from '@vue/test-utils'
 import {
   QBanner,
   QBtn,
+  QBtnToggle,
   QCard,
   QCardActions,
   QCardSection,
@@ -24,6 +25,7 @@ import { beforeEach } from 'vitest'
 const components = {
   QBanner,
   QBtn,
+  QBtnToggle,
   QCard,
   QCardActions,
   QCardSection,

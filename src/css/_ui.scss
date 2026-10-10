@@ -6,18 +6,19 @@
 
 .app-brand__logo {
   display: block;
-  height: 48px;
+  height: 28px;
   width: auto;
+  color: #1f3a34;
 }
 
 body.body--dark .app-brand__logo,
 .landing-footer .app-brand__logo,
 .auth-layout__wordmark .app-brand__logo {
-  filter: brightness(0) invert(1);
+  color: #fff;
 }
 
 .landing-footer .app-brand__logo {
-  height: 72px;
+  height: 32px;
 }
 
 .sr-only {

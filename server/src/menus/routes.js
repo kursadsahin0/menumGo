@@ -81,6 +81,12 @@ export async function menuRoutes(app) {
     { preHandler: limitWifiReads },
     async (request) => {
       const tenant = await publicTenant(request.params.slug)
+      const table = await findActiveTable(tenant.id, request.body?.tableId, { id: true })
+
+      if (!table) {
+        throw fail(404, 'Menü bulunamadı.')
+      }
+
       const settings = await prisma.menuSettings.findUnique({
         where: { tenantId: tenant.id },
         select: { wifiName: true, wifiPassword: true },
@@ -192,7 +198,10 @@ export async function menuRoutes(app) {
         mapsUrl: '',
         socials: [],
       },
-      settings: toPublicSettings(settings, tenant, { includeWifiPassword: false }),
+      settings: toPublicSettings(settings, tenant, {
+        includeWifiPassword: false,
+        includeWifi: Boolean(table),
+      }),
       table,
       categories: groupProducts(tenant.categories, tenant.products),
     }

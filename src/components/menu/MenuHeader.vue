@@ -24,6 +24,7 @@
       :wifi-name="restaurant.wifiName"
       :wifi-password="restaurant.wifiPassword"
       :has-wifi-password="restaurant.hasWifiPassword"
+      :wifi-at-table="restaurant.wifiAtTable"
       :load-wifi="loadWifi"
       :table-name="table?.name || ''"
       :request-waiter="requestWaiter"

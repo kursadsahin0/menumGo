@@ -26,7 +26,7 @@ npm run dev
 
 ## Deneme
 
-Panel girişi: `demo@qrmenu.local` / `demo1234`
+Yerel geliştirmede demo hesap sunucu açılışında oluşturulur. `NODE_ENV=production` iken bu hesap oluşturulmaz; kayıtlıysa girişi kapanır.
 
 Misafir menüsü: `/menu/burger-house`
 
@@ -44,4 +44,4 @@ Veritabanı şeması `server/prisma/migrations` altındaki migration ile kurulur
 
 ## Dağıtım
 
-`docker compose up --build` Postgres, API ve arayüzü açar. Arayüz `http://localhost:8080` adresindedir. API `server/.env` içindeki gizli değerleri kullanır; veritabanı adresi compose tarafından `db` servisine yönlendirilir.
+`docker compose up --build` Postgres, API ve arayüzü açar. Arayüz `http://localhost:8080` adresindedir. API yalnızca konteyner ağında dinler; dışarıya 8080 üzerinden, `/api` yoluyla çıkar. `NODE_ENV=production` ile doğrudan çalışan API `127.0.0.1` adresine bağlanır.

@@ -17,15 +17,35 @@
       @dragover.prevent
       @drop="move(index)"
     >
-      <span
-        class="category-handle"
-        draggable="true"
-        aria-label="Sırayı değiştir"
-        @dragstart="dragIndex = index"
-        @dragend="dragIndex = -1"
-      >
-        <q-icon name="drag_indicator" />
-      </span>
+      <div class="category-order">
+        <button
+          type="button"
+          class="order-step"
+          aria-label="Yukarı taşı"
+          :disabled="index === 0"
+          @click="step(index, -1)"
+        >
+          <q-icon name="keyboard_arrow_up" />
+        </button>
+        <button
+          type="button"
+          class="order-step"
+          aria-label="Aşağı taşı"
+          :disabled="index === categories.length - 1"
+          @click="step(index, 1)"
+        >
+          <q-icon name="keyboard_arrow_down" />
+        </button>
+        <span
+          class="category-handle"
+          draggable="true"
+          aria-label="Sırayı sürükle"
+          @dragstart="dragIndex = index"
+          @dragend="dragIndex = -1"
+        >
+          <q-icon name="drag_indicator" />
+        </span>
+      </div>
 
       <div class="category-row__media">
         <img v-if="category.image" class="product-thumb" :src="category.image" alt="" />
@@ -94,11 +114,8 @@ const props = defineProps({
 const emit = defineEmits(['edit', 'remove', 'toggle', 'reorder'])
 const dragIndex = ref(-1)
 
-function move(index) {
-  const from = dragIndex.value
-  dragIndex.value = -1
-
-  if (from < 0 || from === index) {
+function place(from, index) {
+  if (from < 0 || index < 0 || index >= props.categories.length || from === index) {
     return
   }
 
@@ -109,5 +126,15 @@ function move(index) {
     'reorder',
     next.map((category) => category.id),
   )
+}
+
+function step(index, delta) {
+  place(index, index + delta)
+}
+
+function move(index) {
+  const from = dragIndex.value
+  dragIndex.value = -1
+  place(from, index)
 }
 </script>

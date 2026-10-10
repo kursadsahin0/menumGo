@@ -48,8 +48,6 @@
           :loading="auth.status === 'loading'"
         />
       </q-form>
-
-      <p class="auth-card__hint">Deneme hesabı: demo@qrmenu.local · demo1234</p>
     </q-card-section>
 
     <q-card-section class="auth-card__footer">

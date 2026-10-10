@@ -9,7 +9,7 @@
       </header>
 
       <q-banner v-if="sent" class="bg-green-1 text-positive q-mt-md" rounded>
-        Bu e-posta kayıtlıysa sıfırlama bağlantısını gönderdik. Gelen kutunuzu kontrol edin.
+        Bu e-posta kayıtlıysa sıfırlama bağlantısını gönderdik. Gelen kutunuzu ve istenmeyen klasörünü kontrol edin.
       </q-banner>
 
       <q-form v-else class="q-gutter-y-sm q-mt-lg" @submit="onSubmit">

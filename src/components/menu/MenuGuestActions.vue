@@ -1,5 +1,6 @@
 <template>
   <div class="menu-actions">
+    <p v-if="wifiAtTable && !hasWifi" class="menu-actions__notice">{{ messages.wifiAtTable }}</p>
     <button v-if="hasWifi" type="button" class="menu-venue" @click="wifiOpen = true">
       <q-icon name="wifi" size="18px" />
       {{ messages.wifi }}
@@ -63,6 +64,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  wifiAtTable: {
+    type: Boolean,
+    default: false,
+  },
   loadWifi: {
     type: Function,
     default: null,
@@ -110,10 +115,17 @@ async function copyPassword() {
 }
 
 watch(
-  () => props.wifiPassword,
-  (value) => {
-    if (value) {
-      password.value = value
+  () => [props.wifiName, props.hasWifiPassword, props.wifiPassword],
+  ([name, hasPassword, plain]) => {
+    if (plain) {
+      password.value = plain
+      return
+    }
+
+    if (!name && !hasPassword) {
+      password.value = ''
+      wifiOpen.value = false
+      wifiError.value = ''
     }
   },
 )

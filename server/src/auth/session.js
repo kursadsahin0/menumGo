@@ -1,11 +1,14 @@
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
+import { readSessionCookie } from './cookie.js'
 import { createSessionToken, readSessionToken, sessionTtlMs } from './token.js'
 import { findUserById, newId } from './users.js'
 
-function bearerToken(request) {
+function requestToken(request) {
   const header = request.headers.authorization || ''
-  return header.startsWith('Bearer ') ? header.slice(7) : ''
+  const bearer = header.startsWith('Bearer ') ? header.slice(7) : ''
+
+  return readSessionCookie(request.headers.cookie) || bearer
 }
 
 export async function openSession(userId) {
@@ -28,7 +31,7 @@ export async function openSession(userId) {
 }
 
 export async function revokeRequestSession(request) {
-  const payload = readSessionToken(bearerToken(request))
+  const payload = readSessionToken(requestToken(request))
 
   if (!payload) {
     return
@@ -40,7 +43,7 @@ export async function revokeRequestSession(request) {
 }
 
 export async function revokeOtherSessions(userId, request) {
-  const payload = readSessionToken(bearerToken(request))
+  const payload = readSessionToken(requestToken(request))
 
   await prisma.session.deleteMany({
     where: {
@@ -55,7 +58,7 @@ export async function revokeAllSessions(userId) {
 }
 
 export async function requireUser(request) {
-  const payload = readSessionToken(bearerToken(request))
+  const payload = readSessionToken(requestToken(request))
 
   if (!payload) {
     throw fail(401, 'Oturumunuz sona erdi.')

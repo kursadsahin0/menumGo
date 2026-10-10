@@ -109,6 +109,8 @@
           :categories="categories"
         />
       </div>
+
+      <UnsavedChanges :dirty="dirty" @discard="settingsStore.resetDraft()" />
     </div>
   </q-page>
 </template>
@@ -118,6 +120,7 @@ import { computed, onMounted } from 'vue'
 import MenuPreview from '@/components/admin/MenuPreview.vue'
 import AdminSkeleton from '@/components/common/AdminSkeleton.vue'
 import AppError from '@/components/common/AppError.vue'
+import UnsavedChanges from '@/components/common/UnsavedChanges.vue'
 import { cardStyleOptions, fontOptions, menuThemes } from '@/data/menuThemes'
 import { useNotify } from '@/composables/useNotify'
 import { useAuthStore } from '@/stores/auth'

@@ -147,6 +147,8 @@
           />
         </div>
       </q-form>
+
+      <UnsavedChanges :dirty="dirty" @discard="businessStore.resetDraft()" />
     </div>
   </q-page>
 </template>
@@ -155,6 +157,7 @@
 import { computed, onMounted, ref } from 'vue'
 import AdminSkeleton from '@/components/common/AdminSkeleton.vue'
 import AppError from '@/components/common/AppError.vue'
+import UnsavedChanges from '@/components/common/UnsavedChanges.vue'
 import { businessTypes } from '@/data/business'
 import { useNotify } from '@/composables/useNotify'
 import { useBusinessStore } from '@/stores/business'

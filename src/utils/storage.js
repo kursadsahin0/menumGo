@@ -21,12 +21,29 @@ function writeTo(storage, key, value) {
   }
 }
 
+const sessionMarker = '1'
+
+function readMarker(storage) {
+  const value = readFrom(storage, STORAGE_KEYS.token)
+
+  if (value === sessionMarker) {
+    return true
+  }
+
+  if (value) {
+    writeTo(storage, STORAGE_KEYS.token, null)
+    writeTo(storage, STORAGE_KEYS.user, null)
+  }
+
+  return false
+}
+
 function activeStorage() {
-  if (readFrom(localStorage, STORAGE_KEYS.token)) {
+  if (readMarker(localStorage)) {
     return localStorage
   }
 
-  if (readFrom(sessionStorage, STORAGE_KEYS.token)) {
+  if (readMarker(sessionStorage)) {
     return sessionStorage
   }
 
@@ -34,11 +51,12 @@ function activeStorage() {
 }
 
 export function getToken() {
-  return readFrom(localStorage, STORAGE_KEYS.token) || readFrom(sessionStorage, STORAGE_KEYS.token)
+  return activeStorage() ? sessionMarker : null
 }
 
 export function getStoredUser() {
-  const raw = readFrom(activeStorage() || localStorage, STORAGE_KEYS.user)
+  const storage = activeStorage()
+  const raw = storage ? readFrom(storage, STORAGE_KEYS.user) : null
 
   if (!raw) {
     return null
@@ -51,11 +69,11 @@ export function getStoredUser() {
   }
 }
 
-export function persistSession(token, user, remember) {
+export function persistSession(user, remember) {
   const keep = remember ? localStorage : sessionStorage
   const drop = remember ? sessionStorage : localStorage
 
-  writeTo(keep, STORAGE_KEYS.token, token)
+  writeTo(keep, STORAGE_KEYS.token, sessionMarker)
   writeTo(keep, STORAGE_KEYS.user, JSON.stringify(user))
   writeTo(drop, STORAGE_KEYS.token, null)
   writeTo(drop, STORAGE_KEYS.user, null)

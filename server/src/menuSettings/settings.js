@@ -19,10 +19,11 @@ const classic = {
   logoPosition: 'center',
 }
 
-export function toPublicSettings(settings, tenant, { includeWifiPassword = true } = {}) {
+export function toPublicSettings(settings, tenant, { includeWifiPassword = true, includeWifi = true } = {}) {
   const source = settings || defaultRecord(tenant)
   const storedWifiPassword = source.wifiPassword || ''
-  const wifiPassword = includeWifiPassword ? openWifiPassword(storedWifiPassword) : ''
+  const wifiPassword = includeWifi && includeWifiPassword ? openWifiPassword(storedWifiPassword) : ''
+  const wifiConfigured = Boolean(String(source.wifiName || '').trim() || storedWifiPassword)
 
   return {
     name: source.name,
@@ -37,10 +38,11 @@ export function toPublicSettings(settings, tenant, { includeWifiPassword = true 
     },
     website: source.website || '',
     instagram: source.instagram || '',
-    wifiName: source.wifiName || '',
+    wifiName: includeWifi ? source.wifiName || '' : '',
+    wifiAtTable: !includeWifi && wifiConfigured,
     ...(includeWifiPassword
       ? { wifiPassword }
-      : { hasWifiPassword: Boolean(storedWifiPassword) }),
+      : { hasWifiPassword: includeWifi && Boolean(storedWifiPassword) }),
     hours: {
       tr: source.hoursTr || '',
       en: source.hoursEn || '',

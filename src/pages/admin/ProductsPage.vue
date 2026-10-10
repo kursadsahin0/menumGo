@@ -47,10 +47,15 @@
       <p class="product-toolbar__hint">
         {{
           canReorder
-            ? 'Sırayı kategori içinde tutamaçtan sürükleyerek değiştirin.'
+            ? 'Sırayı kategori içinde yukarı ve aşağı düğmeleriyle değiştirin. Geniş ekranda tutamaçtan da sürükleyebilirsiniz.'
             : 'Sırayı değiştirmek için aramayı ve durum filtresini kapatın.'
         }}
       </p>
+
+      <div v-if="categoryError" class="load-failure">
+        <AppError :error="categoryError" />
+        <q-btn unelevated no-caps color="primary" label="Yeniden dene" @click="loadCategories" />
+      </div>
 
       <div v-if="failed" class="load-failure q-mt-md">
         <AppError :error="productStore.error" />
@@ -70,6 +75,7 @@
         :products="productStore.products"
         :categories="productStore.categories"
         :sortable="canReorder"
+        :filtered="filtered"
         @edit="openEdit"
         @remove="askRemove"
         @reorder="reorder"
@@ -125,6 +131,7 @@ import { trText } from '@/utils/localeText'
 
 const productStore = useProductStore()
 const { notifySuccess, notifyError } = useNotify()
+const categoryError = ref(null)
 const formOpen = ref(false)
 const formKey = ref(0)
 const confirmOpen = ref(false)
@@ -151,6 +158,10 @@ const failed = computed(
 const canReorder = computed(
   () => !String(filters.search || '').trim() && filters.status === 'all',
 )
+const filtered = computed(
+  () =>
+    Boolean(String(filters.search || '').trim() || filters.categoryId || filters.status !== 'all'),
+)
 
 const categoryOptions = computed(() => [
   { label: 'Tüm kategoriler', value: '' },
@@ -159,6 +170,15 @@ const categoryOptions = computed(() => [
     value: category.id,
   })),
 ])
+
+async function loadCategories() {
+  try {
+    await productStore.fetchCategories()
+    categoryError.value = null
+  } catch (error) {
+    categoryError.value = error
+  }
+}
 
 function load() {
   productStore.fetchProducts({ ...filters, page: 1 })
@@ -225,7 +245,7 @@ async function confirmRemove() {
 }
 
 onMounted(async () => {
-  await productStore.fetchCategories()
+  await loadCategories()
   load()
 })
 </script>

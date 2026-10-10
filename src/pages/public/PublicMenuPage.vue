@@ -218,7 +218,7 @@ function requestWaiterCall() {
 }
 
 function loadWifiPassword() {
-  return getWifi(route.params.restaurantSlug)
+  return getWifi(route.params.restaurantSlug, tableQuery())
 }
 
 function openProduct(product) {

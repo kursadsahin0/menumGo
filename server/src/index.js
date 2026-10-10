@@ -3,9 +3,10 @@ import Fastify from 'fastify'
 import { fail } from './http.js'
 import { requireUser } from './auth/session.js'
 import { authRoutes } from './auth/routes.js'
-import { ensureDemoUser } from './auth/seed.js'
+import { closeDemoAccount, ensureDemoUser } from './auth/seed.js'
 import { prisma } from './db.js'
 import { env } from './env.js'
+import { securityHeaders } from './headers.js'
 import { analyticsRoutes } from './analytics/routes.js'
 import { pruneExpiredViews } from './analytics/retention.js'
 import { businessRoutes } from './business/routes.js'
@@ -32,7 +33,14 @@ const app = Fastify({
 
 const localOrigin = [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/]
 
+app.addHook('onSend', async (_request, reply) => {
+  for (const [name, value] of Object.entries(securityHeaders(env.production))) {
+    reply.header(name, value)
+  }
+})
+
 await app.register(cors, {
+  credentials: true,
   origin(origin, callback) {
     if (
       !origin ||
@@ -158,12 +166,16 @@ await subscriptionRoutes(app)
 await importDiskUploads()
 await relocateStoredImages()
 await pruneExpiredViews({ force: true })
-await ensureDemoUser()
+if (env.production) {
+  await closeDemoAccount()
+} else {
+  await ensureDemoUser()
+}
 await ensureAllTenantCategories()
 await ensureAllMenuSettings()
 await sealStoredWifiPasswords()
 
-await app.listen({ port: env.port, host: '0.0.0.0' })
+await app.listen({ port: env.port, host: env.host })
 
 async function shutdown() {
   await app.close()
