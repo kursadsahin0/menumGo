@@ -1,0 +1,24 @@
+# Frontend: Netlify | Backend: Render
+# 1) Render API URL'ini alınca aşağıdaki "to" satırını güncelleyin.
+# 2) Netlify Site settings → Environment: gerekmez (API /api proxy ile gider).
+
+[build]
+  base = "frontend"
+  command = "npm ci && npm run build"
+  publish = "dist/spa"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# API isteklerini Render'a ilet (tarayıcıda aynı origin → oturum çerezi çalışır)
+[[redirects]]
+  from = "/api/*"
+  to = "https://REPLACE_WITH_RENDER_API_HOST/api/:splat"
+  status = 200
+  force = true
+
+# Vue Router history mode
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

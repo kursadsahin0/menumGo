@@ -31,10 +31,11 @@ export function readSessionCookie(header) {
 }
 
 export function sessionCookie(token, { secure, remember }) {
+  // HTTPS cross-site (Netlify → Render) için None; local HTTP için Lax
   const parts = [
     `${cookieName}=${encodeURIComponent(token)}`,
     'HttpOnly',
-    'SameSite=Lax',
+    `SameSite=${secure ? 'None' : 'Lax'}`,
     'Path=/',
   ]
 
@@ -50,7 +51,13 @@ export function sessionCookie(token, { secure, remember }) {
 }
 
 export function clearSessionCookie(secure) {
-  const parts = [`${cookieName}=`, 'HttpOnly', 'SameSite=Lax', 'Path=/', 'Max-Age=0']
+  const parts = [
+    `${cookieName}=`,
+    'HttpOnly',
+    `SameSite=${secure ? 'None' : 'Lax'}`,
+    'Path=/',
+    'Max-Age=0',
+  ]
 
   if (secure) {
     parts.push('Secure')

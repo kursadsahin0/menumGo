@@ -22,11 +22,15 @@ test('api yanıtında güvenlik başlıkları vardır', () => {
 
 test('oturum çerezi tarayıcı betiğinden okunamaz', () => {
   const header = sessionCookie('oturum.anahtari', { secure: false, remember: true })
+  const secureHeader = sessionCookie('oturum.anahtari', { secure: true, remember: false })
 
   assert.equal(header.includes('HttpOnly'), true)
   assert.equal(header.includes('SameSite=Lax'), true)
   assert.equal(header.includes('Secure'), false)
+  assert.equal(secureHeader.includes('SameSite=None'), true)
+  assert.equal(secureHeader.includes('Secure'), true)
   assert.equal(readSessionCookie(header), 'oturum.anahtari')
   assert.equal(clearSessionCookie(true).includes('Max-Age=0'), true)
   assert.equal(clearSessionCookie(true).includes('Secure'), true)
+  assert.equal(clearSessionCookie(true).includes('SameSite=None'), true)
 })

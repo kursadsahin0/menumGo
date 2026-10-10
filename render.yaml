@@ -1,0 +1,33 @@
+databases:
+  - name: menumgo-db
+    plan: free
+    region: frankfurt
+
+services:
+  - type: web
+    name: menumgo-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: TRUST_PROXY
+        value: "1"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: WIFI_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: menumgo-db
+          property: connectionString
+      - key: APP_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
