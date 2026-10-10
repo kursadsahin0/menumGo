@@ -1,7 +1,14 @@
 <template>
-  <q-layout view="lHh Lpr lFf" class="admin-layout" :class="{ 'admin-layout--trial': showTrial }">
+  <q-layout
+    view="lHh Lpr lFf"
+    class="admin-layout"
+    :class="{
+      'admin-layout--trial': showTrial,
+      'admin-layout--app': isMobileApp,
+    }"
+  >
     <q-header bordered class="admin-topbar">
-      <AdminTopbar :title="pageTitle" :show-menu="showSidebar" @toggle="toggleDrawer" />
+      <AdminTopbar :title="pageTitle" :show-menu="showDesktopSidebar" @toggle="toggleDrawer" />
       <div v-if="showTrial" class="admin-trial">
         <span>Deneme sürüyor. {{ daysLeft }} gün kaldı.</span>
         <a :href="salesPhoneHref">{{ salesPhone }}</a>
@@ -9,7 +16,7 @@
     </q-header>
 
     <q-drawer
-      v-if="showSidebar"
+      v-if="showDesktopSidebar"
       v-model="drawerOpen"
       show-if-above
       bordered
@@ -23,13 +30,16 @@
     <q-page-container>
       <router-view />
     </q-page-container>
+
+    <AdminBottomNav v-if="showMobileTabs" />
   </q-layout>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
+import AdminBottomNav from '@/components/admin/AdminBottomNav.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import AdminTopbar from '@/components/admin/AdminTopbar.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -48,6 +58,7 @@ const showTrial = computed(
 )
 
 const lockedOut = computed(() => route.name === 'admin-billing' && !auth.hasAccess)
+const isMobileApp = computed(() => $q.screen.lt.lg)
 
 const pageTitle = computed(() => {
   if (lockedOut.value) return ''
@@ -56,13 +67,21 @@ const pageTitle = computed(() => {
 })
 
 const showSidebar = computed(() => !lockedOut.value)
+const showDesktopSidebar = computed(() => showSidebar.value && !isMobileApp.value)
+const showMobileTabs = computed(() => showSidebar.value && isMobileApp.value && auth.hasAccess)
+
+watch(isMobileApp, (mobile) => {
+  if (mobile) {
+    drawerOpen.value = false
+  }
+})
 
 function toggleDrawer() {
   drawerOpen.value = !drawerOpen.value
 }
 
 function onNavigate() {
-  if ($q.screen.lt.md) {
+  if ($q.screen.lt.lg) {
     drawerOpen.value = false
   }
 }

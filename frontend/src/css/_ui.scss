@@ -69,7 +69,11 @@ body.body--dark .app-brand__logo,
 .admin-skeleton__stats,
 .admin-skeleton__split {
   display: grid;
-  gap: 12px;
+  gap: 10px;
+}
+
+.admin-skeleton__stats {
+  grid-template-columns: 1fr 1fr;
 }
 
 .app-error {
@@ -183,16 +187,16 @@ body.body--dark .landing-footer__bar {
 }
 
 @media (min-width: 720px) {
-  .admin-skeleton__stats {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .admin-skeleton__split {
     grid-template-columns: 1fr 1fr;
   }
 }
 
 @media (min-width: 960px) {
+  .admin-skeleton__stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .row-label {
     display: none;
   }
@@ -215,6 +219,11 @@ body.body--dark .landing-footer__bar {
   background: #fff;
   box-shadow: 0 10px 30px rgba(20, 40, 36, 0.16);
   color: #1f3a34;
+}
+
+.admin-layout--app .install-prompt {
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  margin-bottom: 0;
 }
 
 .install-prompt__text {

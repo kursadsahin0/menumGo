@@ -8,6 +8,7 @@
   color: var(--app-ink);
   backdrop-filter: blur(20px) saturate(180%);
   border-bottom-color: transparent;
+  padding-top: env(safe-area-inset-top);
 }
 
 .admin-layout .q-page-container {
@@ -20,6 +21,176 @@
 
 .admin-layout--trial .q-page {
   padding-top: 120px;
+}
+
+/* Mobil uygulama kabuğu */
+.admin-layout--app .q-header.admin-topbar {
+  border-bottom: 1px solid var(--app-line);
+  box-shadow: none;
+}
+
+.admin-layout--app .admin-topbar__bar {
+  min-height: 52px;
+  padding-right: 8px;
+  padding-left: 12px;
+}
+
+.admin-layout--app .admin-topbar__title {
+  margin-left: 0;
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.admin-layout--app .q-page {
+  padding-top: calc(52px + env(safe-area-inset-top));
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+}
+
+.admin-layout--app.admin-layout--trial .q-page {
+  padding-top: calc(96px + env(safe-area-inset-top));
+}
+
+.admin-layout--app .admin-trial {
+  min-height: 36px;
+  padding: 6px 16px 8px;
+  font-size: 0.8125rem;
+}
+
+.admin-layout--app .admin-page__wrap {
+  padding: 12px 14px 20px;
+}
+
+@media (max-width: 1023px) {
+  .account-sheet {
+    border-radius: 16px;
+    box-shadow: none;
+  }
+
+  .account-sheet__hero {
+    padding: 20px 16px;
+  }
+
+  .account-sheet__section {
+    padding: 18px 16px 16px;
+  }
+
+  .account-sheet__split {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-page__wrap .q-btn,
+  .account-sheet__save {
+    min-height: 44px;
+  }
+}
+
+.admin-tabbar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2000;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: stretch;
+  min-height: 56px;
+  padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--app-line);
+  background: color-mix(in srgb, var(--app-surface) 92%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+}
+
+.admin-tabbar__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--app-muted);
+  font: inherit;
+  font-size: 0.625rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.admin-tabbar__item .q-icon {
+  opacity: 0.88;
+}
+
+.admin-tabbar__item.is-active {
+  color: $primary;
+  background: color-mix(in srgb, $primary 10%, transparent);
+}
+
+.admin-tabbar__item.is-active .q-icon {
+  opacity: 1;
+}
+
+body.body--dark .admin-tabbar__item.is-active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-sheet .q-dialog__inner {
+  padding: 0;
+}
+
+.admin-sheet__card {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  border-radius: 20px 20px 0 0;
+  background: var(--app-surface);
+  color: var(--app-ink);
+  box-shadow: 0 -8px 32px rgba(28, 25, 23, 0.12);
+}
+
+.admin-sheet__handle {
+  width: 36px;
+  height: 4px;
+  margin: 10px auto 0;
+  border-radius: 999px;
+  background: var(--app-line);
+}
+
+.admin-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px 4px 16px;
+}
+
+.admin-sheet__head h2 {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.admin-sheet__list {
+  padding: 4px 8px calc(16px + env(safe-area-inset-bottom));
+}
+
+.admin-sheet__list .q-item {
+  min-height: 52px;
+  border-radius: 14px;
+  margin-bottom: 2px;
+}
+
+.admin-sheet__item--active {
+  color: $primary;
+  background: color-mix(in srgb, $primary 10%, transparent);
+  font-weight: 650;
 }
 
 .admin-trial {
