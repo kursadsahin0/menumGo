@@ -85,24 +85,46 @@ function fromAddress(smtpUser, mailFrom) {
   return smtpUser ? `"menumGo" <${smtpUser}>` : mailFrom || 'menumGo <noreply@menumgo.local>'
 }
 
-async function deliverViaResend({ from, to, subject, text }, { log, resendKey }) {
+function resendFromAddress(mailFrom, smtpUser) {
+  const configured = process.env.RESEND_FROM || mailFrom || ''
+  // Resend, Gmail adresinden gönderime izin vermez; doğrulanmış domain veya onboarding@resend.dev gerekir
+  if (!configured || /@(gmail|googlemail)\.com>/i.test(configured) || /@(gmail|googlemail)\.com$/i.test(configured)) {
+    return 'menumGo <onboarding@resend.dev>'
+  }
+  if (configured.includes('@')) {
+    return configured.includes('<') ? configured : `"menumGo" <${configured}>`
+  }
+  if (smtpUser && !/@(gmail|googlemail)\.com$/i.test(smtpUser)) {
+    return `"menumGo" <${smtpUser}>`
+  }
+  return 'menumGo <onboarding@resend.dev>'
+}
+
+async function deliverViaResend({ from, to, subject, text }, { log, resendKey, mailFrom, smtpUser }) {
+  const sender = resendFromAddress(from || mailFrom, smtpUser)
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${resendKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ from, to: [to], subject, text }),
+    body: JSON.stringify({ from: sender, to: [to], subject, text }),
   })
 
   const body = await response.json().catch(() => ({}))
 
   if (!response.ok) {
-    log?.error({ status: response.status, body }, 'Resend e-posta gönderilemedi')
-    throw fail(422, body?.message || 'E-posta gönderilemedi (Resend).')
+    log?.error({ status: response.status, body, from: sender }, 'Resend e-posta gönderilemedi')
+    const detail = body?.message || body?.error || ''
+    throw fail(
+      422,
+      detail
+        ? `E-posta gönderilemedi (Resend): ${detail}`
+        : 'E-posta gönderilemedi (Resend). RESEND_FROM veya domain doğrulamasını kontrol edin.',
+    )
   }
 
-  log?.info({ to, id: body?.id }, 'E-posta gönderildi (Resend)')
+  log?.info({ to, id: body?.id, from: sender }, 'E-posta gönderildi (Resend)')
 }
 
 async function deliver(message, { log, link } = {}) {
@@ -116,7 +138,7 @@ async function deliver(message, { log, link } = {}) {
   const payload = { ...message, from }
 
   if (resendKey) {
-    await deliverViaResend(payload, { log, resendKey })
+    await deliverViaResend(payload, { log, resendKey, mailFrom, smtpUser })
     return
   }
 
