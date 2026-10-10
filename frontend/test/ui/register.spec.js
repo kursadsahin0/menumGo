@@ -66,6 +66,7 @@ describe('kayıt onayı', () => {
     expect(register).toHaveBeenCalled()
     expect(wrapper.text()).toContain('Hesap oluşturuldu')
     expect(wrapper.text()).toContain('Doğrulama gönder')
+    expect(wrapper.text()).toContain('spam')
     expect(wrapper.text()).not.toContain('kayıtlı bir hesap')
   })
 

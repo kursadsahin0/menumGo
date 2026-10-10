@@ -43,3 +43,7 @@ services:
         sync: false
       - key: SMTP_SECURE
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: ACTIVATION_KEY
+        sync: false

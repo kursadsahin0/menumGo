@@ -32,6 +32,11 @@ if (existsSync(envPath)) {
       value = value.slice(1, -1)
     }
 
+    // Gmail uygulama şifreleri yapıştırılırken boşluk gelebiliyor
+    if (key === 'SMTP_PASS') {
+      value = value.replace(/\s+/g, '')
+    }
+
     if (!process.env[key]) {
       process.env[key] = value
     }

@@ -1,6 +1,11 @@
 import { ensureTenantCategories } from '../categories/categories.js'
 import { removeImage } from '../images/files.js'
-import { sendPasswordResetEmail, sendVerificationEmail } from '../mail/mail.js'
+import {
+  mailConfigured,
+  sendPasswordResetEmail,
+  sendProbeEmail,
+  sendVerificationEmail,
+} from '../mail/mail.js'
 import { ensureMenuSettings } from '../menuSettings/settings.js'
 import { clearSessionCookie, requestIsSecure, sessionCookie } from './cookie.js'
 import { demoAccountEmail } from './seed.js'
@@ -41,10 +46,6 @@ import {
 } from './users.js'
 
 const verifyWindow = 24 * 60 * 60 * 1000
-
-function mailConfigured() {
-  return Boolean((process.env.SMTP_HOST || env.smtpHost) && (process.env.SMTP_PASS || env.smtpPass))
-}
 
 async function issueEmailVerification(log, user) {
   const token = createResetToken()
@@ -107,7 +108,13 @@ export async function authRoutes(app) {
     if (existing) {
       await hashPassword(password)
       if (!existing.emailVerifiedAt) {
-        await sendVerificationBestEffort(request.log, existing)
+        const emailSent = await sendVerificationBestEffort(request.log, existing)
+        if (!emailSent) {
+          throw fail(
+            422,
+            'Hesap zaten var ama doğrulama e-postası gönderilemedi. SMTP ayarlarını kontrol edin veya giriş yapıp “Doğrulama gönder”e basın.',
+          )
+        }
       }
       return { ok: true }
     }
@@ -356,6 +363,21 @@ export async function authRoutes(app) {
     await revokeOtherSessions(current.id, request)
 
     return { ok: true }
+  })
+
+  app.post('/api/auth/mail-probe', async (request) => {
+    if (!env.activationKey || request.headers['x-activation-key'] !== env.activationKey) {
+      throw fail(404, 'Not found')
+    }
+
+    const to = normalizeEmail(request.body?.to)
+
+    if (!to) {
+      throw fail(422, 'E-posta gerekli.')
+    }
+
+    await sendProbeEmail({ to, log: request.log })
+    return { ok: true, to, appUrl: env.appUrl }
   })
 
   app.post('/api/auth/forgot-password', { preHandler: limitForgotPassword }, async (request) => {

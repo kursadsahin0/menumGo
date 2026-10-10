@@ -3,6 +3,7 @@ import Fastify from 'fastify'
 import { fail } from './http.js'
 import { requireUser } from './auth/session.js'
 import { authRoutes } from './auth/routes.js'
+import { mailConfigured } from './mail/mail.js'
 import { closeDemoAccount, ensureDemoUser } from './auth/seed.js'
 import { prisma } from './db.js'
 import { env } from './env.js'
@@ -97,6 +98,7 @@ const unverifiedAllowed = new Set([
   '/api/auth/password',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
+  '/api/auth/mail-probe',
 ])
 
 app.addHook('preHandler', async (request) => {
@@ -139,7 +141,7 @@ app.get('/api/health', async (request, reply) => {
 
   return {
     ok: true,
-    mail: { configured: Boolean(env.smtpHost && env.smtpPass) },
+    mail: { configured: mailConfigured() },
   }
 })
 
@@ -182,13 +184,14 @@ await app.listen({ port: env.port, host: env.host })
 
 app.log.info(
   {
-    mailConfigured: Boolean(env.smtpHost && env.smtpPass),
+    mailConfigured: mailConfigured(),
     smtpHost: env.smtpHost || null,
+    resend: Boolean(process.env.RESEND_API_KEY),
     appUrl: env.appUrl,
   },
-  env.smtpHost && env.smtpPass
-    ? 'SMTP hazır'
-    : 'SMTP eksik — SMTP_HOST ve SMTP_PASS tanımlayın (backend/.env veya Render Environment)',
+  mailConfigured()
+    ? 'Mail hazır'
+    : 'Mail eksik — SMTP_* veya RESEND_API_KEY tanımlayın (backend/.env veya Render Environment)',
 )
 
 async function shutdown() {
