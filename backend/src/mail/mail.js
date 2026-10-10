@@ -23,23 +23,40 @@ async function deliver(message, { log, link } = {}) {
     log?.info({ to: message.to, link }, 'Geliştirme: e-posta bağlantısı')
   }
 
-  if (!env.smtpHost || !env.smtpPass) {
-    throw fail(422, 'E-posta gönderilemiyor. SMTP ayarlarını kontrol edin.')
+  const smtpHost = process.env.SMTP_HOST || env.smtpHost
+  const smtpPass = process.env.SMTP_PASS || env.smtpPass
+  const smtpUser = process.env.SMTP_USER || env.smtpUser
+  const smtpPort = Number(process.env.SMTP_PORT || env.smtpPort || 587)
+  const smtpSecure =
+    process.env.SMTP_SECURE != null
+      ? process.env.SMTP_SECURE === 'true'
+      : env.smtpSecure
+  const mailFrom = process.env.MAIL_FROM || env.mailFrom
+
+  if (!smtpHost || !smtpPass) {
+    const missing = [
+      !smtpHost ? 'SMTP_HOST' : null,
+      !smtpPass ? 'SMTP_PASS' : null,
+    ].filter(Boolean)
+    throw fail(
+      422,
+      `E-posta gönderilemiyor. Eksik ayar: ${missing.join(', ')}. backend/.env veya Render Environment’ı kontrol edin.`,
+    )
   }
 
   const transport = nodemailer.createTransport({
-    host: env.smtpHost,
-    port: env.smtpPort,
-    secure: env.smtpSecure,
-    requireTLS: !env.smtpSecure && env.smtpPort === 587,
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpSecure,
+    requireTLS: !smtpSecure && smtpPort === 587,
     connectionTimeout: 15_000,
     greetingTimeout: 15_000,
     socketTimeout: 20_000,
-    auth: env.smtpUser ? { user: env.smtpUser, pass: env.smtpPass } : undefined,
+    auth: smtpUser ? { user: smtpUser, pass: smtpPass } : undefined,
   })
 
   try {
-    const info = await transport.sendMail(message)
+    const info = await transport.sendMail({ ...message, from: message.from || mailFrom })
     log?.info(
       { to: message.to, messageId: info.messageId, response: info.response },
       'E-posta gönderildi',
