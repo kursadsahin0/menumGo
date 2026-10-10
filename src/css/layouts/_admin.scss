@@ -122,6 +122,12 @@ body.body--dark .admin-layout .q-header.admin-topbar {
   opacity: 0.6;
 }
 
+.notice-menu__failure {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+}
+
 .notice-menu__empty {
   margin: 0;
   padding: 18px 8px 14px;

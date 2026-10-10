@@ -218,6 +218,8 @@
           </section>
         </article>
       </div>
+
+      <UnsavedChanges :dirty="profileDirty" @discard="discardEdits" />
     </div>
   </q-page>
 </template>
@@ -227,6 +229,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import AuthPasswordField from '@/components/auth/AuthPasswordField.vue'
+import UnsavedChanges from '@/components/common/UnsavedChanges.vue'
 import { useNotify } from '@/composables/useNotify'
 import { useAuthStore } from '@/stores/auth'
 import { STORAGE_KEYS } from '@/utils/constants'
@@ -290,6 +293,19 @@ const accountDirty = computed(() => {
 const passwordDirty = computed(
   () => Boolean(password.current || password.next || password.confirm),
 )
+const profileDirty = computed(() => accountDirty.value || slugDirty.value || passwordDirty.value)
+
+function discardEdits() {
+  const current = auth.user
+  account.fullName = current?.fullName || ''
+  account.email = current?.email || ''
+  account.phone = current?.phone || ''
+  slug.value = current?.tenant?.slug || ''
+  password.current = ''
+  password.next = ''
+  password.confirm = ''
+  passwordForm.value?.resetValidation()
+}
 
 watch(
   () => auth.user,
@@ -364,6 +380,7 @@ async function removeAccount() {
   try {
     await auth.deleteAccount(deletePassword.value)
     deleteOpen.value = false
+    discardEdits()
     await router.push({ name: 'login' })
   } catch (error) {
     notifyError(error)

@@ -8,8 +8,10 @@ import { env } from '../env.js'
 import { prisma } from '../db.js'
 import { fail } from '../http.js'
 import {
+  limitAccountDeletes,
   limitForgotPassword,
   limitLoginAttempts,
+  limitPasswordChanges,
   limitPasswordResets,
   limitRegistrations,
   limitVerificationSends,
@@ -275,6 +277,7 @@ export async function authRoutes(app) {
 
   app.delete('/api/auth/me', async (request, reply) => {
     const user = await requireUser(request)
+    await limitAccountDeletes(request, reply, user.id)
     const matches = await verifyPassword(request.body?.password ?? '', user.passwordHash)
 
     if (!matches) {
@@ -312,8 +315,9 @@ export async function authRoutes(app) {
     return { ok: true }
   })
 
-  app.post('/api/auth/password', async (request) => {
+  app.post('/api/auth/password', async (request, reply) => {
     const current = await requireUser(request)
+    await limitPasswordChanges(request, reply, current.id)
     const nextPassword = assertPassword(request.body?.password)
     const matches = await verifyPassword(request.body?.currentPassword ?? '', current.passwordHash)
 

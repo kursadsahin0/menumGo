@@ -44,6 +44,14 @@ export async function limitPasswordResets(request, reply) {
   return limitWrites(request, reply, 'reset', 8)
 }
 
+export async function limitPasswordChanges(request, reply, userId) {
+  return limitWrites({ ip: `user:${userId}` }, reply, 'password', 8)
+}
+
+export async function limitAccountDeletes(request, reply, userId) {
+  return limitWrites({ ip: `user:${userId}` }, reply, 'delete', 5)
+}
+
 async function limitWrites(request, reply, bucket, max) {
   const ip = String(request.ip || 'unknown').slice(0, 64)
   const now = Date.now()

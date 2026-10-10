@@ -155,7 +155,6 @@ export async function menuRoutes(app) {
     const tenant = await prisma.tenant.findUnique({
       where: { slug },
       include: {
-        user: true,
         subscription: { select: { status: true, currentPeriodEnd: true } },
         menuSettings: true,
         categories: {
@@ -193,7 +192,7 @@ export async function menuRoutes(app) {
           en: settings.descriptionEn || '',
         },
         hours: '',
-        phone: tenant.user?.phone || '',
+        phone: '',
         address: '',
         mapsUrl: '',
         socials: [],

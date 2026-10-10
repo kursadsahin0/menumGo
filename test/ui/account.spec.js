@@ -1,5 +1,9 @@
-import { flushPromises } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
+import { QLayout, QPageContainer } from 'quasar'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { defineComponent } from 'vue'
+import { createMemoryHistory, createRouter } from 'vue-router'
 import SettingsPage from '@/pages/admin/SettingsPage.vue'
 import {
   changePassword,
@@ -142,5 +146,63 @@ describe('hesap akışı', () => {
     expect(deleteAccount).toHaveBeenCalledWith({ password: 'demo1234' })
     expect(router.currentRoute.value.name).toBe('login')
     expect(localStorage.getItem('qr_menu.token')).toBeNull()
+  })
+
+  it('kaydedilmemiş profil yazısından çıkmayı sorar', async () => {
+    persistSession(user, true)
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/admin/settings', name: 'admin-profile', component: SettingsPage },
+        { path: '/admin', name: 'admin-dashboard', component: { template: '<div>Pano</div>' } },
+      ],
+    })
+    const root = defineComponent({
+      components: { QLayout, QPageContainer },
+      template:
+        '<q-layout view="hHh lpR fFf"><q-page-container><router-view /></q-page-container></q-layout>',
+    })
+
+    await router.push('/admin/settings')
+    await router.isReady()
+
+    const wrapper = mount(root, {
+      attachTo: document.body,
+      global: { plugins: [pinia, router] },
+    })
+
+    try {
+      await wrapper.findAll('input')[0].setValue('Yeni Ad')
+      const pending = router.push('/admin')
+      await flushPromises()
+
+      expect(document.body.textContent).toContain('Kaydedilmemiş değişiklik')
+      expect(router.currentRoute.value.name).toBe('admin-profile')
+
+      const stay = [...document.querySelectorAll('button')].find((node) =>
+        node.textContent.includes('Vazgeç'),
+      )
+      stay.click()
+      await pending.catch(() => {})
+      await flushPromises()
+
+      expect(router.currentRoute.value.name).toBe('admin-profile')
+      expect(wrapper.findAll('input')[0].element.value).toBe('Yeni Ad')
+
+      const leaving = router.push('/admin')
+      await flushPromises()
+      const leave = [...document.querySelectorAll('button')].find(
+        (node) => node.textContent.trim() === 'Çık',
+      )
+      leave.click()
+      await leaving
+      await flushPromises()
+
+      expect(router.currentRoute.value.name).toBe('admin-dashboard')
+    } finally {
+      wrapper.unmount()
+    }
   })
 })

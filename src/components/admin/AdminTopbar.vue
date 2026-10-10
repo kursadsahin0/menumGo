@@ -38,8 +38,12 @@
               </button>
             </div>
           </header>
-          <p v-if="!notifications.length" class="notice-menu__empty">Henüz bildirim yok</p>
-          <ul v-else class="notice-menu__list">
+          <div v-if="loadError" class="notice-menu__failure">
+            <AppError :error="loadError" />
+            <button type="button" class="notice-menu__more" @click.stop="retryLoad">Yeniden dene</button>
+          </div>
+          <p v-else-if="!notifications.length" class="notice-menu__empty">Henüz bildirim yok</p>
+          <ul v-if="notifications.length" class="notice-menu__list">
             <li
               v-for="item in notifications"
               :key="item.id"
@@ -56,8 +60,19 @@
               </span>
             </li>
           </ul>
+          <div v-if="olderError" class="notice-menu__failure">
+            <AppError :error="olderError" />
+            <button
+              type="button"
+              class="notice-menu__more"
+              :disabled="loadingOlder"
+              @click.stop="loadOlder"
+            >
+              Yeniden dene
+            </button>
+          </div>
           <button
-            v-if="hasMore"
+            v-else-if="hasMore"
             type="button"
             class="notice-menu__more"
             :disabled="loadingOlder"
@@ -123,6 +138,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
+import AppError from '@/components/common/AppError.vue'
 import { useAuth } from '@/composables/useAuth'
 import {
   clearNotifications,
@@ -156,6 +172,8 @@ const isDark = computed(() => $q.dark.isActive)
 const notifications = ref([])
 const clearing = ref(false)
 const loadingOlder = ref(false)
+const loadError = ref(null)
+const olderError = ref(null)
 const hasMore = ref(false)
 const unreadTotal = ref(0)
 const menuOpen = ref(false)
@@ -202,11 +220,20 @@ async function loadNotifications({ replace = false } = {}) {
     if (alreadyComplete) {
       hasMore.value = false
     }
-  } catch {
-    if (!seenIds) {
-      notifications.value = []
+
+    loadError.value = null
+    olderError.value = null
+  } catch (error) {
+    if (id !== requestId) {
+      return
     }
+
+    loadError.value = error
   }
+}
+
+function retryLoad() {
+  loadNotifications({ replace: true })
 }
 
 function openNotifications() {
@@ -233,9 +260,12 @@ async function loadOlder() {
 
     const known = new Set(notifications.value.map((item) => item.id))
     const extra = page.items.filter((item) => !known.has(item.id))
+    olderError.value = null
     showPage(page, [...notifications.value, ...extra], { announce: false })
-  } catch {
-    // The current page stays until the next successful load.
+  } catch (error) {
+    if (id === requestId) {
+      olderError.value = error
+    }
   } finally {
     loadingOlder.value = false
   }
