@@ -54,7 +54,7 @@ async function issueEmailVerification(log, user) {
   })
 
   try {
-    await sendVerificationEmail({ to: user.email, token })
+    await sendVerificationEmail({ to: user.email, token, log })
   } catch (error) {
     await prisma.user.update({
       where: { id: user.id },
@@ -63,7 +63,6 @@ async function issueEmailVerification(log, user) {
         verifyTokenExpiresAt: null,
       },
     })
-    log.error({ err: error }, 'Doğrulama e-postası gönderilemedi')
     throw error.statusCode ? error : fail(422, 'Doğrulama e-postası gönderilemedi.')
   }
 }
@@ -139,10 +138,12 @@ export async function authRoutes(app) {
       throw error
     }
 
-    issueEmailVerification(request.log, user).catch(async (error) => {
-      request.log.error({ err: error }, 'Doğrulama e-postası gönderilemedi')
+    try {
+      await issueEmailVerification(request.log, user)
+    } catch (error) {
       await prisma.user.delete({ where: { id: user.id } }).catch(() => {})
-    })
+      throw error.statusCode ? error : fail(422, 'Doğrulama e-postası gönderilemedi.')
+    }
 
     return { ok: true }
   })
@@ -352,8 +353,9 @@ export async function authRoutes(app) {
       },
     })
 
-    sendPasswordResetEmail({ to: user.email, token: resetToken }).catch(async (error) => {
-      request.log.error({ err: error }, 'Şifre sıfırlama e-postası gönderilemedi')
+    try {
+      await sendPasswordResetEmail({ to: user.email, token: resetToken, log: request.log })
+    } catch (error) {
       await prisma.user
         .update({
           where: { id: user.id },
@@ -363,7 +365,8 @@ export async function authRoutes(app) {
           },
         })
         .catch(() => {})
-    })
+      throw error.statusCode ? error : fail(422, 'Şifre sıfırlama e-postası gönderilemedi.')
+    }
 
     return { ok: true }
   })

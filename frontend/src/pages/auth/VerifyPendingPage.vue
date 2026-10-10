@@ -16,15 +16,15 @@
         {{ errorMessage }}
       </q-banner>
 
-      <q-btn
-        color="primary"
-        label="Doğrulama gönder"
-        no-caps
-        unelevated
-        class="full-width landing-btn q-mt-lg"
-        :loading="sending"
-        @click="send"
-      />
+        <q-btn
+          color="primary"
+          label="Doğrulama gönder"
+          no-caps
+          unelevated
+          class="full-width landing-btn q-mt-lg"
+          :loading="sending"
+          @click="send()"
+        />
     </q-card-section>
 
     <q-card-section class="auth-card__footer">
@@ -34,7 +34,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -44,19 +44,25 @@ const sending = ref(false)
 const sent = ref(false)
 const errorMessage = ref('')
 
-async function send() {
+async function send({ silent = false } = {}) {
   sending.value = true
-  errorMessage.value = ''
+  if (!silent) errorMessage.value = ''
 
   try {
     await auth.sendVerification()
     sent.value = true
   } catch (error) {
-    errorMessage.value = error?.message || 'Doğrulama e-postası gönderilemedi.'
+    if (!silent || !sent.value) {
+      errorMessage.value = error?.message || 'Doğrulama e-postası gönderilemedi.'
+    }
   } finally {
     sending.value = false
   }
 }
+
+onMounted(() => {
+  send({ silent: true })
+})
 
 async function onLogout() {
   await auth.logout()

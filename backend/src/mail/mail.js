@@ -18,49 +18,85 @@ export function emailVerificationUrl(token) {
   return appLink('/auth/verify-email', token)
 }
 
-async function deliver(message) {
+async function deliver(message, { log, link } = {}) {
+  if (!env.production && link) {
+    log?.info({ to: message.to, link }, 'Geliştirme: e-posta bağlantısı')
+  }
+
   if (!env.smtpHost || !env.smtpPass) {
-    throw fail(422, 'E-posta gönderilemiyor. Daha sonra yeniden deneyin.')
+    throw fail(422, 'E-posta gönderilemiyor. SMTP ayarlarını kontrol edin.')
   }
 
   const transport = nodemailer.createTransport({
     host: env.smtpHost,
     port: env.smtpPort,
     secure: env.smtpSecure,
+    requireTLS: !env.smtpSecure && env.smtpPort === 587,
+    connectionTimeout: 15_000,
+    greetingTimeout: 15_000,
+    socketTimeout: 20_000,
     auth: env.smtpUser ? { user: env.smtpUser, pass: env.smtpPass } : undefined,
   })
 
-  await transport.sendMail(message)
+  try {
+    const info = await transport.sendMail(message)
+    log?.info(
+      { to: message.to, messageId: info.messageId, response: info.response },
+      'E-posta gönderildi',
+    )
+  } catch (error) {
+    log?.error(
+      {
+        err: error,
+        to: message.to,
+        code: error?.code,
+        responseCode: error?.responseCode,
+        response: error?.response,
+      },
+      'E-posta gönderilemedi',
+    )
+    throw fail(422, 'E-posta gönderilemedi. Daha sonra yeniden deneyin.')
+  } finally {
+    transport.close()
+  }
 }
 
-export async function sendPasswordResetEmail({ to, token }) {
-  await deliver({
-    from: env.mailFrom,
-    to,
-    subject: 'menümGo şifre sıfırlama',
-    text: [
-      'Şifrenizi sıfırlamak için aşağıdaki bağlantıyı açın.',
-      `Bağlantı ${resetMinutes} dakika geçerlidir.`,
-      '',
-      passwordResetUrl(token),
-      '',
-      'Bu isteği siz yapmadıysanız bu e-postayı yok sayın.',
-    ].join('\n'),
-  })
+export async function sendPasswordResetEmail({ to, token, log }) {
+  const link = passwordResetUrl(token)
+  await deliver(
+    {
+      from: env.mailFrom,
+      to,
+      subject: 'menümGo şifre sıfırlama',
+      text: [
+        'Şifrenizi sıfırlamak için aşağıdaki bağlantıyı açın.',
+        `Bağlantı ${resetMinutes} dakika geçerlidir.`,
+        '',
+        link,
+        '',
+        'Bu isteği siz yapmadıysanız bu e-postayı yok sayın.',
+      ].join('\n'),
+    },
+    { log, link },
+  )
 }
 
-export async function sendVerificationEmail({ to, token }) {
-  await deliver({
-    from: env.mailFrom,
-    to,
-    subject: 'menümGo e-posta doğrulama',
-    text: [
-      'E-posta adresinizi doğrulamak için aşağıdaki bağlantıyı açın.',
-      'Bağlantı 24 saat geçerlidir.',
-      '',
-      emailVerificationUrl(token),
-      '',
-      'Bu isteği siz yapmadıysanız bu e-postayı yok sayın.',
-    ].join('\n'),
-  })
+export async function sendVerificationEmail({ to, token, log }) {
+  const link = emailVerificationUrl(token)
+  await deliver(
+    {
+      from: env.mailFrom,
+      to,
+      subject: 'menümGo e-posta doğrulama',
+      text: [
+        'E-posta adresinizi doğrulamak için aşağıdaki bağlantıyı açın.',
+        'Bağlantı 24 saat geçerlidir.',
+        '',
+        link,
+        '',
+        'Bu isteği siz yapmadıysanız bu e-postayı yok sayın.',
+      ].join('\n'),
+    },
+    { log, link },
+  )
 }

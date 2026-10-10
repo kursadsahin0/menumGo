@@ -64,7 +64,7 @@ describe('kayıt onayı', () => {
     await flushPromises()
 
     expect(register).toHaveBeenCalled()
-    expect(wrapper.text()).toContain('Hesap açılabildiyse doğrulama e-postası gönderdik')
+    expect(wrapper.text()).toContain('Doğrulama e-postası gönderildi')
     expect(wrapper.text()).toContain('istenmeyen klasörünü')
     expect(wrapper.text()).not.toContain('kayıtlı bir hesap')
   })
