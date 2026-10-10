@@ -25,8 +25,12 @@ export function friendlyMessage(error) {
   const status = error?.status ?? error?.response?.status ?? 0
   const raw = String(error?.message || '').trim()
 
-  if (status === 0 || technicalMessage.test(raw) || error?.code === 'ECONNABORTED') {
+  if (error?.code === 'ECONNABORTED' || /\btimeout\b/i.test(raw)) {
     return 'Sunucu yanıt vermedi (timeout). Birkaç saniye bekleyip yeniden deneyin; canlı API uyanıyor olabilir.'
+  }
+
+  if (status === 0 || technicalMessage.test(raw)) {
+    return 'Bağlantı kurulamadı. İnternetinizi kontrol edip yeniden deneyin.'
   }
 
   if (status === 401) {
