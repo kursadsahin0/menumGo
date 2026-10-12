@@ -1,7 +1,29 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
+import { readFileSync, existsSync } from 'node:fs'
+import { resolve, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from '#q-app'
+
+const rootDir = dirname(fileURLToPath(import.meta.url))
+const envPath = resolve(rootDir, '.env')
+
+if (existsSync(envPath)) {
+  for (const line of readFileSync(envPath, 'utf8').split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const eq = trimmed.indexOf('=')
+    if (eq === -1) continue
+    const key = trimmed.slice(0, eq).trim()
+    const value = trimmed.slice(eq + 1).trim()
+    if (key && process.env[key] === undefined) {
+      process.env[key] = value
+    }
+  }
+}
+
+const apiProxyTarget = process.env.DEV_API_PROXY_TARGET || 'http://127.0.0.1:3000'
 
 export default defineConfig((/* ctx */) => {
   return {
@@ -83,8 +105,26 @@ export default defineConfig((/* ctx */) => {
       },
       proxy: {
         '/api': {
-          target: 'http://127.0.0.1:3000',
+          // DEV_API_PROXY_TARGET=https://menumgo-api.onrender.com → yerel UI canlı API/DB kullanır
+          target: apiProxyTarget,
           changeOrigin: true,
+          secure: true,
+          configure(proxy) {
+            if (!process.env.DEV_API_PROXY_TARGET) {
+              return
+            }
+
+            // Canlı Set-Cookie Secure; localhost HTTP için bayrağı düşür
+            proxy.on('proxyRes', (proxyRes) => {
+              const cookies = proxyRes.headers['set-cookie']
+              if (!cookies) return
+              proxyRes.headers['set-cookie'] = cookies.map((cookie) =>
+                cookie
+                  .replace(/;\s*Secure/gi, '')
+                  .replace(/SameSite=None/gi, 'SameSite=Lax'),
+              )
+            })
+          },
         },
       },
     },

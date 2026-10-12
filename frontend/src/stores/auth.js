@@ -67,21 +67,16 @@ export const useAuthStore = defineStore('auth', {
       try {
         const result = await registerRequest(payload)
 
-        if (result?.user) {
-          persistSession(result.user, true)
-          this.user = result.user
-          this.token = getToken()
-          this.sessionChecked = true
-          this.status = 'success'
-          return result
+        if (!result?.user) {
+          throw new Error('Kayıt tamamlanamadı.')
         }
 
-        // E-posta zaten kayıtlıysa (anti-enumeration) aynı şifreyle giriş dene
-        return this.login({
-          email: payload.email,
-          password: payload.password,
-          remember: true,
-        })
+        persistSession(result.user, true)
+        this.user = result.user
+        this.token = getToken()
+        this.sessionChecked = true
+        this.status = 'success'
+        return result
       } catch (error) {
         this.status = 'error'
         this.error = error

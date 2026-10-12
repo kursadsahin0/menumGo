@@ -59,8 +59,7 @@ export async function authRoutes(app) {
     const existing = await findUserByEmail(account.email)
 
     if (existing) {
-      await hashPassword(password)
-      return { ok: true }
+      throw fail(409, 'Bu e-posta ile kayıtlı bir hesap var. Giriş yapın.')
     }
 
     let user = null
@@ -105,7 +104,7 @@ export async function authRoutes(app) {
       }
 
       if (error?.code === 'P2002') {
-        return { ok: true }
+        throw fail(409, 'Bu e-posta ile kayıtlı bir hesap var. Giriş yapın.')
       }
 
       throw error

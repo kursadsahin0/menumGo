@@ -42,7 +42,9 @@ export default [
       },
       {
         path: 'orders',
-        redirect: { name: 'admin-stats' },
+        name: 'admin-orders',
+        meta: { title: 'Adisyonlar' },
+        component: () => import('@/pages/admin/OrdersPage.vue'),
       },
       {
         path: 'stats',

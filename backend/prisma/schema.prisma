@@ -55,6 +55,7 @@ model Tenant {
   menuViews    MenuView[]
   productViews ProductView[]
   tables        DiningTable[]
+  checks        Check[]
   notifications Notification[]
 }
 
@@ -78,11 +79,47 @@ model DiningTable {
   tenantId    String
   tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   views       MenuView[]
+  checks      Check[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
   @@unique([tenantId, tableNumber])
   @@index([tenantId])
+}
+
+model Check {
+  id        String      @id
+  tenantId  String
+  tableId   String
+  status    String      @default("open")
+  note      String      @default("")
+  openedAt  DateTime    @default(now())
+  closedAt  DateTime?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  tenant    Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  table     DiningTable @relation(fields: [tableId], references: [id], onDelete: Restrict)
+  items     CheckItem[]
+
+  @@index([tenantId, status])
+  @@index([tableId, status])
+}
+
+model CheckItem {
+  id         String   @id
+  checkId    String
+  productId  String?
+  name       String
+  unitPrice  Decimal  @db.Decimal(10, 2)
+  quantity   Int      @default(1)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  check      Check    @relation(fields: [checkId], references: [id], onDelete: Cascade)
+  product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([checkId, sortOrder])
+  @@index([productId])
 }
 
 model MenuView {
@@ -152,6 +189,7 @@ model Product {
   tenantId        String
   tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   views           ProductView[]
+  checkItems      CheckItem[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 

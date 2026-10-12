@@ -32,6 +32,11 @@ export const adminNavigation = [
     to: { name: 'admin-tables' },
   },
   {
+    label: 'Adisyonlar',
+    icon: 'receipt_long',
+    to: { name: 'admin-orders' },
+  },
+  {
     label: 'QR Kodlar',
     icon: 'qr_code_2',
     to: { name: 'admin-qr' },
@@ -82,24 +87,25 @@ export const adminMobileTabs = [
     names: ['admin-tables'],
   },
   {
-    id: 'qr',
-    label: 'QR',
-    icon: 'qr_code_2',
-    to: { name: 'admin-qr' },
-    names: ['admin-qr'],
+    id: 'orders',
+    label: 'Adisyon',
+    icon: 'receipt_long',
+    to: { name: 'admin-orders' },
+    names: ['admin-orders'],
   },
   {
     id: 'more',
     label: 'Diğer',
     icon: 'apps',
     action: 'more',
-    names: ['admin-stats', 'admin-business', 'admin-profile', 'admin-billing'],
+    names: ['admin-qr', 'admin-stats', 'admin-business', 'admin-profile', 'admin-billing'],
   },
 ]
 
 export const adminMobileMore = [
   { label: 'Kategoriler', icon: 'category', to: { name: 'admin-categories' } },
   { label: 'Menü Ayarları', icon: 'tune', to: { name: 'admin-menu-settings' } },
+  { label: 'QR Kodlar', icon: 'qr_code_2', to: { name: 'admin-qr' } },
   { label: 'İstatistikler', icon: 'insights', to: { name: 'admin-stats' } },
   { label: 'İşletme', icon: 'storefront', to: { name: 'admin-business' } },
   { label: 'Profil', icon: 'person_outline', to: { name: 'admin-profile' } },

@@ -47,6 +47,13 @@ export const endpoints = {
     list: '/tables',
     detail: (id) => `/tables/${id}`,
   },
+  checks: {
+    list: '/checks',
+    detail: (id) => `/checks/${id}`,
+    items: (id) => `/checks/${id}/items`,
+    item: (id, itemId) => `/checks/${id}/items/${itemId}`,
+    close: (id) => `/checks/${id}/close`,
+  },
   notifications: {
     list: '/notifications',
     read: '/notifications/read',

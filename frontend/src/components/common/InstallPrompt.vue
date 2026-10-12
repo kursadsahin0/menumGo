@@ -50,6 +50,11 @@ function readDismissed() {
 }
 
 function onPrompt(event) {
+  // Daha önce “Şimdi değil” denildiyse tarayıcı banner’ına dokunma
+  if (dismissed.value || standalone.value) {
+    return
+  }
+
   event.preventDefault()
   deferred.value = event
 }
@@ -61,8 +66,14 @@ async function install() {
     return
   }
 
-  await prompt.prompt()
   deferred.value = null
+
+  try {
+    await prompt.prompt()
+    await prompt.userChoice
+  } catch {
+    // Kullanıcı iptal ederse sessiz geç.
+  }
 }
 
 function dismiss() {
@@ -81,8 +92,9 @@ onMounted(() => {
   standalone.value =
     window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
   ios.value =
-    /iphone|ipad|ipod/i.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    !standalone.value &&
+    (/iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
   window.addEventListener('beforeinstallprompt', onPrompt)
 })
 

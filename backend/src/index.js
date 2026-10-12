@@ -23,6 +23,7 @@ import { productRoutes } from './products/routes.js'
 import { opensPanel } from './subscription/record.js'
 import { subscriptionRoutes } from './subscription/routes.js'
 import { tableRoutes } from './tables/routes.js'
+import { checkRoutes } from './checks/routes.js'
 import { importDiskUploads, openUpload, relocateStoredImages } from './images/files.js'
 
 
@@ -156,6 +157,7 @@ await authRoutes(app)
 await productRoutes(app)
 await categoryRoutes(app)
 await tableRoutes(app)
+await checkRoutes(app)
 await businessRoutes(app)
 await analyticsRoutes(app)
 await menuRoutes(app)
