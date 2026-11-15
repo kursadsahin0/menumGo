@@ -4,6 +4,8 @@ Kafeler, restoranlar ve barlar için dijital menü. Misafir tek bir QR kodu okut
 
 Menü Türkçe ve İngilizce açılır. Üründe fiyat, porsiyon, içerik ve alerjen bulunur. Tükenen ürün işaretlenir.
 
+**Canlı:** https://menumgo.netlify.app
+
 ## Çalıştırma
 
 Node.js 22 veya üzeri gerekir.
